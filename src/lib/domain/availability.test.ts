@@ -75,10 +75,12 @@ describe('findOpenStartTimes', () => {
   ]
 
   it('drops candidates whose session would overlap a booking', () => {
+    // Busy 03:00-04:00. Only the 02:00 start finishes before it begins;
+    // 02:30 and 03:00 both run into the booking.
     const open = findOpenStartTimes({
       candidates,
       durationMinutes: 60,
-      busy: [range('2026-03-16T02:30:00Z', '2026-03-16T03:30:00Z')],
+      busy: [range('2026-03-16T03:00:00Z', '2026-03-16T04:00:00Z')],
     })
 
     expect(open.map((d) => d.toISOString())).toEqual(['2026-03-16T02:00:00.000Z'])
