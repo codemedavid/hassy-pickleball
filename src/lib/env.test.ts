@@ -65,3 +65,38 @@ describe('readServerEnv', () => {
     expect(() => readServerEnv()).toThrow(/SUPABASE_SERVICE_ROLE_KEY/)
   })
 })
+
+/**
+ * Supabase's newer key naming. A project created today issues
+ * `sb_publishable_…` / `sb_secret_…` keys under PUBLISHABLE/SECRET names, while
+ * older projects issue JWT anon/service-role keys. Both must work, or the app
+ * refuses to start against whichever project it is pointed at.
+ */
+describe('new-style Supabase key names', () => {
+  it('accepts a publishable key in place of an anon key', () => {
+    delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_abc'
+
+    expect(readPublicEnv().NEXT_PUBLIC_SUPABASE_ANON_KEY).toBe('sb_publishable_abc')
+  })
+
+  it('accepts a secret key in place of a service-role key', () => {
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY
+    process.env.SUPABASE_SECRET_KEY = 'sb_secret_abc'
+
+    expect(readServerEnv().SUPABASE_SERVICE_ROLE_KEY).toBe('sb_secret_abc')
+  })
+
+  it('prefers the explicit anon key when a project sets both', () => {
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_abc'
+
+    expect(readPublicEnv().NEXT_PUBLIC_SUPABASE_ANON_KEY).toBe('anon-key')
+  })
+
+  it('still throws when neither name is set, naming what is missing', () => {
+    delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+
+    expect(() => readPublicEnv()).toThrow(/NEXT_PUBLIC_SUPABASE_ANON_KEY/)
+  })
+})
