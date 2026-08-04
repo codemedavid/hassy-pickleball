@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fakeClient, fakeTable, callsFor } from '../../../test/postgrest-fake'
+import { fakeClient, fakeTable, callsFor, type FakeResult } from '../../../test/postgrest-fake'
 
 const getUser = vi.fn()
 const createSupabaseServerClient = vi.fn()
@@ -16,7 +16,7 @@ const STAFF_ROW = {
   full_name: 'Mika Reyes',
 }
 
-function clientReturning(result: { data: unknown; error: unknown }) {
+function clientReturning(result: FakeResult) {
   const staff = fakeTable(result)
   const client = fakeClient({ staff })
 

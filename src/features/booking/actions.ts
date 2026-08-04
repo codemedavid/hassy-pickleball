@@ -11,6 +11,7 @@
 import { getAvailability } from './server/availability'
 import { createBooking } from './server/create-booking'
 import { cancelBooking, findBooking, type BookingSummary } from './server/lifecycle'
+import { rescheduleBooking } from './server/reschedule'
 import type { Result } from '@/lib/api/result'
 import type { CourtAvailability } from '@/lib/services/availability'
 
@@ -28,4 +29,8 @@ export async function findBookingAction(input: unknown): Promise<Result<BookingS
 
 export async function cancelBookingAction(input: unknown): Promise<Result<BookingSummary>> {
   return cancelBooking(input)
+}
+
+export async function rescheduleBookingAction(input: unknown): Promise<Result<BookingSummary>> {
+  return rescheduleBooking(input)
 }

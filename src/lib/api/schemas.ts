@@ -54,6 +54,16 @@ export const bookingLookupSchema = z.object({
 
 export type BookingLookupInput = z.infer<typeof bookingLookupSchema>
 
+/**
+ * Moving an existing booking. Authenticates on the same reference + email as a
+ * lookup, and carries the new windows only — prices are re-quoted server-side.
+ */
+export const rescheduleBookingSchema = bookingLookupSchema.extend({
+  courts: z.array(courtSelectionSchema).min(1, 'Pick at least one court and time'),
+})
+
+export type RescheduleBookingInput = z.infer<typeof rescheduleBookingSchema>
+
 export const availabilityQuerySchema = z.object({
   clubId: z.uuid(),
   /** Club-local calendar day, "YYYY-MM-DD". */
