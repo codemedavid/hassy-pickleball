@@ -417,10 +417,10 @@ CLI holds no usable access token, so `db push` cannot run unattended.
 - GREEN: `pnpm test` → `Test Files 28 passed (28)`, `Tests 272 passed (272)`.
   Commit `58b5ff2`.
 
-| # | What is guaranteed | Test file | Type | Result |
-|---|---|---|---|---|
-| 51 | A pending button is disabled, not merely restyled, so checkout cannot double-submit | `button.test.tsx:is disabled while pending` | unit | PASS |
-| 52 | Buttons default to type="button" and cannot accidentally submit a form | `button.test.tsx:defaults to type="button"` | unit | PASS |
-| 53 | Quantity cannot go below zero or above the schema's ceiling | `quantity-stepper.test.tsx` | unit | PASS |
-| 54 | Each row's stepper controls are individually named for assistive tech | `quantity-stepper.test.tsx:names the product in each control` | unit | PASS |
-| 55 | Database enums are never shown raw; an unknown status still renders | `status-badge.test.tsx` | unit | PASS |
+| #   | What is guaranteed                                                                  | Test file                                                     | Type | Result |
+| --- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------- | ---- | ------ |
+| 51  | A pending button is disabled, not merely restyled, so checkout cannot double-submit | `button.test.tsx:is disabled while pending`                   | unit | PASS   |
+| 52  | Buttons default to type="button" and cannot accidentally submit a form              | `button.test.tsx:defaults to type="button"`                   | unit | PASS   |
+| 53  | Quantity cannot go below zero or above the schema's ceiling                         | `quantity-stepper.test.tsx`                                   | unit | PASS   |
+| 54  | Each row's stepper controls are individually named for assistive tech               | `quantity-stepper.test.tsx:names the product in each control` | unit | PASS   |
+| 55  | Database enums are never shown raw; an unknown status still renders                 | `status-badge.test.tsx`                                       | unit | PASS   |
