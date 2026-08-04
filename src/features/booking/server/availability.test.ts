@@ -46,7 +46,11 @@ const COURT = {
   isActive: true,
 }
 
-const VALID = { clubId: '11111111-1111-4111-8111-111111111111', day: '2026-03-01', durationMinutes: 60 }
+const VALID = {
+  clubId: '11111111-1111-4111-8111-111111111111',
+  day: '2026-03-01',
+  durationMinutes: 60,
+}
 
 beforeEach(() => {
   vi.clearAllMocks()

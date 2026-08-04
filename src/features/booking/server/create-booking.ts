@@ -1,31 +1,28 @@
-'use server'
+import 'server-only'
 
-import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { err, ok, type Result } from '@/lib/api/result'
-import { bookingLookupSchema, createBookingSchema } from '@/lib/api/schemas'
+import { createBookingSchema } from '@/lib/api/schemas'
 import { quoteSelections } from '@/lib/api/quote'
 import { findClubById } from '@/lib/repositories/clubs'
 import { listActiveCourts } from '@/lib/repositories/courts'
+import { findCustomerByEmail } from '@/lib/repositories/customers'
 import { listActivePricingRules } from '@/lib/repositories/pricing-rules'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import type { BookingSummary } from './lifecycle'
 
 /**
- * Booking mutations.
+ * Booking creation.
  *
- * These use the service-role client on purpose: `create_booking` and
- * `find_booking_by_reference` are granted to service_role only, precisely so
- * that pricing and reference/email matching cannot be driven from the browser.
- * Every input is validated here before it reaches the database.
+ * Uses the service-role client on purpose: `create_booking` is granted to
+ * service_role only, precisely so that pricing cannot be driven from the
+ * browser. Every price is computed here with the tested engine; any
+ * `priceCents` a client sends is dropped by the schema.
  */
 
+/** 23P01 is the exclusion-constraint violation; P0001 the RPC's own raise. */
 const SLOT_TAKEN_CODES = new Set(['23P01', 'P0001'])
 
-type BookingSummary = {
-  readonly reference: string
-  readonly status: string
-  readonly totalCents: number
-}
-
-export async function createBookingAction(input: unknown): Promise<Result<BookingSummary>> {
+export async function createBooking(input: unknown): Promise<Result<BookingSummary>> {
   const parsed = createBookingSchema.safeParse(input)
 
   if (!parsed.success) {
@@ -42,31 +39,33 @@ export async function createBookingAction(input: unknown): Promise<Result<Bookin
       return err('That club could not be found', 'NOT_FOUND')
     }
 
-    const [courts, rules] = await Promise.all([
+    const [courts, rules, customer] = await Promise.all([
       listActiveCourts(client, booking.clubId),
       listActivePricingRules(client, booking.clubId),
+      findCustomerByEmail(client, booking.clubId, booking.contactEmail),
     ])
 
-    // Prices are computed here, never accepted from the client.
     const priced = quoteSelections({
       selections: booking.courts,
       courts: courts.map((court) => ({ id: court.id, basePriceCents: court.basePriceCents })),
       rules,
       timeZone: club.timeZone,
-      tier: 'standard',
+      // A returning member is quoted at their tier; a new guest at standard.
+      tier: customer?.tier ?? 'standard',
     })
 
     // supabase gen types maps SQL `text` to `string` regardless of whether the
     // parameter accepts NULL, so the generated Args type rejects the nulls this
-    // function is designed to take. The cast is narrowed to the two nullable
+    // function is designed to take. The cast is narrowed to the nullable
     // parameters rather than the whole call.
-    const rpcArgs = {
+    const { data, error } = await client.rpc('create_booking', {
       p_club_id: booking.clubId,
       p_contact_name: booking.contactName,
       p_contact_email: booking.contactEmail,
       p_contact_phone: (booking.contactPhone ?? null) as string,
       p_will_present_id: booking.willPresentId,
       p_notes: (booking.notes ?? null) as string,
+      p_payment_method: booking.paymentMethod,
       p_courts: priced.map((selection) => ({
         court_id: selection.courtId,
         starts_at: selection.startsAt.toISOString(),
@@ -77,9 +76,7 @@ export async function createBookingAction(input: unknown): Promise<Result<Bookin
         product_id: item.productId,
         quantity: item.quantity,
       })),
-    }
-
-    const { data, error } = await client.rpc('create_booking', rpcArgs)
+    })
 
     if (error) {
       if (SLOT_TAKEN_CODES.has(error.code ?? '')) {
@@ -99,37 +96,4 @@ export async function createBookingAction(input: unknown): Promise<Result<Bookin
 
     return err(message, 'UNEXPECTED')
   }
-}
-
-export async function findBookingAction(input: unknown): Promise<Result<BookingSummary>> {
-  const parsed = bookingLookupSchema.safeParse(input)
-
-  if (!parsed.success) {
-    return err('Check your reference and email address', 'INVALID')
-  }
-
-  const client = createSupabaseAdminClient()
-
-  const { data, error } = await client.rpc('find_booking_by_reference', {
-    p_reference: parsed.data.reference,
-    p_email: parsed.data.email,
-  })
-
-  if (error) {
-    return err('We could not look that up right now', 'DB_ERROR')
-  }
-
-  const booking = Array.isArray(data) ? data[0] : data
-
-  // Deliberately the same message whether the reference or the email is wrong,
-  // so this cannot be used to confirm that a reference exists.
-  if (!booking) {
-    return err('No booking matches that reference and email', 'NOT_FOUND')
-  }
-
-  return ok({
-    reference: booking.reference,
-    status: booking.status,
-    totalCents: booking.total_cents,
-  })
 }

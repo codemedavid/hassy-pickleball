@@ -35,6 +35,8 @@ export const createBookingSchema = z.object({
   notes: z.string().trim().max(500).nullish(),
   courts: z.array(courtSelectionSchema).min(1, 'Pick at least one court and time'),
   items: z.array(bookingItemSchema).max(50).default([]),
+  /** How the guest intends to pay. Staff confirm settlement later. */
+  paymentMethod: z.enum(['cash', 'card', 'bank_transfer', 'gcash', 'online']).nullish(),
 })
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>
@@ -58,6 +60,8 @@ export const availabilityQuerySchema = z.object({
   day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected a YYYY-MM-DD day'),
   durationMinutes: z.number().int().min(30).max(480),
   courtId: z.uuid().optional(),
+  /** Optional: identifies a returning customer so tier pricing applies. */
+  email: z.email().optional(),
 })
 
 export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>

@@ -104,7 +104,10 @@ describe('cancelBooking', () => {
   it('explains that an already-finished booking cannot be cancelled', async () => {
     rpc.mockResolvedValue({
       data: null,
-      error: { code: 'P0002', message: 'booking PB-4G6JVH cannot be cancelled from status completed' },
+      error: {
+        code: 'P0002',
+        message: 'booking PB-4G6JVH cannot be cancelled from status completed',
+      },
     })
 
     const result = await cancelBooking(VALID)
@@ -113,7 +116,10 @@ describe('cancelBooking', () => {
   })
 
   it('does not leak the database error text to the customer', async () => {
-    rpc.mockResolvedValue({ data: null, error: { code: 'XX000', message: 'relation does not exist' } })
+    rpc.mockResolvedValue({
+      data: null,
+      error: { code: 'XX000', message: 'relation does not exist' },
+    })
 
     const result = await cancelBooking(VALID)
 
