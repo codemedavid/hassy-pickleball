@@ -1,0 +1,83 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens lifted from the Claude Design project
+ * "Pickleball court booking platform" (Pickleball Platform.dc.html).
+ * The design is light-only by intent, so no dark-mode variants are defined.
+ */
+@theme {
+  /* Brand */
+  --color-navy: #0b2545;
+  --color-navy-deep: #123a66;
+  --color-navy-mid: #1d4e89;
+  --color-slate: #3c5570;
+  --color-lime: #dff56b;
+  --color-olive: #7c9a00;
+
+  /* Text */
+  --color-ink: #0b2545;
+  --color-muted: #5b6b7c;
+  --color-subtle: #8695a5;
+
+  /* Surfaces */
+  --color-canvas: #f4f6f9;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f8fafc;
+  --color-surface-sunken: #edf1f5;
+
+  /* Borders */
+  --color-line: #e4e9ef;
+  --color-line-strong: #d6dee7;
+  --color-line-heavy: #c6d0da;
+
+  /* Status */
+  --color-success: #2e6b34;
+  --color-success-bg: #eaf6e9;
+  --color-danger: #b4232a;
+  --color-danger-bg: #fbecec;
+  --color-danger-line: #e7c9cb;
+
+  /* Type */
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-olive);
+}
+
+button {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--color-lime);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
