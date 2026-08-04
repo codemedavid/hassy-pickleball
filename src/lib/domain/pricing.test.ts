@@ -143,7 +143,13 @@ describe('quoteCourtSegment', () => {
     const quote = quoteCourtSegment({
       ...base,
       rules: [
-        rule({ id: 'late', priority: 20, kind: 'amount_delta', valuePercent: null, valueCents: 10000 }),
+        rule({
+          id: 'late',
+          priority: 20,
+          kind: 'amount_delta',
+          valuePercent: null,
+          valueCents: 10000,
+        }),
         rule({ id: 'early', priority: 10, valuePercent: 50 }),
       ],
     })

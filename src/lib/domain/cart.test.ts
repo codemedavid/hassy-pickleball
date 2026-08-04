@@ -13,7 +13,13 @@ function selection(overrides: Partial<CourtSelection> = {}): CourtSelection {
 }
 
 function item(overrides: Partial<CartItem> = {}): CartItem {
-  return { productId: 'p-1', name: 'Paddle rental', unitPriceCents: 20000, quantity: 1, ...overrides }
+  return {
+    productId: 'p-1',
+    name: 'Paddle rental',
+    unitPriceCents: 20000,
+    quantity: 1,
+    ...overrides,
+  }
 }
 
 describe('summariseCart', () => {
@@ -117,9 +123,9 @@ describe('removeCourtFromCart', () => {
   it('is a no-op when nothing matches', () => {
     const courts = [selection()]
 
-    expect(
-      removeCourtFromCart(courts, { courtId: 'court-9', startsAt: new Date() }),
-    ).toHaveLength(1)
+    expect(removeCourtFromCart(courts, { courtId: 'court-9', startsAt: new Date() })).toHaveLength(
+      1,
+    )
   })
 })
 

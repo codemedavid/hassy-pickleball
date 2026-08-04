@@ -4,12 +4,7 @@ export type CustomerTier = 'standard' | 'regular' | 'pro'
 
 export type RateKind = 'fixed' | 'amount_delta' | 'percent_delta'
 
-export type BookingStatus =
-  | 'pending'
-  | 'awaiting_payment'
-  | 'confirmed'
-  | 'cancelled'
-  | 'completed'
+export type BookingStatus = 'pending' | 'awaiting_payment' | 'confirmed' | 'cancelled' | 'completed'
 
 /** A half-open interval [startsAt, endsAt). */
 export type TimeRange = {

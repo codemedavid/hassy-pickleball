@@ -63,8 +63,7 @@ export function removeCourtFromCart(
 ): CourtSelection[] {
   return courts.filter(
     (court) =>
-      court.courtId !== target.courtId ||
-      court.startsAt.getTime() !== target.startsAt.getTime(),
+      court.courtId !== target.courtId || court.startsAt.getTime() !== target.startsAt.getTime(),
   )
 }
 
