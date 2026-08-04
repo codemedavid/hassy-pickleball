@@ -4,8 +4,24 @@ import { z } from 'zod'
  * Environment contract. Parsed at module load so a misconfigured deployment
  * fails at startup rather than at the first request that needs a key.
  */
+/**
+ * `new URL('localhost:54321')` succeeds with protocol "localhost:", so a bare
+ * URL check would wave through a host that no HTTP client can reach. Require
+ * an explicit http/https scheme.
+ */
+const httpUrl = z.string().refine(
+  (value) => {
+    try {
+      return ['http:', 'https:'].includes(new URL(value).protocol)
+    } catch {
+      return false
+    }
+  },
+  { message: 'Must be an http(s) URL' },
+)
+
 const publicEnvSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+  NEXT_PUBLIC_SUPABASE_URL: httpUrl,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 })
 
