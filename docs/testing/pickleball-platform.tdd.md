@@ -111,7 +111,28 @@ followed by the checks above is an outstanding step.
 - GREEN: `pnpm test` → `Test Files 6 passed (6)`, `Tests 81 passed (81)`.
   Commit `6afc31a`.
 
-### Task 6 — Env guard (defect found by test)
+### Task 6 — Row mappers and availability read model (RED → GREEN)
+
+- RED: `pnpm test` → `Test Files 2 failed | 8 passed`, `Failed to resolve import`
+  for `./mappers` and `./availability`.
+- GREEN: `pnpm test` → `Test Files 10 passed (10)`, `Tests 114 passed (114)`.
+- Guarantee: snake_case never escapes the repository layer; null array columns
+  become `[]`; Postgres numeric-as-string becomes a number; the slot grid prices
+  every start and flags availability per court.
+
+### Task 7 — Queries, booking actions, staff auth
+
+- `pnpm typecheck` clean, `pnpm lint` clean, `pnpm build` compiled successfully.
+- Adding `queries.ts` dropped coverage to 63.95%, under the gate. Rather than
+  excluding the module it was given tests using a thenable fake of the PostgREST
+  builder, which asserts the query that was actually built.
+- GREEN: `pnpm test` → `Test Files 11 passed (11)`, `Tests 131 passed (131)`.
+- `server-only` throws outside an RSC and blocked unit-testing server modules;
+  it is aliased to a stub in `vitest.config.ts`. `next build` still resolves the
+  real package, so the client-import guard remains effective.
+- `src/middleware.ts` → `src/proxy.ts` for the Next.js 16 rename.
+
+### Task 8 — Env guard (defect found by test)
 
 - `pnpm test` → `FAIL src/lib/env.test.ts > throws when the URL is not a URL`.
 - Cause: `new URL('localhost:54321')` parses with protocol `localhost:`, so
@@ -148,6 +169,15 @@ followed by the checks above is an outstanding step.
 | 20 | The public env reader never exposes the service-role key | `src/lib/env.test.ts:does not expose the service-role key` | unit | PASS |
 | 21 | Two live bookings cannot hold one court at overlapping times | `psql` against local Postgres (see Task 3) | integration | PASS |
 | 22 | A maintenance block and a live booking cannot coexist on a court | `psql` against local Postgres (see Task 3) | integration | PASS |
+| 23 | Null array columns map to `[]`, not null, so callers need no guard | `src/lib/repositories/mappers.test.ts:substitutes empty arrays` | unit | PASS |
+| 24 | Postgres numeric-as-string becomes a number for the pricing engine | `src/lib/repositories/mappers.test.ts:coerces a numeric-string percent` | unit | PASS |
+| 25 | Every slot in the day grid is priced, including unavailable ones | `src/lib/services/availability.test.ts:prices every slot` | unit | PASS |
+| 26 | Pricing rules are evaluated per slot, not once per court | `src/lib/services/availability.test.ts:applies pricing rules per slot` | unit | PASS |
+| 27 | A fully blocked court reports zero open slots rather than erroring | `src/lib/services/availability.test.ts:reports a court with no open slots` | unit | PASS |
+| 28 | Cancelled bookings are excluded from busy ranges by status filter | `src/lib/repositories/queries.test.ts:excludes cancelled bookings` | unit | PASS |
+| 29 | The busy window is half-open, so a booking ending at `from` is free | `src/lib/repositories/queries.test.ts:uses a half-open window` | unit | PASS |
+| 30 | Bookings and maintenance blocks union under one court id | `src/lib/repositories/queries.test.ts:unions bookings and maintenance blocks` | unit | PASS |
+| 31 | A failed read raises with context instead of returning empty | `src/lib/repositories/queries.test.ts:throws with context` | unit | PASS |
 
 ---
 
@@ -155,18 +185,27 @@ followed by the checks above is an outstanding step.
 
 ```
 $ pnpm test:coverage
- Test Files  8 passed (8)
-      Tests  95 passed (95)
+ Test Files  11 passed (11)
+      Tests  131 passed (131)
 
-Statements   : 98%    (147/150)
-Branches     : 88.5%  (77/87)
-Functions    : 100%   (52/52)
-Lines        : 97.82% (135/138)
+Statements   : 92.75% (192/207)
+Branches     : 82.17% (106/129)
+Functions    : 95.89% (70/73)
+Lines        : 92.26% (179/194)
 ```
 
 Threshold is 80% on all four axes (`vitest.config.ts`); all four clear it.
-`src/lib/supabase/**` is excluded — those modules are thin client factories with
-no branching logic, exercised by integration tests rather than unit tests.
+
+Excluded from the coverage denominator, with reasons:
+
+- `src/lib/supabase/**` — thin factories over the Supabase SDK, no branching of
+  our own.
+- `src/lib/repositories/rows.ts`, `src/lib/domain/types.ts` — type-only aliases,
+  nothing to execute.
+
+`src/lib/auth/staff.ts` is **included and sits at 0%** — it needs a real auth
+session, so it is honestly reported as uncovered rather than excluded to flatter
+the number.
 
 ## Known gaps
 
@@ -183,14 +222,21 @@ no branching logic, exercised by integration tests rather than unit tests.
   untested; the redone check is blocked on the same Docker outage.
 - **No E2E tests yet.** Playwright is configured but `e2e/` is empty — the flows
   it would cover do not have UI yet.
-- **Repositories and server actions not built.** Availability query, the
-  create-booking action, guest lookup, cancel/reschedule, and admin mutations
-  remain. `create_booking` is currently reachable only by `service_role`, so a
-  server action is required before the flow works end to end.
-- **Staff auth not built.** `/admin` route protection and magic-link sign-in
-  remain.
+- **Server actions have no tests.** `createBookingAction`, `findBookingAction`,
+  and the auth actions are written and typecheck, but nothing executes them.
+  Their happy paths and the SLOT_TAKEN branch need integration tests against the
+  local stack — blocked on the same Docker outage.
+- **`getCurrentStaff` is untested (0% coverage).** It needs a real auth session.
+- **Cancel and reschedule are not implemented.** The design has both; only
+  create and lookup exist.
+- **Admin mutations are not implemented.** Mark-paid, refund, block time, and
+  the products/pricing editors from `Pickleball Admin.dc.html` remain.
 - **Rate limiting.** `find_booking_by_reference` is enumerable given a valid
-  reference; the server action wrapping it needs a rate limit.
+  reference. The action returns an identical message for a wrong reference and a
+  wrong email, which prevents confirmation, but it still needs a rate limit.
+- **Customer tier is hardcoded to `standard` when quoting.** The schema and the
+  pricing engine both support tiers, but `createBookingAction` does not yet look
+  up the customer's tier, so tier discounts never apply.
 
 ## Merge evidence
 
@@ -203,4 +249,9 @@ RED/GREEN checkpoints, all on `main` and reachable from `HEAD`:
 | `12d0583` | GREEN — 61/61 domain tests pass |
 | `64315d6` | RED — schema/quote specs fail to resolve |
 | `6afc31a` | GREEN — 81/81 tests pass |
-| `e1d389b` | GREEN — 95/95 tests, env URL defect fixed, coverage 98%/88.5%/100%/97.82% |
+| `e1d389b` | GREEN — 95/95 tests, env URL defect fixed |
+| `71ccb25` | chore — lint scoped to source, evidence report added |
+| (RED) | mapper/availability specs fail to resolve |
+| (GREEN) | 114/114 tests pass |
+| (feat) | queries, booking actions, staff auth gate, proxy rename |
+| (test) | 131/131 tests, coverage 92.75%/82.17%/95.89%/92.26% |
