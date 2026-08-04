@@ -9,10 +9,7 @@ describe('findBusyRangesByCourt', () => {
     to: new Date('2026-03-02T00:00:00.000Z'),
   }
 
-  function client(
-    bookings: ReturnType<typeof fakeTable>,
-    blocks: ReturnType<typeof fakeTable>,
-  ) {
+  function client(bookings: ReturnType<typeof fakeTable>, blocks: ReturnType<typeof fakeTable>) {
     return fakeClient({ booking_courts: bookings, availability_blocks: blocks })
   }
 

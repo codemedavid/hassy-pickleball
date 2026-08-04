@@ -4,7 +4,9 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { err, ok, type Result } from '@/lib/api/result'
 import { bookingLookupSchema, createBookingSchema } from '@/lib/api/schemas'
 import { quoteSelections } from '@/lib/api/quote'
-import { findClubById, listActivePricingRules, listActiveCourts } from '@/lib/repositories/queries'
+import { findClubById } from '@/lib/repositories/clubs'
+import { listActiveCourts } from '@/lib/repositories/courts'
+import { listActivePricingRules } from '@/lib/repositories/pricing-rules'
 
 /**
  * Booking mutations.
