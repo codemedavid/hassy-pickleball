@@ -372,3 +372,40 @@ are the modules under test).
   repositories but no actions or UI.
 - **RLS still unproven**, unchanged from run 1.
 - `getCurrentStaff` still untested (needs a real auth session).
+
+---
+
+# Run 3 — Hosted project wiring
+
+### Task 15 — New-style Supabase key names (RED → GREEN)
+
+- RED: `pnpm test src/lib/env.test.ts` → `Tests 2 failed | 10 passed (12)`.
+  The hosted project issues `sb_publishable_…` / `sb_secret_…` keys; the env
+  contract recognised only the legacy JWT names, so the app could not start
+  against it. Commit `f0b3cc8`.
+- GREEN: `pnpm test` → `Test Files 23 passed (23)`, `Tests 237 passed (237)`.
+  Commit `1ec6885`. Legacy names still win when both are set.
+
+### Task 16 — Hosted project reachability (verified)
+
+```
+$ curl -s -o /dev/null -w "%{http_code}" -H "apikey: <publishable>" \
+    "https://qgfpaoweqpyxuqzsatdc.supabase.co/rest/v1/clubs?select=id&limit=1"
+404
+{"code":"PGRST205","message":"Could not find the table 'public.clubs' in the schema cache"}
+```
+
+The project and key are valid; the **schema is empty**. No migration has ever
+been applied to it.
+
+`pnpm exec supabase projects list` → `{"message":"User is banned"}`, i.e. the
+CLI holds no usable access token, so `db push` cannot run unattended.
+
+### Task 17 — Money formatting and cart persistence (RED → GREEN)
+
+- RED: `pnpm test` → `Test Files 2 failed | 23 passed (25)`. Commit `936596b`.
+- GREEN: `pnpm test` → `Test Files 25 passed (25)`, `Tests 254 passed (254)`.
+  Commit `04c30f4`.
+- Guarantee: whole amounts render without decimals and centavos survive;
+  a cart restored from localStorage revalidates every field, dropping a segment
+  with unparseable timestamps rather than passing `Invalid Date` to pricing.
