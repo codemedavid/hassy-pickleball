@@ -232,8 +232,14 @@ describe('findBusyRangesByCourt', () => {
 
     await findBusyRangesByCourt(client, { courtIds: ['court-1'], ...window })
 
-    expect(bookings.calls).toContainEqual({ method: 'lt', args: ['starts_at', window.to.toISOString()] })
-    expect(bookings.calls).toContainEqual({ method: 'gt', args: ['ends_at', window.from.toISOString()] })
+    expect(bookings.calls).toContainEqual({
+      method: 'lt',
+      args: ['starts_at', window.to.toISOString()],
+    })
+    expect(bookings.calls).toContainEqual({
+      method: 'gt',
+      args: ['ends_at', window.from.toISOString()],
+    })
   })
 
   it('throws when the bookings query errors', async () => {
