@@ -37,13 +37,25 @@ function formatIssues(error: z.ZodError): string {
 }
 
 /**
+ * Supabase renamed its API keys: projects created today issue
+ * `sb_publishable_…` and `sb_secret_…` under PUBLISHABLE/SECRET names, while
+ * older projects issue JWT anon/service-role keys. Both namings are accepted so
+ * the app starts against either, with the legacy name winning if both are set.
+ */
+const publishableKey = (): string | undefined =>
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+
+const secretKey = (): string | undefined =>
+  process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY
+
+/**
  * Values inlined into the client bundle. Referenced via literal
  * `process.env.X` so the Next.js compiler can statically replace them.
  */
 export function readPublicEnv(): PublicEnv {
   const parsed = publicEnvSchema.safeParse({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: publishableKey(),
   })
 
   if (!parsed.success) {
@@ -57,8 +69,8 @@ export function readPublicEnv(): PublicEnv {
 export function readServerEnv(): ServerEnv {
   const parsed = serverEnvSchema.safeParse({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: publishableKey(),
+    SUPABASE_SERVICE_ROLE_KEY: secretKey(),
   })
 
   if (!parsed.success) {

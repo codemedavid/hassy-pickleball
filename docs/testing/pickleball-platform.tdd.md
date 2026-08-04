@@ -275,7 +275,7 @@ contract itself was already correct for a remote project — only the values cha
 ### Task 10 — Booking/payment/customer/block repositories (RED → GREEN)
 
 - RED: `pnpm test` → `Test Files 5 failed | 11 passed (16)`, `Failed to resolve
-  import` for `./booking-mappers`, `./bookings`, `./customers`, `./payments`,
+import` for `./booking-mappers`, `./bookings`, `./customers`, `./payments`,
   `./blocks`. Commit `6840d1b`.
 - GREEN: `pnpm test` → `Test Files 16 passed (16)`, `Tests 183 passed (183)`.
   Commit `b8737e9`.
@@ -316,27 +316,27 @@ including the tier fix. Tests added; commit `f4d998f`.
 
 ## Test specification (additions)
 
-| # | What is guaranteed | Test file | Type | Result |
-|---|---|---|---|---|
-| 32 | Booking timestamps become Dates; an unset cancellation stays null, not epoch | `booking-mappers.test.ts` | unit | PASS |
-| 33 | A deleted product still resolves via its name snapshot | `booking-mappers.test.ts:survives a product that has since been deleted` | unit | PASS |
-| 34 | Booking detail joins segments, items and payments in one query, not N+1 | `bookings.test.ts:joins segments, items and payments` | unit | PASS |
-| 35 | The bookings window is half-open and always club-scoped | `bookings.test.ts` | unit | PASS |
-| 36 | Confirming stamps confirmed_at; cancelling stamps cancelled_at | `bookings.test.ts:updateBookingStatus` | unit | PASS |
-| 37 | A pending payment carries no paid_at; only a settled one does | `payments.test.ts` | unit | PASS |
-| 38 | A block clash surfaces SQLSTATE 23P01 to the caller | `blocks.test.ts:surfaces the Postgres conflict code` | unit | PASS |
-| 39 | Customer lookup is club-scoped, because email is unique per club only | `customers.test.ts` | unit | PASS |
-| 40 | Admin catalog lists include archived rows; customer lists do not | `products.test.ts`, `pricing-rules.test.ts` | unit | PASS |
-| 41 | An empty patch is refused instead of issuing a no-op write | `products.test.ts:rejects an empty patch` | unit | PASS |
-| 42 | Availability windows the club-LOCAL day, not a UTC day | `availability.test.ts:asks for busy ranges over the whole club-local day` | unit | PASS |
-| 43 | A duration outside the club's bounds is refused | `availability.test.ts` | unit | PASS |
-| 44 | Guest lookup is rate limited, and the attempt is counted before deciding | `lifecycle.test.ts` | unit | PASS |
-| 45 | Wrong reference and wrong email are indistinguishable to the caller | `lifecycle.test.ts:gives the same message` | unit | PASS |
-| 46 | Database error text never reaches the customer | `lifecycle.test.ts`, `create-booking.test.ts` | unit | PASS |
-| 47 | A finished booking cannot be cancelled | `lifecycle.test.ts:explains that an already-finished booking` | unit | PASS |
-| 48 | A client-sent price is ignored; the server prices every segment | `create-booking.test.ts:prices every segment on the server` | unit | PASS |
-| 49 | A returning member is charged their tier rate; a guest is not | `create-booking.test.ts:applies the tier discount` | unit | PASS |
-| 50 | A lost race for a slot is reported as SLOT_TAKEN, not a generic failure | `create-booking.test.ts` | unit | PASS |
+| #   | What is guaranteed                                                           | Test file                                                                 | Type | Result |
+| --- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ---- | ------ |
+| 32  | Booking timestamps become Dates; an unset cancellation stays null, not epoch | `booking-mappers.test.ts`                                                 | unit | PASS   |
+| 33  | A deleted product still resolves via its name snapshot                       | `booking-mappers.test.ts:survives a product that has since been deleted`  | unit | PASS   |
+| 34  | Booking detail joins segments, items and payments in one query, not N+1      | `bookings.test.ts:joins segments, items and payments`                     | unit | PASS   |
+| 35  | The bookings window is half-open and always club-scoped                      | `bookings.test.ts`                                                        | unit | PASS   |
+| 36  | Confirming stamps confirmed_at; cancelling stamps cancelled_at               | `bookings.test.ts:updateBookingStatus`                                    | unit | PASS   |
+| 37  | A pending payment carries no paid_at; only a settled one does                | `payments.test.ts`                                                        | unit | PASS   |
+| 38  | A block clash surfaces SQLSTATE 23P01 to the caller                          | `blocks.test.ts:surfaces the Postgres conflict code`                      | unit | PASS   |
+| 39  | Customer lookup is club-scoped, because email is unique per club only        | `customers.test.ts`                                                       | unit | PASS   |
+| 40  | Admin catalog lists include archived rows; customer lists do not             | `products.test.ts`, `pricing-rules.test.ts`                               | unit | PASS   |
+| 41  | An empty patch is refused instead of issuing a no-op write                   | `products.test.ts:rejects an empty patch`                                 | unit | PASS   |
+| 42  | Availability windows the club-LOCAL day, not a UTC day                       | `availability.test.ts:asks for busy ranges over the whole club-local day` | unit | PASS   |
+| 43  | A duration outside the club's bounds is refused                              | `availability.test.ts`                                                    | unit | PASS   |
+| 44  | Guest lookup is rate limited, and the attempt is counted before deciding     | `lifecycle.test.ts`                                                       | unit | PASS   |
+| 45  | Wrong reference and wrong email are indistinguishable to the caller          | `lifecycle.test.ts:gives the same message`                                | unit | PASS   |
+| 46  | Database error text never reaches the customer                               | `lifecycle.test.ts`, `create-booking.test.ts`                             | unit | PASS   |
+| 47  | A finished booking cannot be cancelled                                       | `lifecycle.test.ts:explains that an already-finished booking`             | unit | PASS   |
+| 48  | A client-sent price is ignored; the server prices every segment              | `create-booking.test.ts:prices every segment on the server`               | unit | PASS   |
+| 49  | A returning member is charged their tier rate; a guest is not                | `create-booking.test.ts:applies the tier discount`                        | unit | PASS   |
+| 50  | A lost race for a slot is reported as SLOT_TAKEN, not a generic failure      | `create-booking.test.ts`                                                  | unit | PASS   |
 
 ## Coverage
 
