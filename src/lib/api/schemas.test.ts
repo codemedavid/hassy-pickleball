@@ -100,7 +100,9 @@ describe('createBookingSchema', () => {
   })
 
   it('defaults items to an empty list when omitted', () => {
-    const { items: _items, ...withoutItems } = validBooking()
+    const withoutItems: Record<string, unknown> = { ...validBooking() }
+    delete withoutItems.items
+
     const parsed = createBookingSchema.parse(withoutItems)
 
     expect(parsed.items).toEqual([])
