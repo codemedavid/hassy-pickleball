@@ -445,3 +445,110 @@ CLI holds no usable access token, so `db push` cannot run unattended.
 | 57 | An overlapping segment on the same court is refused | `cart-provider.test.tsx:refuses a second segment that overlaps` | unit | PASS |
 | 58 | The same window on a different court is allowed (group booking) | `cart-provider.test.tsx:allows the same window on a different court` | unit | PASS |
 | 59 | useCart outside a provider throws a named error, not undefined | `cart-provider.test.tsx` | unit | PASS |
+
+---
+
+# Run 4 — Admin mutations
+
+### Task 20 — Admin payment, block, and catalog actions (RED → GREEN)
+
+Wired the existing admin repositories to a server-action surface behind a
+single authorization gate, closing the "repositories but no actions" gap
+carried out of run 3.
+
+**RED** — `pnpm test`
+
+```
+Test Files  4 failed | 29 passed (33)
+     Tests  282 passed (282)
+Error: Failed to resolve import "./session" from
+  "src/features/admin/server/session.test.ts". Does the file exist?
+```
+
+Compile-time RED: the four new specs reference modules that do not exist.
+Checkpoint `25a638a`.
+
+**GREEN** — `pnpm test`
+
+```
+Test Files  33 passed (33)
+     Tests  320 passed (320)
+```
+
+`pnpm typecheck` and `pnpm lint` both clean. Checkpoint `abf7488`.
+
+Three defects were caught between GREEN and the commit, all by tooling
+rather than by inspection: `Product` was imported from `@/lib/domain/types`
+where it does not exist, a `delete` on a required property failed TS2790,
+and a destructured `_id` tripped `no-unused-vars`. The final form builds the
+patch with `Object.entries(...).filter(...)`, which needs neither.
+
+### Task 21 — Staff authorization gate (coverage backfill, NOT a TDD cycle)
+
+`getCurrentStaff` sat at 0% coverage while being the gate every admin action
+depends on. The seven tests added in `src/lib/auth/staff.test.ts` are
+**characterization tests over code that already existed** — they passed on
+their first run, so there was no RED state and no production change. Recorded
+here as coverage work, not as a TDD cycle.
+
+```
+Test Files  34 passed (34)
+     Tests  327 passed (327)
+```
+
+Checkpoint `50a2f37`.
+
+## Test specification (additions)
+
+| # | What is guaranteed | Test | Type | Result |
+|---|--------------------|------|------|--------|
+| 60 | An unauthenticated caller cannot record a payment, block a court, or edit the catalog | `src/features/admin/server/{payments,blocks,catalog}.test.ts:refuses a caller with no staff session` | unit | PASS |
+| 61 | A refused call never reaches a repository, so authorization is not merely cosmetic | same specs, `expect(repo).not.toHaveBeenCalled()` | unit | PASS |
+| 62 | A payment is attributed to the signed-in staff member | `payments.test.ts:attributes the payment to the signed-in staff member` | unit | PASS |
+| 63 | A `recordedBy` in the request body is ignored, so a payment cannot be pinned on a colleague | `payments.test.ts:ignores a recordedBy supplied by the client` | unit | PASS |
+| 64 | Recording a payment confirms the booking | `payments.test.ts:confirms the booking once the payment is recorded` | unit | PASS |
+| 65 | A failed payment insert leaves the booking status untouched | `payments.test.ts:leaves the booking alone when recording the payment fails` | unit | PASS |
+| 66 | A refund does not cancel the booking — separate decisions | `payments.test.ts:does not cancel the booking` | unit | PASS |
+| 67 | Payment amounts of zero or less are rejected before the database | `payments.test.ts:rejects an amount of zero or less` | unit | PASS |
+| 68 | A block's creator comes from the session, not the request | `blocks.test.ts:records who created the block from the session` | unit | PASS |
+| 69 | A block that ends before or when it starts is rejected | `blocks.test.ts:rejects a window that ends before it starts`, `:rejects a zero-length window` | unit | PASS |
+| 70 | A clashing block reports CONFLICT, not a database failure | `blocks.test.ts:reports a clash as a conflict` | unit | PASS |
+| 71 | Catalog rows are created under the staff member's own club | `catalog.test.ts:creates the product under the club the staff member belongs to` | unit | PASS |
+| 72 | A `clubId` in the request is ignored, so staff cannot write into another club | `catalog.test.ts:ignores a clubId in the request` | unit | PASS |
+| 73 | Supplying an id patches rather than duplicating, and sends only changed fields | `catalog.test.ts:patches an existing product`, `:sends only the fields the editor changed` | unit | PASS |
+| 74 | A percentage rule without a percentage, or a cash rule without an amount, is rejected | `catalog.test.ts:rejects a percentage rule that carries no percentage`, `:rejects a cash rule that carries no amount` | unit | PASS |
+| 75 | Enum values the database does not define are rejected at the boundary | `payments/blocks/catalog.test.ts:rejects a … the database does not define` | unit | PASS |
+| 76 | Raw database messages never reach the caller | `session.test.ts:never returns the raw database message` | unit | PASS |
+| 77 | The staff lookup is scoped to the signed-in user and to an active row | `staff.test.ts:scopes the lookup to the signed-in user`, `:only matches an active staff row` | unit | PASS |
+| 78 | The staff gate fails closed when the query errors | `staff.test.ts:fails closed when the staff query errors` | unit | PASS |
+| 79 | The session is revalidated via `getUser()`, not trusted from the cookie | `staff.test.ts:revalidates the user against the auth server` | unit | PASS |
+
+## Coverage
+
+`pnpm test:coverage`
+
+```
+All files   |   93.98 |    83.63 |   96.93 |   96.86 |
+```
+
+Above the 80% threshold on all four axes.
+
+## Known gaps carried into the next run
+
+Unchanged from run 3 except where noted:
+
+- **No migration has been applied.** Everything from `20260101000600` onward
+  is unexecuted SQL, including the fix that revokes `create_booking` from
+  `anon`. Blocked on a secret key and a push route.
+- **`SUPABASE_SECRET_KEY` is empty** in `.env.local`. Guest lookup, cancel,
+  and booking creation cannot run without it.
+- **RLS is still unproven.** Every guarantee above is proven against a fake
+  PostgREST client. The admin actions deliberately use the anon-key client so
+  RLS remains the real boundary — but that boundary has never been exercised
+  against a live database. **The session gate proven here decides what the UI
+  offers, not what the database permits.**
+- **No UI.** All 15 screens remain unbuilt.
+- **No E2E tests.** `e2e/` is still empty.
+- **Reschedule** has a migration and no action. (Now the only remaining
+  action gap; admin mutations are closed.)
+- Service read models (booking detail, schedule grid, reports) not built.
