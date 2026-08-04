@@ -619,3 +619,81 @@ All files   |   93.86 |    83.29 |      97 |   96.55 |
 **Task 5 (all server actions) is complete.** Booking: availability, create,
 find, cancel, reschedule. Admin: mark paid, refund, block, unblock, save
 product, save pricing rule.
+
+---
+
+# Run 5 — First UI screen
+
+### Task 23 — Courts browse screen (RED → GREEN)
+
+The first screen ported from `Pickleball Platform.dc.html`, closing the top of
+the "no UI" gap carried through runs 3 and 4.
+
+**RED** — `pnpm test`
+
+```
+Test Files  2 failed | 35 passed (37)
+     Tests  339 passed (339)
+Error: Failed to resolve import "./court-filters" from
+  "src/features/courts/court-filters.test.ts". Does the file exist?
+```
+
+Compile-time RED. Checkpoint `(test: add failing specs for the courts browse screen)`.
+
+**GREEN** — `pnpm test`
+
+```
+Test Files  37 passed (37)
+     Tests  361 passed (361)
+```
+
+`pnpm typecheck` clean, `pnpm lint` clean, `pnpm build` compiled successfully
+with `/courts` as a dynamic route.
+
+Two decisions worth recording:
+
+- **Filtering is a search param, not client state.** A `?filter=` link keeps the
+  grid a Server Component and makes every filtered view linkable. The cost is a
+  round trip per chip, which is acceptable for a four-item catalog.
+- **An unknown filter shows everything.** A stale bookmark or hand-edited query
+  degrades to the full list rather than an empty page that looks like an outage.
+
+## Test specification (additions)
+
+| #  | What is guaranteed | Test | Type | Result |
+|----|--------------------|------|------|--------|
+| 91 | The default view shows every court | `court-filters.test.ts:returns every court for the "all" filter` | unit | PASS |
+| 92 | Indoor/outdoor/tournament chips each narrow correctly | `court-filters.test.ts` | unit | PASS |
+| 93 | An unrecognised filter falls back to the full list, not an empty page | `court-filters.test.ts:falls back to showing everything` | unit | PASS |
+| 94 | Filtering never mutates the source list | `court-filters.test.ts:does not mutate the input list` | unit | PASS |
+| 95 | Rates render as currency; raw centavos never reach the page | `court-card.test.tsx:shows the hourly rate formatted as currency` | unit | PASS |
+| 96 | A court with no photo renders a placeholder, not a broken image | `court-card.test.tsx:renders a placeholder instead of a broken image` | unit | PASS |
+| 97 | Hero image alt text names the court rather than a generic label | `court-card.test.tsx:gives the hero image alt text naming the court` | unit | PASS |
+| 98 | A null blurb renders as nothing, never the string "null" | `court-card.test.tsx:renders without a blurb rather than printing null` | unit | PASS |
+| 99 | Each court is a heading, so the grid is navigable by landmark | `court-card.test.tsx:names the court as a heading` | unit | PASS |
+| 100 | The tournament badge appears only on tournament-grade courts | `court-card.test.tsx:marks a tournament-grade court`, `:omits the tournament badge` | unit | PASS |
+
+## Known gaps carried into the next run
+
+**Blocked on the operator, not on code:**
+
+- **No migration has ever been applied.** Every file under
+  `supabase/migrations/` is unexecuted SQL, including `20260101000600`, which
+  revokes `create_booking` from `anon`. Both routes are shut:
+  - *Local*: the Docker daemon is unresponsive again — `docker info` hung past
+    120s. It needs a manual Docker Desktop restart, then `pnpm db:reset`.
+  - *Hosted*: `SUPABASE_SECRET_KEY` is still empty in `.env.local`, and the
+    Supabase CLI has no usable access token (`projects list` →
+    `User is banned`). Needs a secret key and `pnpm db:push`.
+- **RLS remains unproven.** Every guarantee in this document is proven against
+  fakes. `/courts` reads with the anon key on purpose so the policy is the
+  boundary — but that boundary has still never been exercised.
+- **`/courts` has never rendered against real data.** It typechecks and builds;
+  no request has run.
+
+**Not blocked, simply not built:**
+
+- 14 of 15 design screens remain: court detail and slot picker, cart, checkout,
+  payment, confirmation, manage-booking, and the nine admin screens.
+- `e2e/` is still empty. Playwright is configured; one screen is not yet a flow.
+- Service read models (booking detail, schedule grid, reports) not built.
