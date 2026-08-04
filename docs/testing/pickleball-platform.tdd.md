@@ -255,3 +255,120 @@ RED/GREEN checkpoints, all on `main` and reachable from `HEAD`:
 | (GREEN)   | 114/114 tests pass                                      |
 | (feat)    | queries, booking actions, staff auth gate, proxy rename |
 | (test)    | 131/131 tests, coverage 92.75%/82.17%/95.89%/92.26%     |
+
+---
+
+# Run 2 — Full-platform build (hosted Supabase)
+
+**Source plan**: inline plan produced by `/ecc:plan` in this session, approved
+with "proceed"; target changed mid-run from the local Docker stack to a hosted
+Supabase project at the user's direction.
+
+## Task report
+
+### Task 9 — Hosted Supabase tooling
+
+`.env.example` documents the hosted project's three keys plus
+`SUPABASE_PROJECT_REF`; `db:link`, `db:push`, `db:types:remote` added. The env
+contract itself was already correct for a remote project — only the values change.
+
+### Task 10 — Booking/payment/customer/block repositories (RED → GREEN)
+
+- RED: `pnpm test` → `Test Files 5 failed | 11 passed (16)`, `Failed to resolve
+  import` for `./booking-mappers`, `./bookings`, `./customers`, `./payments`,
+  `./blocks`. Commit `6840d1b`.
+- GREEN: `pnpm test` → `Test Files 16 passed (16)`, `Tests 183 passed (183)`.
+  Commit `b8737e9`.
+- `support.ts` adds `RepositoryError`, which carries the Postgres SQLSTATE so a
+  23P01 slot conflict is distinguishable without matching on message text.
+
+### Task 11 — Repository split (RED → GREEN → refactor)
+
+- RED: `pnpm test` → `Test Files 5 failed | 15 passed (20)`. Commit `2626c49`.
+- GREEN: `pnpm test` → `Test Files 20 passed (20)`, `Tests 203 passed (203)`.
+  Commit `db64c97`.
+- `queries.ts` became `clubs` / `courts` / `products` / `pricing-rules` /
+  `availability`, each with its own spec, plus the admin catalog writes.
+- **Defect caught by typecheck**: the patch builders returned
+  `Record<string, unknown>`, which the generated `Update` types reject. Retyped
+  to `Tables['x']['Update']`, so a misspelled column is now a compile error.
+
+### Task 12 — Migrations (written, NOT applied)
+
+`20260102000000_booking_lifecycle`, `…0100_customer_rollups`,
+`…0200_reporting`, `…0300_lookup_rate_limit`. Commit `a810bfd`.
+
+No database was reachable in this session, so **none of these have been
+executed**. They are unverified SQL until `pnpm db:push` runs.
+
+### Task 13 — Availability, lookup, cancellation (RED → GREEN)
+
+- RED: `pnpm test` → `Test Files 2 failed | 20 passed (22)`. Commit `3df7ff1`.
+- GREEN: `pnpm test` → `Test Files 22 passed (22)`, `Tests 222 passed (222)`.
+  Commit `393099d`.
+
+### Task 14 — Coverage honesty (defect found by widening the denominator)
+
+Coverage `include` was `src/lib/**` only, so `src/features/**` — all the new
+action code — was outside the denominator. Widening it dropped branches to
+**74.53%**, below the gate, revealing that `createBooking` had no tests at all,
+including the tier fix. Tests added; commit `f4d998f`.
+
+## Test specification (additions)
+
+| # | What is guaranteed | Test file | Type | Result |
+|---|---|---|---|---|
+| 32 | Booking timestamps become Dates; an unset cancellation stays null, not epoch | `booking-mappers.test.ts` | unit | PASS |
+| 33 | A deleted product still resolves via its name snapshot | `booking-mappers.test.ts:survives a product that has since been deleted` | unit | PASS |
+| 34 | Booking detail joins segments, items and payments in one query, not N+1 | `bookings.test.ts:joins segments, items and payments` | unit | PASS |
+| 35 | The bookings window is half-open and always club-scoped | `bookings.test.ts` | unit | PASS |
+| 36 | Confirming stamps confirmed_at; cancelling stamps cancelled_at | `bookings.test.ts:updateBookingStatus` | unit | PASS |
+| 37 | A pending payment carries no paid_at; only a settled one does | `payments.test.ts` | unit | PASS |
+| 38 | A block clash surfaces SQLSTATE 23P01 to the caller | `blocks.test.ts:surfaces the Postgres conflict code` | unit | PASS |
+| 39 | Customer lookup is club-scoped, because email is unique per club only | `customers.test.ts` | unit | PASS |
+| 40 | Admin catalog lists include archived rows; customer lists do not | `products.test.ts`, `pricing-rules.test.ts` | unit | PASS |
+| 41 | An empty patch is refused instead of issuing a no-op write | `products.test.ts:rejects an empty patch` | unit | PASS |
+| 42 | Availability windows the club-LOCAL day, not a UTC day | `availability.test.ts:asks for busy ranges over the whole club-local day` | unit | PASS |
+| 43 | A duration outside the club's bounds is refused | `availability.test.ts` | unit | PASS |
+| 44 | Guest lookup is rate limited, and the attempt is counted before deciding | `lifecycle.test.ts` | unit | PASS |
+| 45 | Wrong reference and wrong email are indistinguishable to the caller | `lifecycle.test.ts:gives the same message` | unit | PASS |
+| 46 | Database error text never reaches the customer | `lifecycle.test.ts`, `create-booking.test.ts` | unit | PASS |
+| 47 | A finished booking cannot be cancelled | `lifecycle.test.ts:explains that an already-finished booking` | unit | PASS |
+| 48 | A client-sent price is ignored; the server prices every segment | `create-booking.test.ts:prices every segment on the server` | unit | PASS |
+| 49 | A returning member is charged their tier rate; a guest is not | `create-booking.test.ts:applies the tier discount` | unit | PASS |
+| 50 | A lost race for a slot is reported as SLOT_TAKEN, not a generic failure | `create-booking.test.ts` | unit | PASS |
+
+## Coverage
+
+```
+$ pnpm test:coverage
+ Test Files  23 passed (23)
+      Tests  233 passed (233)
+
+Statements   : 91.95% (377/410)
+Branches     : 80.81% (219/271)
+Functions    : 96.55% (112/116)
+Lines        : 95.75% (361/377)
+```
+
+Denominator now covers `src/lib/**` and `src/features/**`. Excluded:
+`src/lib/supabase/**` (SDK factories), type-only alias modules, and
+`src/features/**/actions.ts` ('use server' one-line delegations whose targets
+are the modules under test).
+
+## Known gaps carried into the next run
+
+- **No migration has been applied.** Everything under `supabase/migrations/`
+  from `20260101000600` onward is unexecuted SQL. `pnpm db:push` against the
+  hosted project is the first thing that should happen next.
+- **`database.types.ts` is stale.** `src/lib/supabase/rpc.ts` bridges the RPCs
+  the generated types do not know about yet, and is deleted once
+  `pnpm db:types:remote` runs.
+- **No UI.** All 15 screens from the design project remain unbuilt; the app
+  still renders the placeholder home page.
+- **No E2E tests.** `e2e/` is still empty — the flows have no UI to drive.
+- **Reschedule has a migration but no action or test.**
+- **Admin mutations** (mark paid, refund, block time, catalog editors) have
+  repositories but no actions or UI.
+- **RLS still unproven**, unchanged from run 1.
+- `getCurrentStaff` still untested (needs a real auth session).
