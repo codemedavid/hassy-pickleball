@@ -6,8 +6,10 @@ import { readPublicEnv } from '@/lib/env'
  * Refreshes the Supabase auth cookie on every request so Server Components
  * never see an expired session. Route protection itself lives in the /admin
  * layout, which can read the staff role.
+ *
+ * Named `proxy` in src/proxy.ts — Next.js 16 renamed the middleware entry point.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const env = readPublicEnv()
   let response = NextResponse.next({ request })
 
