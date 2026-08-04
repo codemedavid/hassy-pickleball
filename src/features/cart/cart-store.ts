@@ -107,3 +107,56 @@ export function writeStoredCart(cart: Cart): void {
 
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cart))
 }
+
+/**
+ * The cart as an external store, so components can read it through
+ * `useSyncExternalStore`.
+ *
+ * The alternative — hydrating into `useState` from an effect — is what React 19
+ * lints against, and it renders one frame with an empty cart before correcting
+ * itself. Here the first client render already sees the stored cart, while the
+ * server render sees a stable empty one.
+ */
+
+type Listener = () => void
+
+const listeners = new Set<Listener>()
+
+/**
+ * `getSnapshot` must return a referentially stable value or React re-renders
+ * forever, so the parsed cart is cached and only replaced on write.
+ */
+let snapshot: Cart | null = null
+
+export function subscribeToCart(listener: Listener): () => void {
+  listeners.add(listener)
+
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
+export function getCartSnapshot(): Cart {
+  snapshot ??= readStoredCart()
+
+  return snapshot
+}
+
+/** Server render has no localStorage; a constant keeps hydration consistent. */
+export function getCartServerSnapshot(): Cart {
+  return EMPTY_CART
+}
+
+export function setCart(cart: Cart): void {
+  snapshot = cart
+  writeStoredCart(cart)
+
+  for (const listener of listeners) {
+    listener()
+  }
+}
+
+/** Test seam: drops the cached snapshot so a fresh read hits storage again. */
+export function resetCartSnapshot(): void {
+  snapshot = null
+}

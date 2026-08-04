@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CartProvider, useCart } from './cart-provider'
-import { writeStoredCart } from './cart-store'
+import { resetCartSnapshot, writeStoredCart } from './cart-store'
 
 const COURT_A = {
   courtId: 'court-1',
@@ -58,6 +58,9 @@ function renderCart() {
 
 beforeEach(() => {
   window.localStorage.clear()
+  // The store caches its snapshot for referential stability; drop it so each
+  // test starts from storage rather than the previous test's cart.
+  resetCartSnapshot()
 })
 
 describe('CartProvider', () => {
@@ -124,6 +127,9 @@ describe('CartProvider', () => {
 
     await userEvent.click(screen.getByText('add A'))
     unmount()
+    // A real reload loses the module-level cache, so drop it here too —
+    // otherwise this passes off the cache even if persistence is broken.
+    resetCartSnapshot()
     renderCart()
 
     expect(screen.getByTestId('courts')).toHaveTextContent('1')

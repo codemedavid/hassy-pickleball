@@ -1,8 +1,14 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
-import { EMPTY_CART, readStoredCart, writeStoredCart } from './cart-store'
+import {
+  EMPTY_CART,
+  getCartServerSnapshot,
+  getCartSnapshot,
+  setCart,
+  subscribeToCart,
+} from './cart-store'
 import {
   addCourtToCart,
   removeCourtFromCart,
@@ -16,9 +22,9 @@ import type { CartItem, CourtSelection } from '@/lib/domain/types'
  * The cart, held client-side and mirrored to localStorage.
  *
  * All the arithmetic lives in lib/domain/cart, which is pure and already
- * tested; this provider only owns React state and persistence. Adding an
- * overlapping segment throws there, and is swallowed here — the customer has
- * already been shown that slot as taken, so a thrown error would be noise.
+ * tested; this provider only wires that to React. Adding an overlapping
+ * segment throws there and is swallowed here — the customer has already been
+ * shown that slot as taken, so surfacing an error would be noise.
  */
 
 export type CartContextValue = {
@@ -33,38 +39,25 @@ export type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null)
 
 export function CartProvider({ children }: { readonly children: ReactNode }) {
-  // Server and first client render must agree, so hydration happens in an
-  // effect rather than in the initial state.
-  const [cart, setCart] = useState<Cart>(EMPTY_CART)
-  const [isHydrated, setIsHydrated] = useState(false)
-
-  useEffect(() => {
-    setCart(readStoredCart())
-    setIsHydrated(true)
-  }, [])
-
-  useEffect(() => {
-    if (isHydrated) {
-      writeStoredCart(cart)
-    }
-  }, [cart, isHydrated])
+  const cart = useSyncExternalStore(subscribeToCart, getCartSnapshot, getCartServerSnapshot)
 
   const addCourt = useCallback((selection: CourtSelection) => {
-    setCart((current) => {
-      try {
-        return { ...current, courts: addCourtToCart(current.courts, selection) }
-      } catch {
-        // Already held. Keeping the cart unchanged is the correct outcome.
-        return current
-      }
-    })
+    const current = getCartSnapshot()
+
+    try {
+      setCart({ ...current, courts: addCourtToCart(current.courts, selection) })
+    } catch {
+      // Already held. Leaving the cart unchanged is the correct outcome.
+    }
   }, [])
 
   const removeCourt = useCallback((courtId: string, startsAt: Date) => {
-    setCart((current) => ({
+    const current = getCartSnapshot()
+
+    setCart({
       ...current,
       courts: removeCourtFromCart(current.courts, { courtId, startsAt }),
-    }))
+    })
   }, [])
 
   /**
@@ -72,17 +65,18 @@ export function CartProvider({ children }: { readonly children: ReactNode }) {
    * product added from the shop for the first time is not in the list yet.
    */
   const setItemQuantity = useCallback((item: CartItem, quantity: number) => {
-    setCart((current) => {
-      const exists = current.items.some((line) => line.productId === item.productId)
+    const current = getCartSnapshot()
+    const exists = current.items.some((line) => line.productId === item.productId)
 
-      if (!exists) {
-        return quantity > 0
-          ? { ...current, items: [...current.items, { ...item, quantity }] }
-          : current
+    if (!exists) {
+      if (quantity > 0) {
+        setCart({ ...current, items: [...current.items, { ...item, quantity }] })
       }
 
-      return { ...current, items: setLineQuantity(current.items, item.productId, quantity) }
-    })
+      return
+    }
+
+    setCart({ ...current, items: setLineQuantity(current.items, item.productId, quantity) })
   }, [])
 
   const clear = useCallback(() => setCart(EMPTY_CART), [])
