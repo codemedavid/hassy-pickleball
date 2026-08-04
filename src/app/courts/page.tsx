@@ -43,8 +43,7 @@ export default async function CourtsPage({ searchParams }: CourtsPageProps) {
           {courts.length} courts. Open {club.opensAt.slice(0, 5)} to {club.closesAt.slice(0, 5)}.
         </h1>
         <p className="max-w-[52ch] text-[16px] text-muted">
-          Pick a court, choose how long you want to play, and add paddles or café items at
-          checkout.
+          Pick a court, choose how long you want to play, and add paddles or café items at checkout.
         </p>
       </header>
 
