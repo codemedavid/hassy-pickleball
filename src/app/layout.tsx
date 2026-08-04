@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Bricolage_Grotesque, DM_Sans } from 'next/font/google'
+import { CartProvider } from '@/features/cart/cart-provider'
 import './globals.css'
 
 const displayFont = Bricolage_Grotesque({
@@ -22,7 +23,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {/* The cart is read from localStorage, so it must live on the client
+            side of the tree. It wraps everything so a customer's selections
+            survive navigation between courts. */}
+        <CartProvider>{children}</CartProvider>
+      </body>
     </html>
   )
 }
