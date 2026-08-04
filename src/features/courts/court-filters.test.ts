@@ -1,0 +1,87 @@
+import { describe, expect, it } from 'vitest'
+import { COURT_FILTERS, filterCourts, isCourtFilterId } from './court-filters'
+import type { Court } from '@/lib/repositories/mappers'
+
+function court(overrides: Partial<Court> = {}): Court {
+  return {
+    id: 'court-1',
+    clubId: 'club-1',
+    name: 'Court 1',
+    slug: 'court-1',
+    surface: 'Cushioned acrylic',
+    environment: 'indoor',
+    isTournamentGrade: false,
+    blurb: null,
+    notes: null,
+    tags: [],
+    includes: [],
+    heroImageUrl: null,
+    basePriceCents: 60000,
+    sortOrder: 1,
+    isActive: true,
+    ...overrides,
+  }
+}
+
+const courts = [
+  court({ id: 'indoor-pro', environment: 'indoor', isTournamentGrade: true }),
+  court({ id: 'indoor-plain', environment: 'indoor' }),
+  court({ id: 'outdoor', environment: 'outdoor' }),
+]
+
+describe('COURT_FILTERS', () => {
+  it('leads with an "all" filter so the default view shows everything', () => {
+    expect(COURT_FILTERS[0].id).toBe('all')
+  })
+
+  it('gives every filter a distinct id', () => {
+    const ids = COURT_FILTERS.map((filter) => filter.id)
+
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+})
+
+describe('filterCourts', () => {
+  it('returns every court for the "all" filter', () => {
+    expect(filterCourts(courts, 'all')).toHaveLength(3)
+  })
+
+  it('keeps only indoor courts', () => {
+    expect(filterCourts(courts, 'indoor').map((c) => c.id)).toEqual(['indoor-pro', 'indoor-plain'])
+  })
+
+  it('keeps only outdoor courts', () => {
+    expect(filterCourts(courts, 'outdoor').map((c) => c.id)).toEqual(['outdoor'])
+  })
+
+  it('keeps only tournament-grade courts', () => {
+    expect(filterCourts(courts, 'tournament').map((c) => c.id)).toEqual(['indoor-pro'])
+  })
+
+  it('does not mutate the input list', () => {
+    const input = [...courts]
+
+    filterCourts(input, 'indoor')
+
+    expect(input).toHaveLength(3)
+  })
+
+  it('returns an empty list rather than throwing when nothing matches', () => {
+    expect(filterCourts([court({ environment: 'indoor' })], 'outdoor')).toEqual([])
+  })
+
+  it('falls back to showing everything for an unrecognised filter', () => {
+    // A stale URL query should degrade to the full list, not an empty page.
+    expect(filterCourts(courts, 'nonsense')).toHaveLength(3)
+  })
+})
+
+describe('isCourtFilterId', () => {
+  it('accepts a known filter id', () => {
+    expect(isCourtFilterId('indoor')).toBe(true)
+  })
+
+  it('rejects an unknown filter id', () => {
+    expect(isCourtFilterId('nonsense')).toBe(false)
+  })
+})
