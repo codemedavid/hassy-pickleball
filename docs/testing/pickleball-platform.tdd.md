@@ -697,3 +697,72 @@ Two decisions worth recording:
   payment, confirmation, manage-booking, and the nine admin screens.
 - `e2e/` is still empty. Playwright is configured; one screen is not yet a flow.
 - Service read models (booking detail, schedule grid, reports) not built.
+
+### Task 24 — Court detail and slot picker (RED → GREEN)
+
+**RED** — `pnpm test`
+
+```
+Test Files  2 failed | 37 passed (39)
+     Tests  361 passed (361)
+Error: Failed to resolve import "./time" from "src/lib/format/time.test.ts".
+Error: Failed to resolve import "./slot-grid" from
+  "src/features/booking/ui/slot-grid.test.tsx".
+```
+
+**GREEN** — `pnpm test`
+
+```
+Test Files  39 passed (39)
+     Tests  382 passed (382)
+```
+
+`pnpm typecheck` clean, `pnpm lint` clean, `pnpm build` compiled successfully
+with `/courts/[slug]` as a dynamic route.
+
+Decisions worth recording:
+
+- **Taken slots render disabled, not hidden.** Seeing that 7pm is gone is
+  information the customer wants. `booked` is part of the accessible name, so
+  the state is not carried by colour alone.
+- **Time formatting never falls back to the runtime zone.** A viewer in another
+  country must still see the club's 6:00 AM. The test pins this by formatting a
+  single instant in two zones and asserting they differ.
+- **Day and duration are search params.** The page stays a Server Component and
+  every view is linkable; only the current slot selection is client state.
+
+## Test specification (additions)
+
+| #   | What is guaranteed | Test | Type | Result |
+|-----|--------------------|------|------|--------|
+| 101 | Times render in the club's zone, not the viewer's | `time.test.ts:renders the club-local clock time`, `:reflects the zone it is given` | unit | PASS |
+| 102 | Midnight and noon render as 12:00 AM/PM, not 0:00 | `time.test.ts` | unit | PASS |
+| 103 | The club-local day can differ from the UTC day and the club day wins | `time.test.ts:uses the club day` | unit | PASS |
+| 104 | `toDayStringInZone` emits the format the availability query expects | `time.test.ts:matches the format enumerateStartTimes expects` | unit | PASS |
+| 105 | Taken slots are shown rather than hidden | `slot-grid.test.tsx:shows taken slots rather than hiding them` | unit | PASS |
+| 106 | A taken slot is disabled and cannot be selected | `slot-grid.test.tsx:disables a taken slot`, `:does not call onSelect for a taken slot` | unit | PASS |
+| 107 | "Booked" is in the accessible name, not signalled by colour alone | `slot-grid.test.tsx:marks a taken slot for assistive tech` | unit | PASS |
+| 108 | A fully booked day says so instead of rendering an empty grid | `slot-grid.test.tsx:tells the customer when the day is fully booked` | unit | PASS |
+| 109 | The chosen slot is `aria-pressed`, others are not | `slot-grid.test.tsx:marks the selected slot as pressed`, `:leaves other slots unpressed` | unit | PASS |
+| 110 | Slot prices render through the formatter, never raw centavos | `slot-grid.test.tsx:renders prices through the formatter` | unit | PASS |
+
+## Coverage
+
+`pnpm test:coverage`
+
+```
+Statements   : 92.51% (618/668)
+Branches     : 82.61% (366/443)
+Functions    : 95.76% (181/189)
+Lines        : 94.88% (594/626)
+```
+
+## Known gaps carried into the next run
+
+Unchanged from run 5 except that court detail is now built. Still blocked on
+the operator: **no migration has ever been applied**, Docker is unresponsive,
+`SUPABASE_SECRET_KEY` is empty, RLS is unproven, and neither `/courts` nor
+`/courts/[slug]` has rendered against real data.
+
+Still not built: cart, checkout, payment, confirmation, manage-booking, and the
+nine admin screens. `e2e/` remains empty.
