@@ -67,21 +67,21 @@ Six migrations plus a seed, applied against a real Postgres 17 instance.
 
 Ad-hoc verification via `psql`, covering journeys 5, 6, and 4.
 
-| Check | Result |
-|---|---|
-| Booking created, totals computed (court 600.00 + 2 paddles 400.00 = 1000.00) | PASS — `PB-4G6JVH`, `total_cents 100000` |
-| Overlapping booking on the same court | PASS — rejected by `booking_courts_no_double_booking` exclusion constraint |
-| Same window on a different court | PASS — accepted |
-| Maintenance block over a live booking | PASS — rejected by `reject_block_over_booking()` |
-| Booking over an existing maintenance block | PASS — rejected by `reject_booking_over_block()` |
-| Guest lookup with correct reference + email | PASS — returns the booking |
-| Cancelling a booking frees the slot for rebooking | PASS |
+| Check                                                                        | Result                                                                     |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Booking created, totals computed (court 600.00 + 2 paddles 400.00 = 1000.00) | PASS — `PB-4G6JVH`, `total_cents 100000`                                   |
+| Overlapping booking on the same court                                        | PASS — rejected by `booking_courts_no_double_booking` exclusion constraint |
+| Same window on a different court                                             | PASS — accepted                                                            |
+| Maintenance block over a live booking                                        | PASS — rejected by `reject_block_over_booking()`                           |
+| Booking over an existing maintenance block                                   | PASS — rejected by `reject_booking_over_block()`                           |
+| Guest lookup with correct reference + email                                  | PASS — returns the booking                                                 |
+| Cancelling a booking frees the slot for rebooking                            | PASS                                                                       |
 
 **Two defects found and fixed** (migration `20260101000600_harden_rpc.sql`):
 
 1. `find_booking_by_reference` was declared `returns bookings`. A composite
    return yields **one all-null row** when nothing matches, so a lookup with the
-   *wrong* email returned `rows_returned = 1` — a caller checking "did I get a
+   _wrong_ email returned `rows_returned = 1` — a caller checking "did I get a
    row?" would read that as a hit. Changed to `returns setof bookings`.
 2. `create_booking` is `SECURITY DEFINER` and accepts per-segment `price_cents`.
    It had been granted to `anon`, so any client could call it through PostgREST
@@ -101,7 +101,7 @@ followed by the checks above is an outstanding step.
 - GREEN: `pnpm test` → `Test Files 4 passed (4)`, `Tests 61 passed (61)`.
   Commit `12d0583`.
 - One spec was corrected rather than the implementation: a 02:00–03:00 session
-  *does* overlap a 02:30–03:30 booking, so the original expectation was
+  _does_ overlap a 02:30–03:30 booking, so the original expectation was
   arithmetically wrong. Rewritten against busy 03:00–04:00.
 
 ### Task 5 — Validation and quoting (RED → GREEN)
@@ -145,39 +145,39 @@ followed by the checks above is an outstanding step.
 
 ## Test specification
 
-| # | What is guaranteed | Test file | Type | Result |
-|---|---|---|---|---|
-| 1 | Time ranges are half-open, so touching sessions do not conflict | `src/lib/domain/time.test.ts:rangesOverlap` | unit | PASS |
-| 2 | Club-local day/time is derived in the club's zone, not UTC | `src/lib/domain/time.test.ts:getZonedParts` | unit | PASS |
-| 3 | Zoned time math stays correct across a DST transition | `src/lib/domain/time.test.ts:respects daylight saving in zones that observe it` | unit | PASS |
-| 4 | Start times are only offered when the full session fits before closing | `src/lib/domain/time.test.ts:enumerateStartTimes` | unit | PASS |
-| 5 | A zero slot size raises instead of looping forever | `src/lib/domain/time.test.ts:rejects a non-positive slot size` | unit | PASS |
-| 6 | Overlapping busy intervals collapse into one | `src/lib/domain/availability.test.ts:mergeBusyRanges` | unit | PASS |
-| 7 | Candidate starts whose session hits a booking are dropped | `src/lib/domain/availability.test.ts:findOpenStartTimes` | unit | PASS |
-| 8 | Pricing rules match on court, tier, duration, local day, and local window | `src/lib/domain/pricing.test.ts:ruleApplies` | unit | PASS |
-| 9 | Rules stack in priority order; fixed / amount / percent all behave | `src/lib/domain/pricing.test.ts:quoteCourtSegment` | unit | PASS |
-| 10 | A quote is never negative and is always whole cents | `src/lib/domain/pricing.test.ts:never quotes a negative price` | unit | PASS |
-| 11 | Cart operations return new arrays and never mutate | `src/lib/domain/cart.test.ts` | unit | PASS |
-| 12 | Adding an overlapping segment for the same court is refused client-side | `src/lib/domain/cart.test.ts:rejects a segment that overlaps` | unit | PASS |
-| 13 | Cart totals split courts and items and report the session window | `src/lib/domain/cart.test.ts:summariseCart` | unit | PASS |
-| 14 | Booking input rejects bad email, empty name, no courts, inverted windows | `src/lib/api/schemas.test.ts:createBookingSchema` | unit | PASS |
-| 15 | A client-supplied `priceCents` is stripped, never trusted | `src/lib/api/schemas.test.ts:never accepts a client-supplied price` | unit | PASS |
-| 16 | Guest lookup requires a well-formed reference and an email | `src/lib/api/schemas.test.ts:bookingLookupSchema` | unit | PASS |
-| 17 | Each segment is priced from its own court's base rate plus matching rules | `src/lib/api/quote.test.ts:quoteSelections` | unit | PASS |
-| 18 | An unknown court id raises rather than pricing at zero | `src/lib/api/quote.test.ts:throws when a selection names a court that does not exist` | unit | PASS |
-| 19 | Missing or malformed Supabase config throws at startup, naming the variable | `src/lib/env.test.ts` | unit | PASS |
-| 20 | The public env reader never exposes the service-role key | `src/lib/env.test.ts:does not expose the service-role key` | unit | PASS |
-| 21 | Two live bookings cannot hold one court at overlapping times | `psql` against local Postgres (see Task 3) | integration | PASS |
-| 22 | A maintenance block and a live booking cannot coexist on a court | `psql` against local Postgres (see Task 3) | integration | PASS |
-| 23 | Null array columns map to `[]`, not null, so callers need no guard | `src/lib/repositories/mappers.test.ts:substitutes empty arrays` | unit | PASS |
-| 24 | Postgres numeric-as-string becomes a number for the pricing engine | `src/lib/repositories/mappers.test.ts:coerces a numeric-string percent` | unit | PASS |
-| 25 | Every slot in the day grid is priced, including unavailable ones | `src/lib/services/availability.test.ts:prices every slot` | unit | PASS |
-| 26 | Pricing rules are evaluated per slot, not once per court | `src/lib/services/availability.test.ts:applies pricing rules per slot` | unit | PASS |
-| 27 | A fully blocked court reports zero open slots rather than erroring | `src/lib/services/availability.test.ts:reports a court with no open slots` | unit | PASS |
-| 28 | Cancelled bookings are excluded from busy ranges by status filter | `src/lib/repositories/queries.test.ts:excludes cancelled bookings` | unit | PASS |
-| 29 | The busy window is half-open, so a booking ending at `from` is free | `src/lib/repositories/queries.test.ts:uses a half-open window` | unit | PASS |
-| 30 | Bookings and maintenance blocks union under one court id | `src/lib/repositories/queries.test.ts:unions bookings and maintenance blocks` | unit | PASS |
-| 31 | A failed read raises with context instead of returning empty | `src/lib/repositories/queries.test.ts:throws with context` | unit | PASS |
+| #   | What is guaranteed                                                          | Test file                                                                             | Type        | Result |
+| --- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------- | ------ |
+| 1   | Time ranges are half-open, so touching sessions do not conflict             | `src/lib/domain/time.test.ts:rangesOverlap`                                           | unit        | PASS   |
+| 2   | Club-local day/time is derived in the club's zone, not UTC                  | `src/lib/domain/time.test.ts:getZonedParts`                                           | unit        | PASS   |
+| 3   | Zoned time math stays correct across a DST transition                       | `src/lib/domain/time.test.ts:respects daylight saving in zones that observe it`       | unit        | PASS   |
+| 4   | Start times are only offered when the full session fits before closing      | `src/lib/domain/time.test.ts:enumerateStartTimes`                                     | unit        | PASS   |
+| 5   | A zero slot size raises instead of looping forever                          | `src/lib/domain/time.test.ts:rejects a non-positive slot size`                        | unit        | PASS   |
+| 6   | Overlapping busy intervals collapse into one                                | `src/lib/domain/availability.test.ts:mergeBusyRanges`                                 | unit        | PASS   |
+| 7   | Candidate starts whose session hits a booking are dropped                   | `src/lib/domain/availability.test.ts:findOpenStartTimes`                              | unit        | PASS   |
+| 8   | Pricing rules match on court, tier, duration, local day, and local window   | `src/lib/domain/pricing.test.ts:ruleApplies`                                          | unit        | PASS   |
+| 9   | Rules stack in priority order; fixed / amount / percent all behave          | `src/lib/domain/pricing.test.ts:quoteCourtSegment`                                    | unit        | PASS   |
+| 10  | A quote is never negative and is always whole cents                         | `src/lib/domain/pricing.test.ts:never quotes a negative price`                        | unit        | PASS   |
+| 11  | Cart operations return new arrays and never mutate                          | `src/lib/domain/cart.test.ts`                                                         | unit        | PASS   |
+| 12  | Adding an overlapping segment for the same court is refused client-side     | `src/lib/domain/cart.test.ts:rejects a segment that overlaps`                         | unit        | PASS   |
+| 13  | Cart totals split courts and items and report the session window            | `src/lib/domain/cart.test.ts:summariseCart`                                           | unit        | PASS   |
+| 14  | Booking input rejects bad email, empty name, no courts, inverted windows    | `src/lib/api/schemas.test.ts:createBookingSchema`                                     | unit        | PASS   |
+| 15  | A client-supplied `priceCents` is stripped, never trusted                   | `src/lib/api/schemas.test.ts:never accepts a client-supplied price`                   | unit        | PASS   |
+| 16  | Guest lookup requires a well-formed reference and an email                  | `src/lib/api/schemas.test.ts:bookingLookupSchema`                                     | unit        | PASS   |
+| 17  | Each segment is priced from its own court's base rate plus matching rules   | `src/lib/api/quote.test.ts:quoteSelections`                                           | unit        | PASS   |
+| 18  | An unknown court id raises rather than pricing at zero                      | `src/lib/api/quote.test.ts:throws when a selection names a court that does not exist` | unit        | PASS   |
+| 19  | Missing or malformed Supabase config throws at startup, naming the variable | `src/lib/env.test.ts`                                                                 | unit        | PASS   |
+| 20  | The public env reader never exposes the service-role key                    | `src/lib/env.test.ts:does not expose the service-role key`                            | unit        | PASS   |
+| 21  | Two live bookings cannot hold one court at overlapping times                | `psql` against local Postgres (see Task 3)                                            | integration | PASS   |
+| 22  | A maintenance block and a live booking cannot coexist on a court            | `psql` against local Postgres (see Task 3)                                            | integration | PASS   |
+| 23  | Null array columns map to `[]`, not null, so callers need no guard          | `src/lib/repositories/mappers.test.ts:substitutes empty arrays`                       | unit        | PASS   |
+| 24  | Postgres numeric-as-string becomes a number for the pricing engine          | `src/lib/repositories/mappers.test.ts:coerces a numeric-string percent`               | unit        | PASS   |
+| 25  | Every slot in the day grid is priced, including unavailable ones            | `src/lib/services/availability.test.ts:prices every slot`                             | unit        | PASS   |
+| 26  | Pricing rules are evaluated per slot, not once per court                    | `src/lib/services/availability.test.ts:applies pricing rules per slot`                | unit        | PASS   |
+| 27  | A fully blocked court reports zero open slots rather than erroring          | `src/lib/services/availability.test.ts:reports a court with no open slots`            | unit        | PASS   |
+| 28  | Cancelled bookings are excluded from busy ranges by status filter           | `src/lib/repositories/queries.test.ts:excludes cancelled bookings`                    | unit        | PASS   |
+| 29  | The busy window is half-open, so a booking ending at `from` is free         | `src/lib/repositories/queries.test.ts:uses a half-open window`                        | unit        | PASS   |
+| 30  | Bookings and maintenance blocks union under one court id                    | `src/lib/repositories/queries.test.ts:unions bookings and maintenance blocks`         | unit        | PASS   |
+| 31  | A failed read raises with context instead of returning empty                | `src/lib/repositories/queries.test.ts:throws with context`                            | unit        | PASS   |
 
 ---
 
@@ -242,16 +242,16 @@ the number.
 
 RED/GREEN checkpoints, all on `main` and reachable from `HEAD`:
 
-| Commit | Stage |
-|---|---|
-| `43ae6ec` | scaffold |
-| `2ad6ff0` | RED — domain specs fail to resolve |
-| `12d0583` | GREEN — 61/61 domain tests pass |
-| `64315d6` | RED — schema/quote specs fail to resolve |
-| `6afc31a` | GREEN — 81/81 tests pass |
-| `e1d389b` | GREEN — 95/95 tests, env URL defect fixed |
-| `71ccb25` | chore — lint scoped to source, evidence report added |
-| (RED) | mapper/availability specs fail to resolve |
-| (GREEN) | 114/114 tests pass |
-| (feat) | queries, booking actions, staff auth gate, proxy rename |
-| (test) | 131/131 tests, coverage 92.75%/82.17%/95.89%/92.26% |
+| Commit    | Stage                                                   |
+| --------- | ------------------------------------------------------- |
+| `43ae6ec` | scaffold                                                |
+| `2ad6ff0` | RED — domain specs fail to resolve                      |
+| `12d0583` | GREEN — 61/61 domain tests pass                         |
+| `64315d6` | RED — schema/quote specs fail to resolve                |
+| `6afc31a` | GREEN — 81/81 tests pass                                |
+| `e1d389b` | GREEN — 95/95 tests, env URL defect fixed               |
+| `71ccb25` | chore — lint scoped to source, evidence report added    |
+| (RED)     | mapper/availability specs fail to resolve               |
+| (GREEN)   | 114/114 tests pass                                      |
+| (feat)    | queries, booking actions, staff auth gate, proxy rename |
+| (test)    | 131/131 tests, coverage 92.75%/82.17%/95.89%/92.26%     |

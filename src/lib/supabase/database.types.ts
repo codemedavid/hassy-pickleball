@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
   graphql_public: {
@@ -41,7 +35,7 @@ export type Database = {
           created_by: string | null
           ends_at: string
           id: string
-          kind: Database["public"]["Enums"]["block_kind"]
+          kind: Database['public']['Enums']['block_kind']
           reason: string | null
           starts_at: string
         }
@@ -51,7 +45,7 @@ export type Database = {
           created_by?: string | null
           ends_at: string
           id?: string
-          kind?: Database["public"]["Enums"]["block_kind"]
+          kind?: Database['public']['Enums']['block_kind']
           reason?: string | null
           starts_at: string
         }
@@ -61,17 +55,17 @@ export type Database = {
           created_by?: string | null
           ends_at?: string
           id?: string
-          kind?: Database["public"]["Enums"]["block_kind"]
+          kind?: Database['public']['Enums']['block_kind']
           reason?: string | null
           starts_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "availability_blocks_court_id_fkey"
-            columns: ["court_id"]
+            foreignKeyName: 'availability_blocks_court_id_fkey'
+            columns: ['court_id']
             isOneToOne: false
-            referencedRelation: "courts"
-            referencedColumns: ["id"]
+            referencedRelation: 'courts'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -84,7 +78,7 @@ export type Database = {
           id: string
           price_cents: number
           starts_at: string
-          status: Database["public"]["Enums"]["booking_status"]
+          status: Database['public']['Enums']['booking_status']
         }
         Insert: {
           booking_id: string
@@ -94,7 +88,7 @@ export type Database = {
           id?: string
           price_cents: number
           starts_at: string
-          status?: Database["public"]["Enums"]["booking_status"]
+          status?: Database['public']['Enums']['booking_status']
         }
         Update: {
           booking_id?: string
@@ -104,22 +98,22 @@ export type Database = {
           id?: string
           price_cents?: number
           starts_at?: string
-          status?: Database["public"]["Enums"]["booking_status"]
+          status?: Database['public']['Enums']['booking_status']
         }
         Relationships: [
           {
-            foreignKeyName: "booking_courts_booking_id_fkey"
-            columns: ["booking_id"]
+            foreignKeyName: 'booking_courts_booking_id_fkey'
+            columns: ['booking_id']
             isOneToOne: false
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
+            referencedRelation: 'bookings'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "booking_courts_court_id_fkey"
-            columns: ["court_id"]
+            foreignKeyName: 'booking_courts_court_id_fkey'
+            columns: ['court_id']
             isOneToOne: false
-            referencedRelation: "courts"
-            referencedColumns: ["id"]
+            referencedRelation: 'courts'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -156,18 +150,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "booking_items_booking_id_fkey"
-            columns: ["booking_id"]
+            foreignKeyName: 'booking_items_booking_id_fkey'
+            columns: ['booking_id']
             isOneToOne: false
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
+            referencedRelation: 'bookings'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "booking_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: 'booking_items_product_id_fkey'
+            columns: ['product_id']
             isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
+            referencedRelation: 'products'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -188,7 +182,7 @@ export type Database = {
           notes: string | null
           reference: string
           starts_at: string
-          status: Database["public"]["Enums"]["booking_status"]
+          status: Database['public']['Enums']['booking_status']
           total_cents: number
           updated_at: string
           will_present_id: boolean
@@ -209,7 +203,7 @@ export type Database = {
           notes?: string | null
           reference: string
           starts_at: string
-          status?: Database["public"]["Enums"]["booking_status"]
+          status?: Database['public']['Enums']['booking_status']
           total_cents?: number
           updated_at?: string
           will_present_id?: boolean
@@ -230,25 +224,25 @@ export type Database = {
           notes?: string | null
           reference?: string
           starts_at?: string
-          status?: Database["public"]["Enums"]["booking_status"]
+          status?: Database['public']['Enums']['booking_status']
           total_cents?: number
           updated_at?: string
           will_present_id?: boolean
         }
         Relationships: [
           {
-            foreignKeyName: "bookings_club_id_fkey"
-            columns: ["club_id"]
+            foreignKeyName: 'bookings_club_id_fkey'
+            columns: ['club_id']
             isOneToOne: false
-            referencedRelation: "clubs"
-            referencedColumns: ["id"]
+            referencedRelation: 'clubs'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "bookings_customer_id_fkey"
-            columns: ["customer_id"]
+            foreignKeyName: 'bookings_customer_id_fkey'
+            columns: ['customer_id']
             isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
+            referencedRelation: 'customers'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -303,7 +297,7 @@ export type Database = {
           blurb: string | null
           club_id: string
           created_at: string
-          environment: Database["public"]["Enums"]["court_environment"]
+          environment: Database['public']['Enums']['court_environment']
           hero_image_url: string | null
           id: string
           includes: string[]
@@ -322,7 +316,7 @@ export type Database = {
           blurb?: string | null
           club_id: string
           created_at?: string
-          environment?: Database["public"]["Enums"]["court_environment"]
+          environment?: Database['public']['Enums']['court_environment']
           hero_image_url?: string | null
           id?: string
           includes?: string[]
@@ -341,7 +335,7 @@ export type Database = {
           blurb?: string | null
           club_id?: string
           created_at?: string
-          environment?: Database["public"]["Enums"]["court_environment"]
+          environment?: Database['public']['Enums']['court_environment']
           hero_image_url?: string | null
           id?: string
           includes?: string[]
@@ -357,11 +351,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "courts_club_id_fkey"
-            columns: ["club_id"]
+            foreignKeyName: 'courts_club_id_fkey'
+            columns: ['club_id']
             isOneToOne: false
-            referencedRelation: "clubs"
-            referencedColumns: ["id"]
+            referencedRelation: 'clubs'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -376,7 +370,7 @@ export type Database = {
           id: string
           last_visit_at: string | null
           phone: string | null
-          tier: Database["public"]["Enums"]["customer_tier"]
+          tier: Database['public']['Enums']['customer_tier']
           total_spend_cents: number
           updated_at: string
         }
@@ -390,7 +384,7 @@ export type Database = {
           id?: string
           last_visit_at?: string | null
           phone?: string | null
-          tier?: Database["public"]["Enums"]["customer_tier"]
+          tier?: Database['public']['Enums']['customer_tier']
           total_spend_cents?: number
           updated_at?: string
         }
@@ -404,17 +398,17 @@ export type Database = {
           id?: string
           last_visit_at?: string | null
           phone?: string | null
-          tier?: Database["public"]["Enums"]["customer_tier"]
+          tier?: Database['public']['Enums']['customer_tier']
           total_spend_cents?: number
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "customers_club_id_fkey"
-            columns: ["club_id"]
+            foreignKeyName: 'customers_club_id_fkey'
+            columns: ['club_id']
             isOneToOne: false
-            referencedRelation: "clubs"
-            referencedColumns: ["id"]
+            referencedRelation: 'clubs'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -425,11 +419,11 @@ export type Database = {
           created_at: string
           external_reference: string | null
           id: string
-          method: Database["public"]["Enums"]["payment_method"]
+          method: Database['public']['Enums']['payment_method']
           paid_at: string | null
           recorded_by: string | null
           refunded_at: string | null
-          status: Database["public"]["Enums"]["payment_status"]
+          status: Database['public']['Enums']['payment_status']
           updated_at: string
         }
         Insert: {
@@ -438,11 +432,11 @@ export type Database = {
           created_at?: string
           external_reference?: string | null
           id?: string
-          method: Database["public"]["Enums"]["payment_method"]
+          method: Database['public']['Enums']['payment_method']
           paid_at?: string | null
           recorded_by?: string | null
           refunded_at?: string | null
-          status?: Database["public"]["Enums"]["payment_status"]
+          status?: Database['public']['Enums']['payment_status']
           updated_at?: string
         }
         Update: {
@@ -451,26 +445,26 @@ export type Database = {
           created_at?: string
           external_reference?: string | null
           id?: string
-          method?: Database["public"]["Enums"]["payment_method"]
+          method?: Database['public']['Enums']['payment_method']
           paid_at?: string | null
           recorded_by?: string | null
           refunded_at?: string | null
-          status?: Database["public"]["Enums"]["payment_status"]
+          status?: Database['public']['Enums']['payment_status']
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "payments_booking_id_fkey"
-            columns: ["booking_id"]
+            foreignKeyName: 'payments_booking_id_fkey'
+            columns: ['booking_id']
             isOneToOne: false
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
+            referencedRelation: 'bookings'
+            referencedColumns: ['id']
           },
         ]
       }
       pricing_rules: {
         Row: {
-          applies_to_tier: Database["public"]["Enums"]["customer_tier"] | null
+          applies_to_tier: Database['public']['Enums']['customer_tier'] | null
           club_id: string
           court_id: string | null
           created_at: string
@@ -478,7 +472,7 @@ export type Database = {
           ends_at_time: string | null
           id: string
           is_active: boolean
-          kind: Database["public"]["Enums"]["rate_kind"]
+          kind: Database['public']['Enums']['rate_kind']
           label: string
           min_duration_minutes: number | null
           priority: number
@@ -488,7 +482,7 @@ export type Database = {
           value_percent: number | null
         }
         Insert: {
-          applies_to_tier?: Database["public"]["Enums"]["customer_tier"] | null
+          applies_to_tier?: Database['public']['Enums']['customer_tier'] | null
           club_id: string
           court_id?: string | null
           created_at?: string
@@ -496,7 +490,7 @@ export type Database = {
           ends_at_time?: string | null
           id?: string
           is_active?: boolean
-          kind: Database["public"]["Enums"]["rate_kind"]
+          kind: Database['public']['Enums']['rate_kind']
           label: string
           min_duration_minutes?: number | null
           priority?: number
@@ -506,7 +500,7 @@ export type Database = {
           value_percent?: number | null
         }
         Update: {
-          applies_to_tier?: Database["public"]["Enums"]["customer_tier"] | null
+          applies_to_tier?: Database['public']['Enums']['customer_tier'] | null
           club_id?: string
           court_id?: string | null
           created_at?: string
@@ -514,7 +508,7 @@ export type Database = {
           ends_at_time?: string | null
           id?: string
           is_active?: boolean
-          kind?: Database["public"]["Enums"]["rate_kind"]
+          kind?: Database['public']['Enums']['rate_kind']
           label?: string
           min_duration_minutes?: number | null
           priority?: number
@@ -525,18 +519,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pricing_rules_club_id_fkey"
-            columns: ["club_id"]
+            foreignKeyName: 'pricing_rules_club_id_fkey'
+            columns: ['club_id']
             isOneToOne: false
-            referencedRelation: "clubs"
-            referencedColumns: ["id"]
+            referencedRelation: 'clubs'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "pricing_rules_court_id_fkey"
-            columns: ["court_id"]
+            foreignKeyName: 'pricing_rules_court_id_fkey'
+            columns: ['court_id']
             isOneToOne: false
-            referencedRelation: "courts"
-            referencedColumns: ["id"]
+            referencedRelation: 'courts'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -552,7 +546,7 @@ export type Database = {
           name: string
           price_cents: number
           sort_order: number
-          type: Database["public"]["Enums"]["product_type"]
+          type: Database['public']['Enums']['product_type']
           updated_at: string
         }
         Insert: {
@@ -566,7 +560,7 @@ export type Database = {
           name: string
           price_cents: number
           sort_order?: number
-          type: Database["public"]["Enums"]["product_type"]
+          type: Database['public']['Enums']['product_type']
           updated_at?: string
         }
         Update: {
@@ -580,16 +574,16 @@ export type Database = {
           name?: string
           price_cents?: number
           sort_order?: number
-          type?: Database["public"]["Enums"]["product_type"]
+          type?: Database['public']['Enums']['product_type']
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "products_club_id_fkey"
-            columns: ["club_id"]
+            foreignKeyName: 'products_club_id_fkey'
+            columns: ['club_id']
             isOneToOne: false
-            referencedRelation: "clubs"
-            referencedColumns: ["id"]
+            referencedRelation: 'clubs'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -600,7 +594,7 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
-          role: Database["public"]["Enums"]["staff_role"]
+          role: Database['public']['Enums']['staff_role']
           user_id: string
         }
         Insert: {
@@ -609,7 +603,7 @@ export type Database = {
           full_name: string
           id?: string
           is_active?: boolean
-          role?: Database["public"]["Enums"]["staff_role"]
+          role?: Database['public']['Enums']['staff_role']
           user_id: string
         }
         Update: {
@@ -618,16 +612,16 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean
-          role?: Database["public"]["Enums"]["staff_role"]
+          role?: Database['public']['Enums']['staff_role']
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "staff_club_id_fkey"
-            columns: ["club_id"]
+            foreignKeyName: 'staff_club_id_fkey'
+            columns: ['club_id']
             isOneToOne: false
-            referencedRelation: "clubs"
-            referencedColumns: ["id"]
+            referencedRelation: 'clubs'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -663,14 +657,14 @@ export type Database = {
           notes: string | null
           reference: string
           starts_at: string
-          status: Database["public"]["Enums"]["booking_status"]
+          status: Database['public']['Enums']['booking_status']
           total_cents: number
           updated_at: string
           will_present_id: boolean
         }
         SetofOptions: {
-          from: "*"
-          to: "bookings"
+          from: '*'
+          to: 'bookings'
           isOneToOne: true
           isSetofReturn: false
         }
@@ -693,14 +687,14 @@ export type Database = {
           notes: string | null
           reference: string
           starts_at: string
-          status: Database["public"]["Enums"]["booking_status"]
+          status: Database['public']['Enums']['booking_status']
           total_cents: number
           updated_at: string
           will_present_id: boolean
         }
         SetofOptions: {
-          from: "*"
-          to: "bookings"
+          from: '*'
+          to: 'bookings'
           isOneToOne: true
           isSetofReturn: false
         }
@@ -710,20 +704,15 @@ export type Database = {
       is_staff: { Args: { p_club_id: string }; Returns: boolean }
     }
     Enums: {
-      block_kind: "maintenance" | "league" | "private" | "closed"
-      booking_status:
-        | "pending"
-        | "awaiting_payment"
-        | "confirmed"
-        | "cancelled"
-        | "completed"
-      court_environment: "indoor" | "outdoor"
-      customer_tier: "standard" | "regular" | "pro"
-      payment_method: "cash" | "card" | "bank_transfer" | "gcash" | "online"
-      payment_status: "pending" | "paid" | "refunded" | "failed"
-      product_type: "addon" | "cafe"
-      rate_kind: "fixed" | "amount_delta" | "percent_delta"
-      staff_role: "admin" | "staff"
+      block_kind: 'maintenance' | 'league' | 'private' | 'closed'
+      booking_status: 'pending' | 'awaiting_payment' | 'confirmed' | 'cancelled' | 'completed'
+      court_environment: 'indoor' | 'outdoor'
+      customer_tier: 'standard' | 'regular' | 'pro'
+      payment_method: 'cash' | 'card' | 'bank_transfer' | 'gcash' | 'online'
+      payment_status: 'pending' | 'paid' | 'refunded' | 'failed'
+      product_type: 'addon' | 'cafe'
+      rate_kind: 'fixed' | 'amount_delta' | 'percent_delta'
+      staff_role: 'admin' | 'staff'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -731,33 +720,31 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -766,23 +753,22 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -791,23 +777,22 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -816,36 +801,34 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    keyof DefaultSchema['Enums'] | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    keyof DefaultSchema['CompositeTypes'] | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -854,22 +837,15 @@ export const Constants = {
   },
   public: {
     Enums: {
-      block_kind: ["maintenance", "league", "private", "closed"],
-      booking_status: [
-        "pending",
-        "awaiting_payment",
-        "confirmed",
-        "cancelled",
-        "completed",
-      ],
-      court_environment: ["indoor", "outdoor"],
-      customer_tier: ["standard", "regular", "pro"],
-      payment_method: ["cash", "card", "bank_transfer", "gcash", "online"],
-      payment_status: ["pending", "paid", "refunded", "failed"],
-      product_type: ["addon", "cafe"],
-      rate_kind: ["fixed", "amount_delta", "percent_delta"],
-      staff_role: ["admin", "staff"],
+      block_kind: ['maintenance', 'league', 'private', 'closed'],
+      booking_status: ['pending', 'awaiting_payment', 'confirmed', 'cancelled', 'completed'],
+      court_environment: ['indoor', 'outdoor'],
+      customer_tier: ['standard', 'regular', 'pro'],
+      payment_method: ['cash', 'card', 'bank_transfer', 'gcash', 'online'],
+      payment_status: ['pending', 'paid', 'refunded', 'failed'],
+      product_type: ['addon', 'cafe'],
+      rate_kind: ['fixed', 'amount_delta', 'percent_delta'],
+      staff_role: ['admin', 'staff'],
     },
   },
 } as const
-

@@ -44,7 +44,9 @@ describe('listBlocksInWindow', () => {
   })
 
   it('maps rows into domain blocks', async () => {
-    const client = fakeClient({ availability_blocks: fakeTable({ data: [BLOCK_ROW], error: null }) })
+    const client = fakeClient({
+      availability_blocks: fakeTable({ data: [BLOCK_ROW], error: null }),
+    })
 
     const blocks = await listBlocksInWindow(client, window)
 
