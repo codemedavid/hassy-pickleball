@@ -41,7 +41,7 @@ describe('withStaff', () => {
     const result = await withStaff(async ({ staff, client }) => ({
       staffId: staff.id,
       clubId: staff.clubId,
-      sawClient: client === CLIENT,
+      sawClient: (client as unknown) === CLIENT,
     }))
 
     expect(result).toEqual({
