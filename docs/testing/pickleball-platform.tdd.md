@@ -552,3 +552,70 @@ Unchanged from run 3 except where noted:
 - **Reschedule** has a migration and no action. (Now the only remaining
   action gap; admin mutations are closed.)
 - Service read models (booking detail, schedule grid, reports) not built.
+
+### Task 22 — Booking reschedule (RED → GREEN)
+
+Closed the last server-action gap. `reschedule_booking` had a migration since
+run 2 with nothing calling it.
+
+**RED** — `pnpm test`
+
+```
+Test Files  1 failed | 34 passed (35)
+     Tests  327 passed (327)
+Error: Failed to resolve import "./reschedule" from
+  "src/features/booking/server/reschedule.test.ts". Does the file exist?
+```
+
+Checkpoint `a90aa51`.
+
+**GREEN** — `pnpm test`
+
+```
+Test Files  35 passed (35)
+     Tests  339 passed (339)
+```
+
+`pnpm typecheck` and `pnpm lint` clean. Checkpoint `d73774c`.
+
+The central design decision: the new slot is **re-quoted server-side** rather
+than carried over from the old booking. Moving an off-peak session into a
+Saturday evening changes what it costs, so preserving the old price — or
+accepting one from the request — would be a way to buy peak time at off-peak
+rates. The schema does not accept `priceCents` at all, and the test asserts
+the RPC receives the quoted figure when the request supplies its own.
+
+**A defect this task surfaced in the previous one:** `pnpm typecheck` failed
+on `src/lib/auth/staff.test.ts` with TS2345. Task 21's typecheck had been run
+*before* that file was written, so the error was committed in `50a2f37`
+unnoticed. Fixed in `d73774c` by importing the exported `FakeResult` type
+instead of restating it. The lesson is the same one from run 2's pipe-exit-
+status mistake: a gate run at the wrong moment is not a gate.
+
+## Test specification (additions)
+
+| # | What is guaranteed | Test | Type | Result |
+|---|--------------------|------|------|--------|
+| 80 | A malformed reference is rejected before any lookup runs | `reschedule.test.ts:rejects a malformed reference` | unit | PASS |
+| 81 | A reschedule with no segments, or one ending before it starts, is rejected | `reschedule.test.ts:rejects a request with no court segments`, `:rejects a segment that ends before it starts` | unit | PASS |
+| 82 | Reschedule is rate limited on the same counter as lookup | `reschedule.test.ts:is rate limited like the lookup` | unit | PASS |
+| 83 | A rate-limited caller never reaches the reschedule RPC | same spec, `expect(rescheduleCall()).toBeUndefined()` | unit | PASS |
+| 84 | An unknown reference and a wrong email give byte-identical answers | `reschedule.test.ts:gives the same answer for an unknown reference as for a wrong email` | unit | PASS |
+| 85 | The new slot is priced server-side; a price in the request is ignored | `reschedule.test.ts:prices the new slot on the server` | unit | PASS |
+| 86 | Quoting uses the club's timezone and the customer's tier | `reschedule.test.ts:quotes at the club timezone and the customer tier` | unit | PASS |
+| 87 | A guest with no customer record is quoted at the standard tier | `reschedule.test.ts:quotes a guest with no customer record at the standard tier` | unit | PASS |
+| 88 | A cancelled or completed booking reports NOT_RESCHEDULABLE | `reschedule.test.ts:reports a booking that can no longer be moved` | unit | PASS |
+| 89 | A clash reports SLOT_TAKEN rather than a database failure | `reschedule.test.ts:reports a clash … as a taken slot` | unit | PASS |
+| 90 | Constraint names never reach the customer | `reschedule.test.ts:never returns the raw database message` | unit | PASS |
+
+## Coverage
+
+`pnpm test:coverage`
+
+```
+All files   |   93.86 |    83.29 |      97 |   96.55 |
+```
+
+**Task 5 (all server actions) is complete.** Booking: availability, create,
+find, cancel, reschedule. Admin: mark paid, refund, block, unblock, save
+product, save pricing rule.
