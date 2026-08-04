@@ -22,7 +22,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      include: ['src/lib/**/*.ts'],
+      include: ['src/lib/**/*.ts', 'src/features/**/*.ts', 'src/features/**/*.tsx'],
       exclude: [
         '**/*.test.ts',
         '**/*.d.ts',
@@ -31,6 +31,9 @@ export default defineConfig({
         // Type-only alias modules.
         'src/lib/repositories/rows.ts',
         'src/lib/domain/types.ts',
+        // 'use server' boundaries: one-line delegations to ./server modules,
+        // which are the ones under test. Nothing here branches.
+        'src/features/**/actions.ts',
       ],
       thresholds: {
         branches: COVERAGE_THRESHOLD,
