@@ -424,3 +424,24 @@ CLI holds no usable access token, so `db push` cannot run unattended.
 | 53  | Quantity cannot go below zero or above the schema's ceiling                         | `quantity-stepper.test.tsx`                                   | unit | PASS   |
 | 54  | Each row's stepper controls are individually named for assistive tech               | `quantity-stepper.test.tsx:names the product in each control` | unit | PASS   |
 | 55  | Database enums are never shown raw; an unknown status still renders                 | `status-badge.test.tsx`                                       | unit | PASS   |
+
+### Task 19 — CartProvider (RED → GREEN → refactor)
+
+- RED: `pnpm test` → `Test Files 1 failed | 28 passed (29)`; `./cart-provider`
+  fails to resolve. Commit `85296fa`.
+- GREEN: `pnpm test` → `Test Files 29 passed (29)`, `Tests 282 passed (282)`.
+  Commit `a021609`.
+- REFACTOR: `pnpm lint` failed with `react-hooks/set-state-in-effect` — the
+  cart was hydrated into `useState` from an effect, which renders one frame
+  with an empty cart before correcting itself. Rebuilt on
+  `useSyncExternalStore`; tests stayed green. Commit `00acc2a`.
+- The persistence test was also strengthened: with a module-level snapshot
+  cache it would have passed off the cache even if the localStorage write were
+  broken. It now drops the cache first, as a real reload does.
+
+| # | What is guaranteed | Test file | Type | Result |
+|---|---|---|---|---|
+| 56 | A cart survives a reload | `cart-provider.test.tsx:persists across a remount` | unit | PASS |
+| 57 | An overlapping segment on the same court is refused | `cart-provider.test.tsx:refuses a second segment that overlaps` | unit | PASS |
+| 58 | The same window on a different court is allowed (group booking) | `cart-provider.test.tsx:allows the same window on a different court` | unit | PASS |
+| 59 | useCart outside a provider throws a named error, not undefined | `cart-provider.test.tsx` | unit | PASS |
