@@ -113,10 +113,7 @@ describe('SlotGrid', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: /6:00 AM/ })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    expect(screen.getByRole('button', { name: /6:00 AM/ })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('leaves other slots unpressed', () => {
@@ -136,10 +133,7 @@ describe('SlotGrid', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: /7:00 AM/ })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    )
+    expect(screen.getByRole('button', { name: /7:00 AM/ })).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('renders prices through the formatter, never raw centavos', () => {

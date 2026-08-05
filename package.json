@@ -18,9 +18,9 @@
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
     "db:link": "supabase link --project-ref $SUPABASE_PROJECT_REF",
-    "db:push": "supabase db push",
-    "db:seed:remote": "supabase db push --include-seed",
-    "db:types:remote": "supabase gen types typescript --project-id $SUPABASE_PROJECT_REF > src/lib/supabase/database.types.ts"
+    "db:push": "bash scripts/db-push.sh",
+    "db:seed:remote": "bash scripts/db-push.sh --include-seed",
+    "db:types:remote": "supabase gen types typescript --db-url \"$SUPABASE_DB_URL\" > src/lib/supabase/database.types.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

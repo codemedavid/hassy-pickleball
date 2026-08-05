@@ -4,7 +4,7 @@ import { formatDayInZone, formatTimeInZone, toDayStringInZone } from './time'
 const MANILA = 'Asia/Manila'
 
 describe('formatTimeInZone', () => {
-  it('renders the club-local clock time, not the viewer\'s', () => {
+  it("renders the club-local clock time, not the viewer's", () => {
     // 22:00 UTC is 06:00 the next day in Manila.
     expect(formatTimeInZone(new Date('2026-03-15T22:00:00Z'), MANILA)).toBe('6:00 AM')
   })
