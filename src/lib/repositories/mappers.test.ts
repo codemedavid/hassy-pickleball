@@ -77,6 +77,8 @@ describe('toCourt', () => {
     base_price_cents: 90000,
     sort_order: 1,
     is_active: true,
+    min_players: 2,
+    max_players: 4,
   }
 
   it('maps a court row to the domain shape', () => {
@@ -90,6 +92,13 @@ describe('toCourt', () => {
       basePriceCents: 90000,
       isActive: true,
     })
+  })
+
+  it('carries the player capacity through, so the booking form can bound pax', () => {
+    const court = toCourt({ ...row, min_players: 2, max_players: 6 })
+
+    expect(court.minPlayers).toBe(2)
+    expect(court.maxPlayers).toBe(6)
   })
 
   it('preserves array columns as arrays', () => {
