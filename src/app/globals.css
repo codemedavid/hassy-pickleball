@@ -42,29 +42,36 @@
   --font-sans: 'DM Sans', system-ui, sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-}
+/*
+ * Element defaults belong in the `base` layer. Unlayered rules outrank every
+ * layered one, so a bare `a { color }` here would beat `text-white` on a link
+ * and render the navy buttons navy-on-navy. Guarded by e2e/storefront.spec.ts.
+ */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-body {
-  margin: 0;
-  background: var(--color-canvas);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    margin: 0;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
 
-a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
+  a {
+    color: var(--color-ink);
+    text-decoration: none;
+  }
 
-a:hover {
-  color: var(--color-olive);
-}
+  a:hover {
+    color: var(--color-olive);
+  }
 
-button {
-  font-family: inherit;
+  button {
+    font-family: inherit;
+  }
 }
 
 ::selection {

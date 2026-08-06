@@ -160,4 +160,18 @@ describe('CourtCard, compact layout', () => {
 
     expect(screen.getByText('3 slots open today')).toBeInTheDocument()
   })
+
+  it('marks a tournament-grade court here too — density must not hide the grade', () => {
+    render(<CourtCard court={court({ isTournamentGrade: true })} layout="compact" />)
+
+    expect(screen.getByText(/tournament grade/i)).toBeInTheDocument()
+  })
+
+  it('gives the thumbnail alt text naming the court', () => {
+    render(
+      <CourtCard court={court({ heroImageUrl: 'https://example.com/c1.jpg' })} layout="compact" />,
+    )
+
+    expect(screen.getByAltText('Court 1 — Center')).toBeInTheDocument()
+  })
 })
