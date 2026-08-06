@@ -146,6 +146,15 @@ describe('SiteHeader', () => {
     expect(cartButton()).toHaveAttribute('aria-expanded', 'true')
   })
 
+  it('points aria-controls at the drawer it opens, not at the heading inside it', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+
+    await user.click(cartButton())
+
+    expect(cartButton().getAttribute('aria-controls')).toBe(screen.getByRole('dialog').id)
+  })
+
   it('returns focus to the cart button when the drawer closes', async () => {
     const user = userEvent.setup()
     renderHeader()

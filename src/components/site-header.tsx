@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRef, useState } from 'react'
 import { useCart } from '@/features/cart/cart-provider'
-import { CartDrawer } from '@/features/cart/ui/cart-drawer'
+import { CART_DRAWER_ID, CartDrawer } from '@/features/cart/ui/cart-drawer'
 
 /**
  * Site chrome for the storefront.
@@ -55,7 +55,7 @@ export function SiteHeader() {
           ref={cartRef}
           type="button"
           aria-expanded={isCartOpen}
-          aria-controls="cart-drawer-title"
+          aria-controls={CART_DRAWER_ID}
           onClick={() => setIsCartOpen((wasOpen) => !wasOpen)}
           className="ml-auto flex items-center gap-2 rounded-[10px] border border-white/20 px-3.5 py-[7px] text-[13.5px] font-semibold text-white/85 hover:border-white/40 hover:text-white"
         >

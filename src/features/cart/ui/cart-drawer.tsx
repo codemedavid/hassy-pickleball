@@ -21,6 +21,9 @@ export interface CartDrawerProps {
   readonly onClose: () => void
 }
 
+/** Exported so the control that opens the drawer can point `aria-controls` at it. */
+export const CART_DRAWER_ID = 'cart-drawer'
+
 /**
  * Every line carries its own currency, so an empty cart has none to borrow.
  * Matches the single-club default used by the court cards.
@@ -125,6 +128,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       <div aria-hidden onClick={onClose} className="absolute inset-0 bg-navy/40" />
 
       <div
+        id={CART_DRAWER_ID}
         role="dialog"
         aria-modal="true"
         aria-labelledby="cart-drawer-title"
