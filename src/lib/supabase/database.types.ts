@@ -248,42 +248,51 @@ export type Database = {
       }
       clubs: {
         Row: {
+          cancellation_window_hours: number
           closes_at: string
           created_at: string
           currency: string
+          group_booking_note: string | null
           id: string
           max_duration_minutes: number
           min_duration_minutes: number
           name: string
           opens_at: string
+          phone: string | null
           slot_minutes: number
           slug: string
           timezone: string
           updated_at: string
         }
         Insert: {
+          cancellation_window_hours?: number
           closes_at?: string
           created_at?: string
           currency?: string
+          group_booking_note?: string | null
           id?: string
           max_duration_minutes?: number
           min_duration_minutes?: number
           name: string
           opens_at?: string
+          phone?: string | null
           slot_minutes?: number
           slug: string
           timezone?: string
           updated_at?: string
         }
         Update: {
+          cancellation_window_hours?: number
           closes_at?: string
           created_at?: string
           currency?: string
+          group_booking_note?: string | null
           id?: string
           max_duration_minutes?: number
           min_duration_minutes?: number
           name?: string
           opens_at?: string
+          phone?: string | null
           slot_minutes?: number
           slug?: string
           timezone?: string
@@ -304,7 +313,7 @@ export type Database = {
           is_active: boolean
           is_tournament_grade: boolean
           name: string
-          notes: string | null
+          notes: string[]
           slug: string
           sort_order: number
           surface: string
@@ -323,7 +332,7 @@ export type Database = {
           is_active?: boolean
           is_tournament_grade?: boolean
           name: string
-          notes?: string | null
+          notes?: string[]
           slug: string
           sort_order?: number
           surface: string
@@ -342,7 +351,7 @@ export type Database = {
           is_active?: boolean
           is_tournament_grade?: boolean
           name?: string
-          notes?: string | null
+          notes?: string[]
           slug?: string
           sort_order?: number
           surface?: string

@@ -50,7 +50,8 @@ export function CourtsBrowse({
             Book a court
           </p>
           <h1 className="mb-2.5 font-[family-name:var(--font-display)] text-[40px] font-bold leading-[1.05] tracking-[-0.03em]">
-            {courts.length} courts. Open {toClockTime(club.opensAt)} to {toClockTime(club.closesAt)}.
+            {courts.length} courts. Open {toClockTime(club.opensAt)} to {toClockTime(club.closesAt)}
+            .
           </h1>
           <p className="max-w-[52ch] text-pretty text-[16px] text-muted">
             Pick a court, choose how long you want to play, and add paddles or café items at
@@ -102,7 +103,9 @@ export function CourtsBrowse({
         </p>
       ) : (
         <div
-          className={layout === 'compact' ? 'flex flex-col gap-3' : 'grid gap-[22px] md:grid-cols-2'}
+          className={
+            layout === 'compact' ? 'flex flex-col gap-3' : 'grid gap-[22px] md:grid-cols-2'
+          }
         >
           {visible.map((court) => (
             <CourtCard

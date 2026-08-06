@@ -17,6 +17,11 @@ export type Club = {
   readonly slotMinutes: number
   readonly minDurationMinutes: number
   readonly maxDurationMinutes: number
+  /** Desk number shown on the court detail page. Null until a club fills it in. */
+  readonly phone: string | null
+  /** Hours before start that a booking can still be cancelled free of charge. */
+  readonly cancellationWindowHours: number
+  readonly groupBookingNote: string | null
 }
 
 export type Court = {
@@ -28,7 +33,8 @@ export type Court = {
   readonly environment: CourtEnvironment
   readonly isTournamentGrade: boolean
   readonly blurb: string | null
-  readonly notes: string | null
+  /** One "Good to know" line per entry — the design lists them, not one paragraph. */
+  readonly notes: readonly string[]
   readonly tags: readonly string[]
   readonly includes: readonly string[]
   readonly heroImageUrl: string | null
@@ -70,6 +76,9 @@ export function toClub(row: {
   slot_minutes: number
   min_duration_minutes: number
   max_duration_minutes: number
+  phone: string | null
+  cancellation_window_hours: number
+  group_booking_note: string | null
 }): Club {
   return {
     id: row.id,
@@ -82,6 +91,9 @@ export function toClub(row: {
     slotMinutes: row.slot_minutes,
     minDurationMinutes: row.min_duration_minutes,
     maxDurationMinutes: row.max_duration_minutes,
+    phone: row.phone,
+    cancellationWindowHours: row.cancellation_window_hours,
+    groupBookingNote: row.group_booking_note,
   }
 }
 
@@ -94,7 +106,7 @@ export function toCourt(row: {
   environment: CourtEnvironment
   is_tournament_grade: boolean
   blurb: string | null
-  notes: string | null
+  notes: string[] | null
   tags: string[] | null
   includes: string[] | null
   hero_image_url: string | null
@@ -111,7 +123,7 @@ export function toCourt(row: {
     environment: row.environment,
     isTournamentGrade: row.is_tournament_grade,
     blurb: row.blurb,
-    notes: row.notes,
+    notes: row.notes ?? [],
     tags: row.tags ?? [],
     includes: row.includes ?? [],
     heroImageUrl: row.hero_image_url,

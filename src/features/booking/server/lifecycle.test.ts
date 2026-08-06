@@ -16,6 +16,15 @@ const BOOKING_ROW = {
 
 const VALID = { reference: 'PB-4G6JVH', email: 'ana@example.com' }
 
+/** Lets the limiter through so a test can exercise what comes after it. */
+function underLimit(response: { data: unknown; error?: unknown }) {
+  rpc.mockImplementation((name: string) =>
+    name === 'record_lookup_attempt'
+      ? Promise.resolve({ data: true, error: null })
+      : Promise.resolve({ error: null, ...response }),
+  )
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
@@ -41,7 +50,7 @@ describe('findBooking', () => {
 
     expect(rpc).toHaveBeenCalledWith(
       'record_lookup_attempt',
-      expect.objectContaining({ p_identity: 'ana@example.com' }),
+      expect.objectContaining({ p_identity: expect.stringContaining('ana@example.com') }),
     )
   })
 
@@ -80,9 +89,73 @@ describe('findBooking', () => {
   })
 })
 
+describe('findBooking rate limiting', () => {
+  // A limiter that waves callers through when its own counter is broken hands
+  // an attacker unlimited attempts at the reference keyspace.
+  it('refuses the lookup when the limiter itself errors', async () => {
+    rpc.mockImplementation((name: string) =>
+      name === 'record_lookup_attempt'
+        ? Promise.resolve({ data: null, error: { message: 'function does not exist' } })
+        : Promise.resolve({ data: [BOOKING_ROW], error: null }),
+    )
+
+    const result = await findBooking(VALID)
+
+    expect(result).toMatchObject({ success: false, code: 'RATE_LIMITED' })
+    expect(rpc).not.toHaveBeenCalledWith('find_booking_by_reference', expect.anything())
+  })
+
+  it('refuses the lookup when the limiter returns nothing', async () => {
+    rpc.mockImplementation((name: string) =>
+      name === 'record_lookup_attempt'
+        ? Promise.resolve({ data: null, error: null })
+        : Promise.resolve({ data: [BOOKING_ROW], error: null }),
+    )
+
+    const result = await findBooking(VALID)
+
+    expect(result).toMatchObject({ success: false, code: 'RATE_LIMITED' })
+  })
+
+  it('counts the identity case-insensitively, so casing does not reset the counter', async () => {
+    underLimit({ data: [BOOKING_ROW] })
+
+    await findBooking({ ...VALID, email: 'ANA@example.com' })
+
+    expect(rpc).toHaveBeenCalledWith(
+      'record_lookup_attempt',
+      expect.objectContaining({ p_identity: expect.stringContaining('ana@example.com') }),
+    )
+  })
+})
+
 describe('cancelBooking', () => {
+  // Cancellation authenticates on the same reference + email pair as the
+  // lookup, so it is exactly as enumerable — and it also mutates state.
+  it('refuses once the rate limit for that identity is spent', async () => {
+    rpc.mockResolvedValue({ data: false, error: null })
+
+    const result = await cancelBooking(VALID)
+
+    expect(result).toMatchObject({ success: false, code: 'RATE_LIMITED' })
+    expect(rpc).not.toHaveBeenCalledWith('cancel_booking', expect.anything())
+  })
+
+  it('refuses when the limiter itself errors', async () => {
+    rpc.mockImplementation((name: string) =>
+      name === 'record_lookup_attempt'
+        ? Promise.resolve({ data: null, error: { message: 'boom' } })
+        : Promise.resolve({ data: [BOOKING_ROW], error: null }),
+    )
+
+    const result = await cancelBooking(VALID)
+
+    expect(result).toMatchObject({ success: false, code: 'RATE_LIMITED' })
+    expect(rpc).not.toHaveBeenCalledWith('cancel_booking', expect.anything())
+  })
+
   it('cancels a booking that matches the reference and email', async () => {
-    rpc.mockResolvedValue({ data: [BOOKING_ROW], error: null })
+    underLimit({ data: [BOOKING_ROW] })
 
     const result = await cancelBooking(VALID)
 
@@ -94,7 +167,7 @@ describe('cancelBooking', () => {
   })
 
   it('reports not found when nothing matches, without confirming the reference exists', async () => {
-    rpc.mockResolvedValue({ data: [], error: null })
+    underLimit({ data: [] })
 
     const result = await cancelBooking(VALID)
 
@@ -102,7 +175,7 @@ describe('cancelBooking', () => {
   })
 
   it('explains that an already-finished booking cannot be cancelled', async () => {
-    rpc.mockResolvedValue({
+    underLimit({
       data: null,
       error: {
         code: 'P0002',
@@ -116,10 +189,7 @@ describe('cancelBooking', () => {
   })
 
   it('does not leak the database error text to the customer', async () => {
-    rpc.mockResolvedValue({
-      data: null,
-      error: { code: 'XX000', message: 'relation does not exist' },
-    })
+    underLimit({ data: null, error: { code: 'XX000', message: 'relation does not exist' } })
 
     const result = await cancelBooking(VALID)
 

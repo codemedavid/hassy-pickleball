@@ -46,3 +46,25 @@ export function toDayStringInZone(date: Date, timeZone: string): string {
 
   return `${lookup('year')}-${lookup('month')}-${lookup('day')}`
 }
+
+const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * The calendar day to use for a raw search param.
+ *
+ * An unvalidated day reaches `new Date()` and renders as "Invalid Date" in the
+ * page heading, while the slot grid separately reports the parse failure — two
+ * different symptoms of one bad param. Normalising here gives one.
+ */
+export function parseDayString(value: string | undefined, fallback: string): string {
+  if (value === undefined || !DAY_PATTERN.test(value)) {
+    return fallback
+  }
+
+  // The shape can match a day that does not exist, e.g. "2026-13-45".
+  const parsed = new Date(`${value}T00:00:00Z`)
+
+  return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value
+    ? fallback
+    : value
+}

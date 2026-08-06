@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDayInZone, formatTimeInZone, toDayStringInZone } from './time'
+import { formatDayInZone, formatTimeInZone, parseDayString, toDayStringInZone } from './time'
 
 const MANILA = 'Asia/Manila'
 
@@ -53,5 +53,29 @@ describe('toDayStringInZone', () => {
     expect(toDayStringInZone(new Date('2026-03-16T02:00:00Z'), MANILA)).toMatch(
       /^\d{4}-\d{2}-\d{2}$/,
     )
+  })
+})
+
+describe('parseDayString', () => {
+  it('keeps a well-formed day', () => {
+    expect(parseDayString('2026-03-01', '2026-01-01')).toBe('2026-03-01')
+  })
+
+  it('falls back when the day is missing', () => {
+    expect(parseDayString(undefined, '2026-01-01')).toBe('2026-01-01')
+  })
+
+  // An unvalidated day reaches `new Date()` and renders "Invalid Date" in the
+  // page heading while the slot grid separately reports the error.
+  it('falls back for a malformed day rather than producing an invalid date', () => {
+    expect(parseDayString('not-a-day', '2026-01-01')).toBe('2026-01-01')
+  })
+
+  it('falls back for a shape that matches but is not a real date', () => {
+    expect(parseDayString('2026-13-45', '2026-01-01')).toBe('2026-01-01')
+  })
+
+  it('falls back for a day carrying extra path or query characters', () => {
+    expect(parseDayString('2026-03-01?x=1', '2026-01-01')).toBe('2026-01-01')
   })
 })

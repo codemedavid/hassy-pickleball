@@ -33,6 +33,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = public
+as $$
 declare
   v_customer_id uuid;
 begin

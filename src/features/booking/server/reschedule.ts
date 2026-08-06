@@ -1,5 +1,15 @@
 import 'server-only'
 
+import {
+  firstRow,
+  ILLEGAL_TRANSITION,
+  NO_MATCH,
+  SLOT_TAKEN_CODES,
+  toSummary,
+  underLookupLimit,
+  type BookingRpcRow,
+  type BookingSummary,
+} from './booking-summary'
 import { err, ok, type Result } from '@/lib/api/result'
 import { rescheduleBookingSchema } from '@/lib/api/schemas'
 import { quoteSelections } from '@/lib/api/quote'
@@ -8,9 +18,9 @@ import { findClubById } from '@/lib/repositories/clubs'
 import { listActiveCourts } from '@/lib/repositories/courts'
 import { findCustomerByEmail } from '@/lib/repositories/customers'
 import { listActivePricingRules } from '@/lib/repositories/pricing-rules'
+import { RATE_LIMITED_CODE } from '@/lib/security/rate-limit'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { callPendingRpc } from '@/lib/supabase/rpc'
-import type { BookingSummary } from './lifecycle'
 
 /**
  * Moving an existing booking to a new time.
@@ -24,22 +34,6 @@ import type { BookingSummary } from './lifecycle'
  * booking is never left holding half its old slots and half its new ones.
  */
 
-/** Raised by the RPC for a cancelled or completed booking. */
-const ILLEGAL_TRANSITION = 'P0002'
-/** Exclusion violation, or the RPC's own raise for an empty request. */
-const SLOT_TAKEN_CODES = new Set(['23P01', 'P0001'])
-
-/** Identical for a wrong reference and a wrong email, so neither is probeable. */
-const NO_MATCH = 'No booking matches that reference and email'
-
-type BookingRpcRow = { reference: string; status: string; total_cents: number }
-
-function firstRow(data: unknown): BookingRpcRow | null {
-  const rows = Array.isArray(data) ? data : [data]
-
-  return (rows[0] as BookingRpcRow | undefined) ?? null
-}
-
 export async function rescheduleBooking(input: unknown): Promise<Result<BookingSummary>> {
   const parsed = rescheduleBookingSchema.safeParse(input)
 
@@ -50,16 +44,10 @@ export async function rescheduleBooking(input: unknown): Promise<Result<BookingS
   const { reference, email, courts } = parsed.data
   const client = createSupabaseAdminClient()
 
-  // Rate limited on the same counter as the lookup: this endpoint authenticates
-  // on the same two fields and is therefore just as enumerable.
-  const { data: underLimit } = await callPendingRpc<'record_lookup_attempt', boolean>(
-    client,
-    'record_lookup_attempt',
-    { p_identity: email },
-  )
-
-  if (underLimit === false) {
-    return err('Too many attempts. Please wait a few minutes and try again.', 'RATE_LIMITED')
+  // Metered on the same counter as the lookup: this endpoint authenticates on
+  // the same two fields and is therefore just as enumerable.
+  if (!(await underLookupLimit(email))) {
+    return err('Too many attempts. Please wait a few minutes and try again.', RATE_LIMITED_CODE)
   }
 
   try {
@@ -125,11 +113,7 @@ export async function rescheduleBooking(input: unknown): Promise<Result<BookingS
       return err(NO_MATCH, 'NOT_FOUND')
     }
 
-    return ok({
-      reference: updated.reference,
-      status: updated.status,
-      totalCents: updated.total_cents,
-    })
+    return ok(toSummary(updated))
   } catch {
     // An unknown court id throws out of quoteSelections; nothing here is
     // information the customer can act on beyond retrying.

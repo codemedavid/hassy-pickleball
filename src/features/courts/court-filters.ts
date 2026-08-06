@@ -23,6 +23,16 @@ export function isCourtFilterId(value: string): boolean {
 }
 
 /**
+ * The filter id to use for a raw search param.
+ *
+ * Called once at the page boundary so the value echoed back into every link on
+ * the page is one we recognise, rather than whatever the URL happened to carry.
+ */
+export function parseCourtFilter(value: string | undefined): string {
+  return value !== undefined && isCourtFilterId(value) ? value : 'all'
+}
+
+/**
  * An unrecognised id shows everything rather than an empty page — a stale
  * bookmark or hand-edited query should degrade to the full list.
  */

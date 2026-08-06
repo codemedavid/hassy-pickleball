@@ -33,6 +33,9 @@ export const club: Club = {
   slotMinutes: 30,
   minDurationMinutes: 60,
   maxDurationMinutes: 180,
+  phone: null,
+  cancellationWindowHours: 24,
+  groupBookingNote: null,
 }
 
 export function makeCourt(overrides: Partial<Court> & { id: string }): Court {
@@ -44,7 +47,7 @@ export function makeCourt(overrides: Partial<Court> & { id: string }): Court {
     environment: 'indoor',
     isTournamentGrade: false,
     blurb: null,
-    notes: null,
+    notes: [],
     tags: [],
     includes: [],
     heroImageUrl: null,

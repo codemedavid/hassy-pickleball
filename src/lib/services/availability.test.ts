@@ -13,6 +13,9 @@ const club: Club = {
   slotMinutes: 60,
   minDurationMinutes: 60,
   maxDurationMinutes: 240,
+  phone: '(555) 019-8842',
+  cancellationWindowHours: 12,
+  groupBookingNote: null,
 }
 
 const court = {

@@ -13,7 +13,7 @@ function court(overrides: Partial<Court> = {}): Court {
     environment: 'indoor',
     isTournamentGrade: false,
     blurb: 'Our show court.',
-    notes: null,
+    notes: [],
     tags: ['Seating'],
     includes: ['Net and posts'],
     heroImageUrl: null,

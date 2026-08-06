@@ -1,12 +1,10 @@
 import { notFound } from 'next/navigation'
-import { getAvailability } from '@/features/booking/server/availability'
-import { CourtsBrowse } from '@/features/courts/courts-browse'
+import { countOpenSlots } from '@/features/booking/server/open-slots'
+import { loadCatalog } from '@/features/courts/catalog'
+import { parseCourtFilter } from '@/features/courts/court-filters'
 import { parseCourtLayout } from '@/features/courts/court-layout'
+import { CourtsBrowse } from '@/features/courts/courts-browse'
 import { toDayStringInZone } from '@/lib/format/time'
-import { findClubBySlug } from '@/lib/repositories/clubs'
-import { listActiveCourts } from '@/lib/repositories/courts'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import type { Club } from '@/lib/repositories/mappers'
 
 /** Single-club deployment for now; the schema is multi-club ready. */
 const CLUB_SLUG = 'baseline'
@@ -16,53 +14,37 @@ type HomePageProps = {
 }
 
 /**
- * How many start times are still free today, per court.
+ * The storefront catalog at the site root.
  *
- * Counted at the club's shortest bookable session, which is the most openings
- * a court can offer. Availability is a privileged read that can fail on its
- * own; when it does the catalog still renders, just without the counts — a
- * wrong "fully booked" would cost a booking.
- */
-async function countOpenSlotsToday(club: Club): Promise<Record<string, number> | undefined> {
-  const availability = await getAvailability({
-    clubId: club.id,
-    day: toDayStringInZone(new Date(), club.timeZone),
-    durationMinutes: club.minDurationMinutes,
-  })
-
-  if (!availability.success) {
-    return undefined
-  }
-
-  return Object.fromEntries(availability.data.map((court) => [court.courtId, court.openCount]))
-}
-
-/**
- * The storefront, served at the root so the catalog is the first thing a
- * visitor sees. Courts are public catalog data, readable under the
- * `courts_public_read` policy with the anon key, so this stays a Server
- * Component with no client fetch.
+ * Server Component with no client fetch. The catalog half is cached — the same
+ * public rows for every visitor — while today's open-slot counts are read
+ * fresh, because a stale availability count sells a slot that is already gone.
+ *
+ * Both search params are normalised here rather than passed through raw: each
+ * one is echoed back into every link on the page.
  */
 export default async function HomePage({ searchParams }: HomePageProps) {
   const { filter, layout } = await searchParams
-  const client = await createSupabaseServerClient()
 
-  const club = await findClubBySlug(client, CLUB_SLUG)
+  const catalog = await loadCatalog(CLUB_SLUG)
 
-  if (!club) {
+  if (!catalog) {
     notFound()
   }
 
-  const [courts, openSlotsByCourt] = await Promise.all([
-    listActiveCourts(client, club.id),
-    countOpenSlotsToday(club),
-  ])
+  const { club, courts } = catalog
+
+  const openSlotsByCourt = await countOpenSlots({
+    club,
+    courtIds: courts.map((court) => court.id),
+    day: toDayStringInZone(new Date(), club.timeZone),
+  })
 
   return (
     <CourtsBrowse
       club={club}
       courts={courts}
-      filter={filter}
+      filter={parseCourtFilter(filter)}
       layout={parseCourtLayout(layout)}
       openSlotsByCourt={openSlotsByCourt}
     />

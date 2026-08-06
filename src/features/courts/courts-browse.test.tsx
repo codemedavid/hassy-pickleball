@@ -15,6 +15,9 @@ function club(overrides: Partial<Club> = {}): Club {
     slotMinutes: 30,
     minDurationMinutes: 60,
     maxDurationMinutes: 180,
+    phone: '(555) 019-8842',
+    cancellationWindowHours: 12,
+    groupBookingNote: null,
     ...overrides,
   }
 }
@@ -29,7 +32,7 @@ function court(overrides: Partial<Court> = {}): Court {
     environment: 'indoor',
     isTournamentGrade: false,
     blurb: 'Our show court.',
-    notes: null,
+    notes: [],
     tags: [],
     includes: [],
     heroImageUrl: null,

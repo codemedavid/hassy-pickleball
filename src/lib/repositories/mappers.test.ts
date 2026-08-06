@@ -12,8 +12,11 @@ describe('toClub', () => {
       opens_at: '06:00:00',
       closes_at: '22:00:00',
       slot_minutes: 30,
-      min_duration_minutes: 60,
+      min_duration_minutes: 30,
       max_duration_minutes: 240,
+      phone: '(555) 019-8842',
+      cancellation_window_hours: 12,
+      group_booking_note: 'Book two adjacent courts and we will set up the divider net.',
     })
 
     expect(club).toEqual({
@@ -25,9 +28,35 @@ describe('toClub', () => {
       opensAt: '06:00:00',
       closesAt: '22:00:00',
       slotMinutes: 30,
-      minDurationMinutes: 60,
+      minDurationMinutes: 30,
       maxDurationMinutes: 240,
+      phone: '(555) 019-8842',
+      cancellationWindowHours: 12,
+      groupBookingNote: 'Book two adjacent courts and we will set up the divider net.',
     })
+  })
+
+  it('keeps the optional contact and group-booking copy null rather than inventing it', () => {
+    // Arrange — a club that has not filled in the storefront extras yet.
+    const club = toClub({
+      id: 'club-2',
+      name: 'Quiet Club',
+      slug: 'quiet',
+      timezone: 'Asia/Manila',
+      currency: 'PHP',
+      opens_at: '06:00:00',
+      closes_at: '22:00:00',
+      slot_minutes: 30,
+      min_duration_minutes: 30,
+      max_duration_minutes: 240,
+      phone: null,
+      cancellation_window_hours: 12,
+      group_booking_note: null,
+    })
+
+    // Assert — the page decides what to hide; the mapper never fabricates copy.
+    expect(club.phone).toBeNull()
+    expect(club.groupBookingNote).toBeNull()
   })
 })
 
@@ -41,7 +70,7 @@ describe('toCourt', () => {
     environment: 'indoor' as const,
     is_tournament_grade: true,
     blurb: 'Show court',
-    notes: null,
+    notes: ['Non-marking shoes required'],
     tags: ['Tournament'],
     includes: ['Net and posts'],
     hero_image_url: null,
@@ -71,14 +100,25 @@ describe('toCourt', () => {
   })
 
   it('substitutes empty arrays when array columns are null', () => {
-    const court = toCourt({ ...row, tags: null, includes: null })
+    const court = toCourt({ ...row, tags: null, includes: null, notes: null })
 
     expect(court.tags).toEqual([])
     expect(court.includes).toEqual([])
+    expect(court.notes).toEqual([])
   })
 
-  it('keeps nullable text columns null rather than coercing to empty string', () => {
-    expect(toCourt(row).notes).toBeNull()
+  it('keeps each "good to know" note a separate entry so the page can list them', () => {
+    // Arrange — the design renders one line per note, not one paragraph.
+    const court = toCourt({
+      ...row,
+      notes: ['Lights on automatically after 7pm', 'Play may pause in heavy rain'],
+    })
+
+    // Assert
+    expect(court.notes).toEqual([
+      'Lights on automatically after 7pm',
+      'Play may pause in heavy rain',
+    ])
   })
 })
 

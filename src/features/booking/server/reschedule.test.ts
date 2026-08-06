@@ -198,3 +198,32 @@ describe('rescheduleBooking', () => {
     })
   })
 })
+
+describe('rescheduleBooking rate limiting', () => {
+  // Reschedule authenticates on the same reference + email pair as the lookup,
+  // so a limiter that fails open hands an attacker unlimited attempts.
+  it('refuses when the limiter itself errors', async () => {
+    rpc.mockImplementation((name: string) =>
+      name === 'record_lookup_attempt'
+        ? Promise.resolve({ data: null, error: { message: 'function does not exist' } })
+        : Promise.resolve({ data: [RESCHEDULED_ROW], error: null }),
+    )
+
+    const result = await rescheduleBooking(VALID)
+
+    expect(result).toMatchObject({ success: false, code: 'RATE_LIMITED' })
+    expect(rpc).not.toHaveBeenCalledWith('reschedule_booking', expect.anything())
+  })
+
+  it('refuses when the limiter returns nothing', async () => {
+    rpc.mockImplementation((name: string) =>
+      name === 'record_lookup_attempt'
+        ? Promise.resolve({ data: null, error: null })
+        : Promise.resolve({ data: [RESCHEDULED_ROW], error: null }),
+    )
+
+    const result = await rescheduleBooking(VALID)
+
+    expect(result).toMatchObject({ success: false, code: 'RATE_LIMITED' })
+  })
+})

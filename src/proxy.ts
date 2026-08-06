@@ -9,7 +9,21 @@ import { readPublicEnv } from '@/lib/env'
  *
  * Named `proxy` in src/proxy.ts — Next.js 16 renamed the middleware entry point.
  */
+/**
+ * Supabase writes its session to `sb-<ref>-auth-token`. A caller with no such
+ * cookie has no session to refresh, and getUser() is a network round trip to
+ * the auth server — paid on every request, including anonymous ones, if we do
+ * not check first.
+ */
+function hasSessionCookie(request: NextRequest): boolean {
+  return request.cookies.getAll().some((cookie) => cookie.name.startsWith('sb-'))
+}
+
 export async function proxy(request: NextRequest) {
+  if (!hasSessionCookie(request)) {
+    return NextResponse.next({ request })
+  }
+
   const env = readPublicEnv()
   let response = NextResponse.next({ request })
 

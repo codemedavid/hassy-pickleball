@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { COURT_FILTERS, filterCourts, isCourtFilterId } from './court-filters'
+import { COURT_FILTERS, filterCourts, isCourtFilterId, parseCourtFilter } from './court-filters'
 import type { Court } from '@/lib/repositories/mappers'
 
 function court(overrides: Partial<Court> = {}): Court {
@@ -12,7 +12,7 @@ function court(overrides: Partial<Court> = {}): Court {
     environment: 'indoor',
     isTournamentGrade: false,
     blurb: null,
-    notes: null,
+    notes: [],
     tags: [],
     includes: [],
     heroImageUrl: null,
@@ -83,5 +83,25 @@ describe('isCourtFilterId', () => {
 
   it('rejects an unknown filter id', () => {
     expect(isCourtFilterId('nonsense')).toBe(false)
+  })
+})
+
+describe('parseCourtFilter', () => {
+  it('keeps a recognised filter id', () => {
+    expect(parseCourtFilter('indoor')).toBe('indoor')
+  })
+
+  it('falls back to all when the id is missing', () => {
+    expect(parseCourtFilter(undefined)).toBe('all')
+  })
+
+  // The raw search param is echoed back into every link on the page, so an
+  // unrecognised value must not survive the round trip.
+  it('falls back to all for an unrecognised id', () => {
+    expect(parseCourtFilter('javascript:alert(1)')).toBe('all')
+  })
+
+  it('falls back to all for an id that only looks like a filter', () => {
+    expect(parseCourtFilter('INDOOR')).toBe('all')
   })
 })

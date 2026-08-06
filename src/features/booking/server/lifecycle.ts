@@ -1,7 +1,17 @@
 import 'server-only'
 
+import {
+  firstRow,
+  ILLEGAL_TRANSITION,
+  NO_MATCH,
+  toSummary,
+  underLookupLimit,
+  type BookingRpcRow,
+  type BookingSummary,
+} from './booking-summary'
 import { err, ok, type Result } from '@/lib/api/result'
 import { bookingLookupSchema } from '@/lib/api/schemas'
+import { RATE_LIMITED_CODE } from '@/lib/security/rate-limit'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { callPendingRpc } from '@/lib/supabase/rpc'
 
@@ -10,32 +20,13 @@ import { callPendingRpc } from '@/lib/supabase/rpc'
  *
  * Both authenticate on reference + email and run through service_role RPCs,
  * because a policy that let anon read by reference alone would expose every
- * booking to anyone who could guess one.
+ * booking to anyone who could guess one. Both are therefore equally enumerable
+ * and both are metered — cancellation more so, since it also mutates state.
  */
 
-export type BookingSummary = {
-  readonly reference: string
-  readonly status: string
-  readonly totalCents: number
-}
+export type { BookingSummary }
 
-/** Raised by cancel_booking / reschedule_booking for an illegal transition. */
-const ILLEGAL_TRANSITION = 'P0002'
-
-/** Deliberately identical for a wrong reference and a wrong email. */
-const NO_MATCH = 'No booking matches that reference and email'
-
-type BookingRpcRow = { reference: string; status: string; total_cents: number }
-
-function toSummary(row: BookingRpcRow): BookingSummary {
-  return { reference: row.reference, status: row.status, totalCents: row.total_cents }
-}
-
-function firstRow(data: unknown): BookingRpcRow | null {
-  const rows = Array.isArray(data) ? data : [data]
-
-  return (rows[0] as BookingRpcRow | undefined) ?? null
-}
+const TOO_MANY = 'Too many attempts. Please wait a few minutes and try again.'
 
 export async function findBooking(input: unknown): Promise<Result<BookingSummary>> {
   const parsed = bookingLookupSchema.safeParse(input)
@@ -44,19 +35,11 @@ export async function findBooking(input: unknown): Promise<Result<BookingSummary
     return err('Check your reference and email address', 'INVALID')
   }
 
-  const client = createSupabaseAdminClient()
-
-  // Counted before the lookup runs, so exhausting the limit keeps it exhausted
-  // rather than letting a blocked caller decay back under it.
-  const { data: underLimit } = await callPendingRpc<'record_lookup_attempt', boolean>(
-    client,
-    'record_lookup_attempt',
-    { p_identity: parsed.data.email },
-  )
-
-  if (underLimit === false) {
-    return err('Too many lookups. Please wait a few minutes and try again.', 'RATE_LIMITED')
+  if (!(await underLookupLimit(parsed.data.email))) {
+    return err(TOO_MANY, RATE_LIMITED_CODE)
   }
+
+  const client = createSupabaseAdminClient()
 
   const { data, error } = await client.rpc('find_booking_by_reference', {
     p_reference: parsed.data.reference,
@@ -77,6 +60,10 @@ export async function cancelBooking(input: unknown): Promise<Result<BookingSumma
 
   if (!parsed.success) {
     return err('Check your reference and email address', 'INVALID')
+  }
+
+  if (!(await underLookupLimit(parsed.data.email))) {
+    return err(TOO_MANY, RATE_LIMITED_CODE)
   }
 
   const client = createSupabaseAdminClient()

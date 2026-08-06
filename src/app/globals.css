@@ -12,6 +12,10 @@
   --color-navy-mid: #1d4e89;
   --color-slate: #3c5570;
   --color-lime: #dff56b;
+  /* LIME_D in the design — the border on a selected slot or add-on. */
+  --color-lime-deep: #c3dc4a;
+  /* The tint behind a chosen add-on row. */
+  --color-lime-soft: #fbffee;
   --color-olive: #7c9a00;
 
   /* Text */

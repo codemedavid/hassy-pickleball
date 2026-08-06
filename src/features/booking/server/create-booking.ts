@@ -8,7 +8,7 @@ import { listActiveCourts } from '@/lib/repositories/courts'
 import { findCustomerByEmail } from '@/lib/repositories/customers'
 import { listActivePricingRules } from '@/lib/repositories/pricing-rules'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import type { BookingSummary } from './lifecycle'
+import { SLOT_TAKEN_CODES, type BookingSummary } from './booking-summary'
 
 /**
  * Booking creation.
@@ -18,9 +18,6 @@ import type { BookingSummary } from './lifecycle'
  * browser. Every price is computed here with the tested engine; any
  * `priceCents` a client sends is dropped by the schema.
  */
-
-/** 23P01 is the exclusion-constraint violation; P0001 the RPC's own raise. */
-const SLOT_TAKEN_CODES = new Set(['23P01', 'P0001'])
 
 export async function createBooking(input: unknown): Promise<Result<BookingSummary>> {
   const parsed = createBookingSchema.safeParse(input)

@@ -51,7 +51,3 @@ export async function getCurrentStaff(): Promise<StaffMember | null> {
     fullName: data.full_name,
   }
 }
-
-export async function requireStaff(): Promise<StaffMember | null> {
-  return getCurrentStaff()
-}
