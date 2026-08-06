@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Bricolage_Grotesque, DM_Sans } from 'next/font/google'
+import { SiteHeader } from '@/components/site-header'
 import { CartProvider } from '@/features/cart/cart-provider'
 import './globals.css'
 
@@ -27,7 +28,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {/* The cart is read from localStorage, so it must live on the client
             side of the tree. It wraps everything so a customer's selections
             survive navigation between courts. */}
-        <CartProvider>{children}</CartProvider>
+        <CartProvider>
+          <SiteHeader />
+          {children}
+        </CartProvider>
       </body>
     </html>
   )

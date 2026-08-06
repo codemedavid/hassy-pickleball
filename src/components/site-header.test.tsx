@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import { SiteHeader } from './site-header'
 import { CartProvider, useCart } from '@/features/cart/cart-provider'
+import { resetCartSnapshot } from '@/features/cart/cart-store'
 import type { CartItem, CourtSelection } from '@/lib/domain/types'
 
 function selection(overrides: Partial<CourtSelection> = {}): CourtSelection {
@@ -52,6 +53,9 @@ function renderHeader() {
 
 afterEach(() => {
   window.localStorage.clear()
+  // The store caches its snapshot module-side; clearing storage alone would
+  // leak one test's cart into the next.
+  resetCartSnapshot()
 })
 
 describe('SiteHeader', () => {
