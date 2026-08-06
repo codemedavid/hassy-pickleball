@@ -36,8 +36,10 @@ function fakeFetch(response: Response) {
 }
 
 /** The request body ImageKit received, decoded back into a plain object. */
-async function sentFields(fetchMock: ReturnType<typeof fakeFetch>): Promise<Record<string, string>> {
-  const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+async function sentFields(
+  fetchMock: ReturnType<typeof fakeFetch>,
+): Promise<Record<string, string>> {
+  const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
   const form = init.body as FormData
   const entries: Record<string, string> = {}
 
@@ -92,7 +94,7 @@ describe('uploadImage', () => {
       fetchMock,
     )
 
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
     const header = new Headers(init.headers).get('authorization') ?? ''
     const [scheme, encoded] = header.split(' ')
 
@@ -233,7 +235,7 @@ describe('deleteImage', () => {
     const result = await deleteImage('file-123', fetchMock)
 
     expect(result.success).toBe(true)
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
     expect(url).toContain('/v1/files/file-123')
     expect(init.method).toBe('DELETE')
   })

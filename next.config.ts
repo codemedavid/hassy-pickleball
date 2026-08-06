@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next'
 
-type RemotePatterns = NonNullable<NextConfig['images']>['remotePatterns']
+type RemotePatterns = NonNullable<NonNullable<NextConfig['images']>['remotePatterns']>
 
 /**
  * Images now come from ImageKit, but rows seeded before the move still point at

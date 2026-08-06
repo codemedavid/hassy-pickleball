@@ -1,56 +1,62 @@
 import 'server-only'
 
 import { err, ok, type Result } from '@/lib/api/result'
-import type { Client } from '@/lib/repositories/support'
+import { buildPaymentProofPath } from '@/lib/domain/payment-proof'
+import { signStoredImageUrl, uploadImage } from '@/lib/imagekit/client'
 
 /**
- * Uploads to the private `payment-proofs` bucket.
+ * Where proofs of payment live.
  *
- * Private, and written only from here on the service-role client: a bucket a
- * browser can write to directly is an anonymous file drop. The desk reads a
- * proof back through a signed URL.
+ * Uploaded private and written only from here on the server: a store a browser
+ * can write to directly is an anonymous file drop. The desk reads a proof back
+ * through a signed URL that expires, because the image is a photograph of
+ * someone's banking app and a permanent link to one is a liability.
  */
 
-export const PAYMENT_PROOF_BUCKET = 'payment-proofs'
-
-/** How long a link to a proof stays valid when staff open one. */
-const SIGNED_URL_TTL_SECONDS = 300
+export const PAYMENT_PROOF_FOLDER = '/payment-proofs'
 
 export type ProofUpload = {
-  readonly path: string
+  /** Booking reference, e.g. `PB-4G6JVH`. Names the folder. */
+  readonly reference: string
+  readonly extension: string
   readonly contentType: string
   readonly body: ArrayBuffer
 }
 
-/** Returns the stored object key, or the reason it could not be stored. */
-export async function uploadPaymentProof(
-  client: Client,
-  upload: ProofUpload,
-): Promise<Result<string>> {
-  const { error } = await client.storage
-    .from(PAYMENT_PROOF_BUCKET)
-    .upload(upload.path, upload.body, {
-      contentType: upload.contentType,
-      // One proof per booking: re-submitting replaces rather than accumulating.
-      upsert: true,
-    })
+/** Returns the stored path, or the reason it could not be stored. */
+export async function uploadPaymentProof(upload: ProofUpload): Promise<Result<string>> {
+  // Throws on anything that is not a reference we issued. Deliberately ahead of
+  // the upload: this string decides which folder gets written to.
+  const relativePath = buildPaymentProofPath(upload.reference, upload.extension)
+  const [folder, fileName] = splitPath(relativePath)
 
-  if (error) {
-    return err(error.message, 'STORAGE_ERROR')
+  const stored = await uploadImage({
+    folder: `${PAYMENT_PROOF_FOLDER}/${folder}`,
+    fileName,
+    contentType: upload.contentType,
+    body: upload.body,
+    isPrivate: true,
+  })
+
+  if (!stored.success) {
+    return err(stored.error, stored.code)
   }
 
-  return ok(upload.path)
+  return ok(stored.data.path)
 }
 
 /** A time-boxed link for staff reviewing a payment in the admin console. */
-export async function signPaymentProofUrl(client: Client, path: string): Promise<Result<string>> {
-  const { data, error } = await client.storage
-    .from(PAYMENT_PROOF_BUCKET)
-    .createSignedUrl(path, SIGNED_URL_TTL_SECONDS)
+export function signPaymentProofUrl(path: string): Result<string> {
+  return signStoredImageUrl(path)
+}
 
-  if (error || !data) {
-    return err(error?.message ?? 'Could not open that proof', 'STORAGE_ERROR')
-  }
+/**
+ * `PB-4G6JVH/proof.png` -> folder and file name, which the upload API takes
+ * separately. Safe to split on the last slash: the path came from
+ * buildPaymentProofPath, which produces exactly one.
+ */
+function splitPath(path: string): readonly [string, string] {
+  const index = path.lastIndexOf('/')
 
-  return ok(data.signedUrl)
+  return [path.slice(0, index), path.slice(index + 1)]
 }

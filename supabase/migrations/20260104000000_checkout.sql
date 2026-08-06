@@ -53,25 +53,13 @@ create policy payment_methods_staff_write on payment_methods
   with check (is_club_admin(club_id));
 
 -- ---------------------------------------------------------------------------
--- The proof itself. A storage object key, not a URL: the bucket is private, so
--- the desk views it through a signed URL rather than a guessable public link.
--- ---------------------------------------------------------------------------
-alter table payments add column proof_url text;
-
--- ---------------------------------------------------------------------------
--- Private bucket for the screenshots.
+-- The proof itself. An ImageKit file path, not a URL: the file is uploaded
+-- private, so the desk views it through a signed link that expires rather than
+-- a guessable permanent one.
 --
--- No storage policies are granted to anon or authenticated on purpose: uploads
--- go through the checkout server action on the service-role client, which has
--- already validated the file's type and size. A bucket a browser can write to
+-- Images live in ImageKit rather than Supabase Storage, so there is no bucket
+-- to create here. Uploads go through the checkout server action, which has
+-- already validated the file's type and size — a store a browser can write to
 -- directly is an open file drop.
 -- ---------------------------------------------------------------------------
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'payment-proofs',
-  'payment-proofs',
-  false,
-  5242880,
-  array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
-)
-on conflict (id) do nothing;
+alter table payments add column proof_url text;

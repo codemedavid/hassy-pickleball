@@ -4,11 +4,7 @@ import { uploadPaymentProof } from './proof-storage'
 import { createBooking, type CreatedBooking } from '@/features/booking/server/create-booking'
 import { err, ok, type Result } from '@/lib/api/result'
 import { checkoutSchema } from '@/lib/api/schemas'
-import {
-  buildPaymentProofPath,
-  validatePaymentProof,
-  type ProofFile,
-} from '@/lib/domain/payment-proof'
+import { validatePaymentProof, type ProofFile } from '@/lib/domain/payment-proof'
 import { findActivePaymentMethod } from '@/lib/repositories/payment-methods'
 import { attachPaymentProof } from '@/lib/repositories/payments'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
@@ -157,8 +153,9 @@ async function storeProof(
   extension: string,
 ): Promise<boolean> {
   try {
-    const stored = await uploadPaymentProof(client, {
-      path: buildPaymentProofPath(booking.reference, extension),
+    const stored = await uploadPaymentProof({
+      reference: booking.reference,
+      extension,
       contentType: proof.type,
       body: await proof.arrayBuffer(),
     })

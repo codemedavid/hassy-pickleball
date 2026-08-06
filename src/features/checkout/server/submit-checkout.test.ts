@@ -93,7 +93,10 @@ beforeEach(() => {
   vi.clearAllMocks()
   findActivePaymentMethod.mockResolvedValue(GCASH)
   createBooking.mockResolvedValue({ success: true, data: BOOKING })
-  uploadPaymentProof.mockResolvedValue({ success: true, data: 'PB-4G6JVH/proof.png' })
+  uploadPaymentProof.mockResolvedValue({
+    success: true,
+    data: '/payment-proofs/PB-4G6JVH/proof.png',
+  })
   attachPaymentProof.mockResolvedValue(undefined)
 })
 
@@ -160,13 +163,17 @@ describe('submitCheckout', () => {
     await submitCheckout(formDataFor(order(), proofFile()))
 
     expect(uploadPaymentProof).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ path: 'PB-4G6JVH/proof.png', contentType: 'image/png' }),
+      expect.objectContaining({
+        reference: 'PB-4G6JVH',
+        extension: 'png',
+        contentType: 'image/png',
+      }),
     )
+    // The payment row records whatever path the store came back with.
     expect(attachPaymentProof).toHaveBeenCalledWith(
       expect.anything(),
       'booking-1',
-      'PB-4G6JVH/proof.png',
+      '/payment-proofs/PB-4G6JVH/proof.png',
     )
   })
 

@@ -38,9 +38,7 @@ export function signImageUrl(input: SignatureInput): string {
 
   // The digest covers the path as it appears *after* the endpoint, which is
   // why the URL is assembled from the same normalised parts that are signed.
-  const signature = createHmac('sha1', input.privateKey)
-    .update(`${path}${expiry}`)
-    .digest('hex')
+  const signature = createHmac('sha1', input.privateKey).update(`${path}${expiry}`).digest('hex')
 
   return `${endpoint}/${path}?ik-t=${expiry}&ik-s=${signature}`
 }
