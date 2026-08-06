@@ -1,14 +1,22 @@
 import type { NextConfig } from 'next'
 
-/**
- * Court hero images are uploaded to Supabase Storage, so their host is the
- * project URL. next/image refuses to optimise a remote host that is not listed
- * here — without this entry, any court with a hero image throws at render and
- * takes the catalog down with it.
- */
-function supabaseImageHost(): NonNullable<NextConfig['images']>['remotePatterns'] {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+type RemotePatterns = NonNullable<NextConfig['images']>['remotePatterns']
 
+/**
+ * Images now come from ImageKit, but rows seeded before the move still point at
+ * Supabase Storage. next/image refuses to optimise a remote host that is not
+ * listed here — an unlisted host throws at render and takes the catalog down
+ * with it — so both hosts stay allowlisted until the seed data is backfilled.
+ */
+function supabaseImageHost(): RemotePatterns {
+  return hostPattern(process.env.NEXT_PUBLIC_SUPABASE_URL, '/storage/v1/object/public/**')
+}
+
+function imagekitImageHost(): RemotePatterns {
+  return hostPattern(process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT, '/**')
+}
+
+function hostPattern(url: string | undefined, pathname: string): RemotePatterns {
   if (!url) {
     return []
   }
@@ -20,7 +28,7 @@ function supabaseImageHost(): NonNullable<NextConfig['images']>['remotePatterns'
       {
         protocol: protocol.replace(':', '') as 'http' | 'https',
         hostname,
-        pathname: '/storage/v1/object/public/**',
+        pathname,
       },
     ]
   } catch {
@@ -31,7 +39,19 @@ function supabaseImageHost(): NonNullable<NextConfig['images']>['remotePatterns'
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: supabaseImageHost(),
+    remotePatterns: [...supabaseImageHost(), ...imagekitImageHost()],
+  },
+
+  /**
+   * Payment proofs are allowed up to 5 MB and ride to the server inside a
+   * server action, whose body defaults to a 1 MB cap — a phone screenshot would
+   * be refused by the framework before any of our own validation ran. Sized
+   * just above MAX_PROOF_BYTES so the message a guest sees is ours.
+   */
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '6mb',
+    },
   },
 
   /**
