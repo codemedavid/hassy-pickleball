@@ -1,37 +1,40 @@
 'use server'
 
+import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { err, ok, type Result } from '@/lib/api/result'
+import { err, ok, type Err, type Result } from '@/lib/api/result'
 
-const signInSchema = z.object({ email: z.email() })
+const credentialsSchema = z.object({
+  email: z.email('Enter a valid email address'),
+  password: z.string().min(1, 'Enter your password'),
+})
 
 /**
- * Staff sign-in by magic link.
+ * Staff sign-in with an email address and password.
  *
- * Succeeds with the same message whether or not the address belongs to a staff
- * member, so this cannot be used to enumerate staff emails. Authorisation is
- * decided later by getCurrentStaff() and by RLS, not here.
+ * Every credential failure returns the same message, so this cannot be used to
+ * work out which addresses belong to staff. Authorisation is decided later by
+ * getCurrentStaff() and by RLS, not here — a signed-in user with no staff row
+ * is sent straight back by the /admin layout.
+ *
+ * Returns only on failure: success redirects, and redirect() throws.
  */
-export async function signInWithMagicLink(input: unknown): Promise<Result<{ sent: true }>> {
-  const parsed = signInSchema.safeParse(input)
+export async function signInWithEmailAndPassword(input: unknown): Promise<Err> {
+  const parsed = credentialsSchema.safeParse(input)
 
   if (!parsed.success) {
-    return err('Enter a valid email address', 'INVALID')
+    return err(parsed.error.issues[0].message, 'INVALID')
   }
 
   const client = await createSupabaseServerClient()
-
-  const { error } = await client.auth.signInWithOtp({
-    email: parsed.data.email,
-    options: { shouldCreateUser: false },
-  })
+  const { error } = await client.auth.signInWithPassword(parsed.data)
 
   if (error) {
-    return err('We could not send that link right now', 'AUTH_ERROR')
+    return err('Email or password is incorrect', 'AUTH_ERROR')
   }
 
-  return ok({ sent: true })
+  redirect('/admin')
 }
 
 export async function signOut(): Promise<Result<{ signedOut: true }>> {

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { signInWithMagicLink } from '@/app/actions/auth'
+import { signInWithEmailAndPassword } from '@/app/actions/auth'
 import { StaffSignInForm } from '@/features/admin/ui/staff-sign-in-form'
 import { getCurrentStaff } from '@/lib/auth/staff'
 
@@ -20,11 +20,11 @@ export default async function StaffSignInPage() {
         Staff sign-in
       </h1>
       <p className="mt-0 mb-6 text-[14px] text-muted">
-        We’ll email you a link that signs you into the admin console.
+        Sign in with your work email to reach the admin console.
       </p>
 
       <div className="rounded-[14px] border border-line bg-surface px-6 py-6">
-        <StaffSignInForm onSubmit={signInWithMagicLink} />
+        <StaffSignInForm onSubmit={signInWithEmailAndPassword} />
       </div>
     </main>
   )
