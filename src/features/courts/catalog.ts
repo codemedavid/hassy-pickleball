@@ -3,7 +3,7 @@ import 'server-only'
 import { unstable_cache } from 'next/cache'
 import { findClubBySlug } from '@/lib/repositories/clubs'
 import { listActiveCourts } from '@/lib/repositories/courts'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabasePublicClient } from '@/lib/supabase/public'
 import type { Club, Court } from '@/lib/repositories/mappers'
 
 /**
@@ -30,7 +30,9 @@ const CATALOG_TTL_SECONDS = 300
 export const CATALOG_TAG = 'catalog'
 
 async function readCatalog(slug: string): Promise<Catalog | null> {
-  const client = await createSupabaseServerClient()
+  // Cookie-free by necessity: this runs inside the cache scope below, where
+  // Next.js rejects any read of request state.
+  const client = createSupabasePublicClient()
   const club = await findClubBySlug(client, slug)
 
   if (!club) {
