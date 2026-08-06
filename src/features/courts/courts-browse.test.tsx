@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { CourtsBrowse } from './courts-browse'
 import type { Club, Court } from '@/lib/repositories/mappers'
@@ -87,5 +87,82 @@ describe('CourtsBrowse', () => {
     render(<CourtsBrowse club={club({ currency: 'USD' })} courts={[court()]} />)
 
     expect(screen.getByText(/\$900/)).toBeInTheDocument()
+  })
+
+  it('offers a gallery and a compact view of the same catalog', () => {
+    render(<CourtsBrowse club={club()} courts={[court()]} />)
+
+    const toggle = screen.getByRole('navigation', { name: 'Catalog layout' })
+
+    expect(within(toggle).getByRole('link', { name: 'Gallery' })).toHaveAttribute('href', '/')
+    expect(within(toggle).getByRole('link', { name: 'Compact' })).toHaveAttribute(
+      'href',
+      '/?layout=compact',
+    )
+  })
+
+  it('marks the active layout as the current page for assistive tech', () => {
+    render(<CourtsBrowse club={club()} courts={[court()]} layout="compact" />)
+
+    const toggle = screen.getByRole('navigation', { name: 'Catalog layout' })
+
+    expect(within(toggle).getByRole('link', { name: 'Compact' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    expect(within(toggle).getByRole('link', { name: 'Gallery' })).not.toHaveAttribute(
+      'aria-current',
+    )
+  })
+
+  it('keeps the active filter when switching layout', () => {
+    render(<CourtsBrowse club={club()} courts={[court()]} filter="indoor" />)
+
+    const toggle = screen.getByRole('navigation', { name: 'Catalog layout' })
+
+    expect(within(toggle).getByRole('link', { name: 'Compact' })).toHaveAttribute(
+      'href',
+      '/?filter=indoor&layout=compact',
+    )
+  })
+
+  it('keeps the active layout when switching filter', () => {
+    render(<CourtsBrowse club={club()} courts={[court()]} layout="compact" />)
+
+    const filters = screen.getByRole('navigation', { name: 'Filter courts' })
+
+    expect(within(filters).getByRole('link', { name: 'Indoor' })).toHaveAttribute(
+      'href',
+      '/?filter=indoor&layout=compact',
+    )
+    expect(within(filters).getByRole('link', { name: 'All courts' })).toHaveAttribute(
+      'href',
+      '/?layout=compact',
+    )
+  })
+
+  it('renders the compact row rather than the gallery card in the compact layout', () => {
+    render(<CourtsBrowse club={club()} courts={[court()]} layout="compact" />)
+
+    expect(screen.getByRole('link', { name: 'Book' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /view & book/i })).not.toBeInTheDocument()
+  })
+
+  it('shows each court its own open-slot count', () => {
+    const courts = [
+      court({ id: 'a', slug: 'a', name: 'Court A' }),
+      court({ id: 'b', slug: 'b', name: 'Court B' }),
+    ]
+
+    render(<CourtsBrowse club={club()} courts={courts} openSlotsByCourt={{ a: 5, b: 0 }} />)
+
+    expect(screen.getByText('5 slots open today')).toBeInTheDocument()
+    expect(screen.getByText('Fully booked today')).toBeInTheDocument()
+  })
+
+  it('omits availability for a court the count does not cover', () => {
+    render(<CourtsBrowse club={club()} courts={[court({ id: 'a', slug: 'a' })]} />)
+
+    expect(screen.queryByText(/slots open today/)).not.toBeInTheDocument()
   })
 })

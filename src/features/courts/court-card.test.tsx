@@ -96,4 +96,68 @@ describe('CourtCard', () => {
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
+
+  it('qualifies the rate as per hour so the price is not read as the session total', () => {
+    render(<CourtCard court={court()} />)
+
+    expect(screen.getByText('per hour')).toBeInTheDocument()
+  })
+
+  it('reports how many slots are still open today', () => {
+    render(<CourtCard court={court()} openSlotCount={7} />)
+
+    expect(screen.getByText('7 slots open today')).toBeInTheDocument()
+  })
+
+  it('says "1 slot" rather than "1 slots" for the last opening', () => {
+    render(<CourtCard court={court()} openSlotCount={1} />)
+
+    expect(screen.getByText('1 slot open today')).toBeInTheDocument()
+  })
+
+  it('says a fully booked court is fully booked instead of showing "0 slots"', () => {
+    render(<CourtCard court={court()} openSlotCount={0} />)
+
+    expect(screen.getByText('Fully booked today')).toBeInTheDocument()
+  })
+
+  it('claims nothing about availability when the count could not be loaded', () => {
+    render(<CourtCard court={court()} />)
+
+    expect(screen.queryByText(/slots open today/)).not.toBeInTheDocument()
+    expect(screen.queryByText('Fully booked today')).not.toBeInTheDocument()
+  })
+})
+
+describe('CourtCard, compact layout', () => {
+  it('still names the court as a heading', () => {
+    render(<CourtCard court={court()} layout="compact" />)
+
+    expect(screen.getByRole('heading', { name: 'Court 1 — Center' })).toBeInTheDocument()
+  })
+
+  it('shortens the call to action to fit the row', () => {
+    render(<CourtCard court={court()} layout="compact" />)
+
+    expect(screen.getByRole('link', { name: 'Book' })).toHaveAttribute('href', '/courts/court-1')
+  })
+
+  it('drops the blurb — the compact row trades prose for density', () => {
+    render(<CourtCard court={court()} layout="compact" />)
+
+    expect(screen.queryByText('Our show court.')).not.toBeInTheDocument()
+  })
+
+  it('keeps the rate and the environment visible', () => {
+    render(<CourtCard court={court({ environment: 'outdoor' })} layout="compact" />)
+
+    expect(screen.getByText(/₱900/)).toBeInTheDocument()
+    expect(screen.getByText(/outdoor/i)).toBeInTheDocument()
+  })
+
+  it('reports open slots the same way the gallery card does', () => {
+    render(<CourtCard court={court()} layout="compact" openSlotCount={3} />)
+
+    expect(screen.getByText('3 slots open today')).toBeInTheDocument()
+  })
 })
