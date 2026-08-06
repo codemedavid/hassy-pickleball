@@ -2,47 +2,42 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { StaffSignInForm } from './staff-sign-in-form'
-import { ok, err } from '@/lib/api/result'
+import { err } from '@/lib/api/result'
+
+const CREDENTIALS = { email: 'priya@club.example', password: 'correct-horse' }
 
 describe('StaffSignInForm', () => {
-  it('asks for an email address with a real label', async () => {
+  it('asks for an email and a password with real labels', async () => {
     // Act
     render(<StaffSignInForm onSubmit={vi.fn()} />)
 
     // Assert
     expect(screen.getByLabelText('Work email')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Send sign-in link' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Password')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
   })
 
-  it('sends the address to the action when submitted', async () => {
+  it('masks the password as it is typed', async () => {
+    // Act
+    render(<StaffSignInForm onSubmit={vi.fn()} />)
+
+    // Assert
+    expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password')
+  })
+
+  it('sends both credentials to the action when submitted', async () => {
     // Arrange
     const user = userEvent.setup()
-    const onSubmit = vi.fn().mockResolvedValue(ok({ sent: true as const }))
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
     render(<StaffSignInForm onSubmit={onSubmit} />)
 
     // Act
-    await user.type(screen.getByLabelText('Work email'), 'priya@club.example')
-    await user.click(screen.getByRole('button', { name: 'Send sign-in link' }))
+    await user.type(screen.getByLabelText('Work email'), CREDENTIALS.email)
+    await user.type(screen.getByLabelText('Password'), CREDENTIALS.password)
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     // Assert
-    expect(onSubmit).toHaveBeenCalledWith({ email: 'priya@club.example' })
-  })
-
-  it('confirms the link was sent without saying whether the address is staff', async () => {
-    // Arrange — confirming an address exists would let anyone enumerate staff.
-    const user = userEvent.setup()
-    render(<StaffSignInForm onSubmit={vi.fn().mockResolvedValue(ok({ sent: true as const }))} />)
-
-    // Act
-    await user.type(screen.getByLabelText('Work email'), 'priya@club.example')
-    await user.click(screen.getByRole('button', { name: 'Send sign-in link' }))
-
-    // Assert
-    expect(
-      await screen.findByText(
-        'If that address belongs to a staff member, a sign-in link is on its way.',
-      ),
-    ).toBeInTheDocument()
+    expect(onSubmit).toHaveBeenCalledWith(CREDENTIALS)
   })
 
   it('surfaces the failure instead of silently doing nothing', async () => {
@@ -50,16 +45,15 @@ describe('StaffSignInForm', () => {
     const user = userEvent.setup()
     const onSubmit = vi
       .fn()
-      .mockResolvedValue(err('We could not send that link right now', 'AUTH_ERROR'))
+      .mockResolvedValue(err('Email or password is incorrect', 'AUTH_ERROR'))
     render(<StaffSignInForm onSubmit={onSubmit} />)
 
     // Act
-    await user.type(screen.getByLabelText('Work email'), 'priya@club.example')
-    await user.click(screen.getByRole('button', { name: 'Send sign-in link' }))
+    await user.type(screen.getByLabelText('Work email'), CREDENTIALS.email)
+    await user.type(screen.getByLabelText('Password'), CREDENTIALS.password)
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     // Assert
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'We could not send that link right now',
-    )
+    expect(await screen.findByRole('alert')).toHaveTextContent('Email or password is incorrect')
   })
 })
