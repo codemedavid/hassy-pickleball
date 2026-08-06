@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CartDrawer } from './cart-drawer'
@@ -93,7 +93,8 @@ describe('CartDrawer', () => {
   it('prices a court line in the club currency', () => {
     renderDrawer({ courts: [COURT] })
 
-    expect(screen.getByText('₱600')).toBeInTheDocument()
+    // Scoped to the row: with one line the cart total reads the same.
+    expect(within(screen.getByRole('listitem')).getByText('₱600')).toBeInTheDocument()
   })
 
   it('drops a court line when its remove button is pressed', async () => {
@@ -125,7 +126,7 @@ describe('CartDrawer', () => {
   it('prices an add-on line at quantity times unit price', () => {
     renderDrawer({ items: [ITEM] })
 
-    expect(screen.getByText('₱180')).toBeInTheDocument()
+    expect(within(screen.getByRole('listitem')).getByText('₱180')).toBeInTheDocument()
   })
 
   it('raises an add-on quantity from the drawer', async () => {
@@ -134,7 +135,7 @@ describe('CartDrawer', () => {
 
     await user.click(screen.getByRole('button', { name: 'Increase Gatorade' }))
 
-    expect(screen.getByText('₱270')).toBeInTheDocument()
+    expect(within(screen.getByRole('listitem')).getByText('₱270')).toBeInTheDocument()
   })
 
   it('removes an add-on line once its quantity reaches zero', async () => {

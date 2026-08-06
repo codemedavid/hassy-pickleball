@@ -1,5 +1,4 @@
-import type { Cart } from '@/lib/domain/cart'
-import type { CartItem, CourtSelection } from '@/lib/domain/types'
+import type { Cart, CartCourtLine, CartItemLine } from '@/lib/domain/cart'
 
 /**
  * Cart persistence.
@@ -34,8 +33,17 @@ function toValidDate(value: unknown): Date | null {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
-function toCourtSelection(value: unknown): CourtSelection | null {
-  if (!isRecord(value) || typeof value.courtId !== 'string') {
+function toCourtLine(value: unknown): CartCourtLine | null {
+  if (
+    !isRecord(value) ||
+    typeof value.courtId !== 'string' ||
+    // Display context added after the first release: a line stored without it
+    // would render as a nameless row priced in the wrong symbol, so it is
+    // dropped the same way any other unreadable line is.
+    typeof value.courtName !== 'string' ||
+    typeof value.timeZone !== 'string' ||
+    typeof value.currency !== 'string'
+  ) {
     return null
   }
 
@@ -46,16 +54,25 @@ function toCourtSelection(value: unknown): CourtSelection | null {
     return null
   }
 
-  return { courtId: value.courtId, startsAt, endsAt, priceCents: value.priceCents }
+  return {
+    courtId: value.courtId,
+    courtName: value.courtName,
+    startsAt,
+    endsAt,
+    priceCents: value.priceCents,
+    timeZone: value.timeZone,
+    currency: value.currency,
+  }
 }
 
-function toCartItem(value: unknown): CartItem | null {
+function toItemLine(value: unknown): CartItemLine | null {
   if (
     !isRecord(value) ||
     typeof value.productId !== 'string' ||
     typeof value.name !== 'string' ||
     typeof value.unitPriceCents !== 'number' ||
-    typeof value.quantity !== 'number'
+    typeof value.quantity !== 'number' ||
+    typeof value.currency !== 'string'
   ) {
     return null
   }
@@ -65,6 +82,7 @@ function toCartItem(value: unknown): CartItem | null {
     name: value.name,
     unitPriceCents: value.unitPriceCents,
     quantity: value.quantity,
+    currency: value.currency,
   }
 }
 
@@ -91,8 +109,8 @@ export function readStoredCart(): Cart {
     }
 
     return {
-      courts: parsed.courts.map(toCourtSelection).filter(isNotNull),
-      items: parsed.items.map(toCartItem).filter(isNotNull),
+      courts: parsed.courts.map(toCourtLine).filter(isNotNull),
+      items: parsed.items.map(toItemLine).filter(isNotNull),
     }
   } catch {
     // Corrupt storage is not an error the customer can act on; start empty.

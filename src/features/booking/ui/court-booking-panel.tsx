@@ -35,11 +35,16 @@ export function CourtBookingPanel({
       return
     }
 
+    // The court's name and the club's lens travel with the line: the cart is
+    // read from the site header, which has no club in scope.
     addCourt({
       courtId,
+      courtName,
       startsAt: selected.startsAt,
       endsAt: selected.endsAt,
       priceCents: selected.priceCents,
+      timeZone,
+      currency,
     })
 
     setConfirmation(`${courtName} added to your cart.`)

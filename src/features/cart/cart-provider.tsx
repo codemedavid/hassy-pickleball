@@ -15,8 +15,7 @@ import {
   setItemQuantity as setLineQuantity,
   summariseCart,
 } from '@/lib/domain/cart'
-import type { Cart, CartSummary } from '@/lib/domain/cart'
-import type { CartItem, CourtSelection } from '@/lib/domain/types'
+import type { Cart, CartCourtLine, CartItemLine, CartSummary } from '@/lib/domain/cart'
 
 /**
  * The cart, held client-side and mirrored to localStorage.
@@ -30,9 +29,9 @@ import type { CartItem, CourtSelection } from '@/lib/domain/types'
 export type CartContextValue = {
   readonly cart: Cart
   readonly summary: CartSummary
-  readonly addCourt: (selection: CourtSelection) => void
+  readonly addCourt: (selection: CartCourtLine) => void
   readonly removeCourt: (courtId: string, startsAt: Date) => void
-  readonly setItemQuantity: (item: CartItem, quantity: number) => void
+  readonly setItemQuantity: (item: CartItemLine, quantity: number) => void
   readonly clear: () => void
 }
 
@@ -41,7 +40,7 @@ const CartContext = createContext<CartContextValue | null>(null)
 export function CartProvider({ children }: { readonly children: ReactNode }) {
   const cart = useSyncExternalStore(subscribeToCart, getCartSnapshot, getCartServerSnapshot)
 
-  const addCourt = useCallback((selection: CourtSelection) => {
+  const addCourt = useCallback((selection: CartCourtLine) => {
     const current = getCartSnapshot()
 
     try {
@@ -64,7 +63,7 @@ export function CartProvider({ children }: { readonly children: ReactNode }) {
    * Upsert: the domain helper updates or removes an existing line, but a
    * product added from the shop for the first time is not in the list yet.
    */
-  const setItemQuantity = useCallback((item: CartItem, quantity: number) => {
+  const setItemQuantity = useCallback((item: CartItemLine, quantity: number) => {
     const current = getCartSnapshot()
     const exists = current.items.some((line) => line.productId === item.productId)
 

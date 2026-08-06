@@ -11,12 +11,39 @@ export type CartSummary = {
   readonly endsAt: Date | null
 }
 
+/**
+ * A court as the cart holds it: the selection the pricing code needs, plus what
+ * it takes to render the line. The cart is shown from the site header, which
+ * has no club in scope, so the club's name for the court and the lens its times
+ * and prices must be read through travel with the line rather than being looked
+ * up again at render time.
+ */
+export type CartCourtLine = CourtSelection & {
+  readonly courtName: string
+  readonly timeZone: string
+  readonly currency: string
+}
+
+/** Likewise for an add-on: the price is meaningless without its currency. */
+export type CartItemLine = CartItem & {
+  readonly currency: string
+}
+
 export type Cart = {
+  readonly courts: readonly CartCourtLine[]
+  readonly items: readonly CartItemLine[]
+}
+
+/**
+ * Arithmetic needs only the priced fields, so a server-side quote — which has
+ * no display context — can be summarised with the same function as the cart.
+ */
+type PricedCart = {
   readonly courts: readonly CourtSelection[]
   readonly items: readonly CartItem[]
 }
 
-export function summariseCart(cart: Cart): CartSummary {
+export function summariseCart(cart: PricedCart): CartSummary {
   const courtsSubtotalCents = cart.courts.reduce((sum, court) => sum + court.priceCents, 0)
   const itemsSubtotalCents = cart.items.reduce(
     (sum, item) => sum + item.unitPriceCents * item.quantity,
@@ -42,10 +69,7 @@ export function summariseCart(cart: Cart): CartSummary {
  * cart — the database would reject it later anyway, and failing here lets the
  * UI say so before checkout.
  */
-export function addCourtToCart(
-  courts: readonly CourtSelection[],
-  selection: CourtSelection,
-): CourtSelection[] {
+export function addCourtToCart<T extends CourtSelection>(courts: readonly T[], selection: T): T[] {
   const conflict = courts.some(
     (court) => court.courtId === selection.courtId && rangesOverlap(court, selection),
   )
@@ -57,10 +81,10 @@ export function addCourtToCart(
   return [...courts, selection]
 }
 
-export function removeCourtFromCart(
-  courts: readonly CourtSelection[],
+export function removeCourtFromCart<T extends CourtSelection>(
+  courts: readonly T[],
   target: { readonly courtId: string; readonly startsAt: Date },
-): CourtSelection[] {
+): T[] {
   return courts.filter(
     (court) =>
       court.courtId !== target.courtId || court.startsAt.getTime() !== target.startsAt.getTime(),
@@ -68,11 +92,11 @@ export function removeCourtFromCart(
 }
 
 /** Sets a line's quantity. A quantity of zero or less removes the line. */
-export function setItemQuantity(
-  items: readonly CartItem[],
+export function setItemQuantity<T extends CartItem>(
+  items: readonly T[],
   productId: string,
   quantity: number,
-): CartItem[] {
+): T[] {
   if (quantity <= 0) {
     return items.filter((item) => item.productId !== productId)
   }

@@ -1,18 +1,29 @@
 'use client'
 
 import Link from 'next/link'
+import { useRef, useState } from 'react'
 import { useCart } from '@/features/cart/cart-provider'
+import { CartDrawer } from '@/features/cart/ui/cart-drawer'
 
 /**
  * Site chrome for the storefront.
  *
  * A Client Component because the cart count lives in the client-side cart
- * store. The count is a `status` region rather than a link: there is no
- * checkout page yet, and a link to a route that 404s is worse than a summary.
+ * store. The cart is the button that opens the drawer, and the drawer's open
+ * state lives here because the same component owns both halves of the pair.
  */
 export function SiteHeader() {
   const { summary } = useCart()
   const count = summary.courtCount + summary.itemCount
+  const [isCartOpen, setIsCartOpen] = useState(false)
+  const cartRef = useRef<HTMLButtonElement>(null)
+
+  function closeCart() {
+    setIsCartOpen(false)
+    // The drawer took focus on open; dropping it on the body would restart
+    // keyboard navigation at the top of the page.
+    cartRef.current?.focus()
+  }
 
   return (
     <header className="sticky top-0 z-40 bg-navy text-white">
@@ -40,9 +51,13 @@ export function SiteHeader() {
           </Link>
         </nav>
 
-        <p
-          role="status"
-          className="ml-auto flex items-center gap-2 rounded-[10px] border border-white/20 px-3.5 py-[7px] text-[13.5px] font-semibold text-white/85"
+        <button
+          ref={cartRef}
+          type="button"
+          aria-expanded={isCartOpen}
+          aria-controls="cart-drawer-title"
+          onClick={() => setIsCartOpen((wasOpen) => !wasOpen)}
+          className="ml-auto flex items-center gap-2 rounded-[10px] border border-white/20 px-3.5 py-[7px] text-[13.5px] font-semibold text-white/85 hover:border-white/40 hover:text-white"
         >
           Cart{' '}
           {count === 0 ? (
@@ -56,8 +71,10 @@ export function SiteHeader() {
               <span className="sr-only">{count === 1 ? 'item' : 'items'}</span>
             </>
           )}
-        </p>
+        </button>
       </div>
+
+      <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
     </header>
   )
 }
