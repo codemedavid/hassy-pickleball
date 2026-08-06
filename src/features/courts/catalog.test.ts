@@ -30,9 +30,7 @@ vi.mock('next/cache', () => ({
 vi.mock('@/lib/supabase/server', () => ({
   createSupabaseServerClient: async () => {
     if (isInsideCacheScope) {
-      throw new Error(
-        'Route / used `cookies()` inside a function cached with `unstable_cache()`.',
-      )
+      throw new Error('Route / used `cookies()` inside a function cached with `unstable_cache()`.')
     }
 
     return { kind: 'cookie-bound' }

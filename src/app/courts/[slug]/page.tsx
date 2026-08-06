@@ -111,7 +111,9 @@ export default async function CourtPage({ params, searchParams }: CourtPageProps
                 <h1 className="font-[family-name:var(--font-display)] text-[32px] font-bold leading-[1.05] tracking-[-0.03em]">
                   {court.name}
                 </h1>
-                {court.blurb ? <p className="mt-1.5 text-[14px] text-muted">{court.blurb}</p> : null}
+                {court.blurb ? (
+                  <p className="mt-1.5 text-[14px] text-muted">{court.blurb}</p>
+                ) : null}
               </div>
               <p className="flex-none text-right">
                 <span className="block font-[family-name:var(--font-display)] text-[26px] font-bold">

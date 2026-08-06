@@ -23,7 +23,11 @@ describe('signInWithEmailAndPassword', () => {
     const result = await signInWithEmailAndPassword({ email: 'not-an-email', password: 'whatever' })
 
     // Assert
-    expect(result).toEqual({ success: false, error: 'Enter a valid email address', code: 'INVALID' })
+    expect(result).toEqual({
+      success: false,
+      error: 'Enter a valid email address',
+      code: 'INVALID',
+    })
     expect(signInWithPassword).not.toHaveBeenCalled()
   })
 

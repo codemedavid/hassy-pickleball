@@ -43,9 +43,7 @@ describe('StaffSignInForm', () => {
   it('surfaces the failure instead of silently doing nothing', async () => {
     // Arrange
     const user = userEvent.setup()
-    const onSubmit = vi
-      .fn()
-      .mockResolvedValue(err('Email or password is incorrect', 'AUTH_ERROR'))
+    const onSubmit = vi.fn().mockResolvedValue(err('Email or password is incorrect', 'AUTH_ERROR'))
     render(<StaffSignInForm onSubmit={onSubmit} />)
 
     // Act

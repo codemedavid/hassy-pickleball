@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { callsFor, fakeClient, fakeTable } from '../../../test/postgrest-fake'
-import { markPaymentRefunded, recordPayment } from './payments'
+import { attachPaymentProof, markPaymentRefunded, recordPayment } from './payments'
 
 const PAYMENT_ROW = {
   id: 'payment-1',
@@ -109,6 +109,35 @@ describe('markPaymentRefunded', () => {
 
     await expect(markPaymentRefunded(client, 'payment-1')).rejects.toThrow(
       /Failed to refund payment: nope/,
+    )
+  })
+})
+
+describe('attachPaymentProof', () => {
+  it('records the stored proof against the booking’s pending payment', async () => {
+    const payments = fakeTable({ data: { ...PAYMENT_ROW, proof_url: 'PB-4G6JVH/proof.png' }, error: null })
+
+    await attachPaymentProof(fakeClient({ payments }), 'booking-1', 'PB-4G6JVH/proof.png')
+
+    expect(callsFor(payments, 'update')[0]?.args[0]).toEqual({
+      proof_url: 'PB-4G6JVH/proof.png',
+    })
+    expect(payments.calls).toContainEqual({ method: 'eq', args: ['booking_id', 'booking-1'] })
+  })
+
+  it('leaves a settled payment alone, so a proof cannot overwrite a reconciled record', async () => {
+    const payments = fakeTable({ data: PAYMENT_ROW, error: null })
+
+    await attachPaymentProof(fakeClient({ payments }), 'booking-1', 'PB-4G6JVH/proof.png')
+
+    expect(payments.calls).toContainEqual({ method: 'eq', args: ['status', 'pending'] })
+  })
+
+  it('throws with context when the update is rejected', async () => {
+    const client = fakeClient({ payments: fakeTable({ data: null, error: { message: 'nope' } }) })
+
+    await expect(attachPaymentProof(client, 'booking-1', 'x/proof.png')).rejects.toThrow(
+      /Failed to attach payment proof: nope/,
     )
   })
 })

@@ -144,7 +144,11 @@ export function CourtBookingExperience({
             Pick your time
           </h2>
 
-          <div role="group" aria-label="Slot layout" className="flex gap-0.5 rounded-[9px] bg-canvas p-0.5">
+          <div
+            role="group"
+            aria-label="Slot layout"
+            className="flex gap-0.5 rounded-[9px] bg-canvas p-0.5"
+          >
             {(['timeline', 'grid'] as const).map((style) => (
               <button
                 key={style}

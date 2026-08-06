@@ -17,9 +17,7 @@ import type { Database } from './database.types'
 export function createSupabasePublicClient() {
   const env = readPublicEnv()
 
-  return createClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  )
+  return createClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
 }

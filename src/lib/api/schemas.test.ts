@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bookingLookupSchema, createBookingSchema } from './schemas'
+import { bookingLookupSchema, checkoutSchema, createBookingSchema } from './schemas'
 
 const VALID_UUID = '00000000-0000-4000-8000-000000000001'
 
@@ -139,5 +139,82 @@ describe('bookingLookupSchema', () => {
 
   it('rejects a missing email', () => {
     expect(bookingLookupSchema.safeParse({ reference: 'PB-4G6JVH' }).success).toBe(false)
+  })
+})
+
+function validCheckout() {
+  return {
+    clubId: VALID_UUID,
+    contactName: 'Ana Cruz',
+    contactEmail: 'ana@example.com',
+    contactPhone: '0917 123 4567',
+    paymentMethodId: VALID_UUID,
+    notes: null,
+    courts: [
+      {
+        courtId: VALID_UUID,
+        startsAt: '2026-03-16T02:00:00.000Z',
+        endsAt: '2026-03-16T03:00:00.000Z',
+      },
+    ],
+    items: [],
+  }
+}
+
+describe('checkoutSchema', () => {
+  it('accepts a complete checkout', () => {
+    expect(checkoutSchema.safeParse(validCheckout()).success).toBe(true)
+  })
+
+  it('requires a phone number, because the desk confirms a manual payment by phone', () => {
+    const result = checkoutSchema.safeParse({ ...validCheckout(), contactPhone: '' })
+
+    expect(result.success).toBe(false)
+    expect(result.success === false && result.error.issues[0]?.message).toMatch(/phone/i)
+  })
+
+  it('rejects a phone number too short to dial', () => {
+    expect(checkoutSchema.safeParse({ ...validCheckout(), contactPhone: '123' }).success).toBe(false)
+  })
+
+  it('requires a payment method, so no booking arrives without a stated intent to pay', () => {
+    const withoutMethod: Record<string, unknown> = validCheckout()
+    delete withoutMethod.paymentMethodId
+
+    expect(checkoutSchema.safeParse(withoutMethod).success).toBe(false)
+  })
+
+  it('rejects an empty cart rather than creating a booking with nothing in it', () => {
+    const result = checkoutSchema.safeParse({ ...validCheckout(), courts: [] })
+
+    expect(result.success).toBe(false)
+    expect(result.success === false && result.error.issues[0]?.message).toMatch(/court/i)
+  })
+
+  it('trims the contact name and phone', () => {
+    const parsed = checkoutSchema.parse({
+      ...validCheckout(),
+      contactName: '  Ana Cruz  ',
+      contactPhone: '  0917 123 4567  ',
+    })
+
+    expect(parsed.contactName).toBe('Ana Cruz')
+    expect(parsed.contactPhone).toBe('0917 123 4567')
+  })
+
+  it('drops a price a client tries to set on a court segment', () => {
+    const parsed = checkoutSchema.parse({
+      ...validCheckout(),
+      courts: [
+        {
+          courtId: VALID_UUID,
+          startsAt: '2026-03-16T02:00:00.000Z',
+          endsAt: '2026-03-16T03:00:00.000Z',
+          priceCents: 1,
+        },
+      ],
+    })
+
+    expect(parsed.courts[0]).not.toHaveProperty('priceCents')
   })
 })
