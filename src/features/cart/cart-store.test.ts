@@ -11,12 +11,23 @@ const CART = {
   courts: [
     {
       courtId: 'court-1',
+      courtName: 'Court 1',
       startsAt: new Date('2026-03-01T02:00:00.000Z'),
       endsAt: new Date('2026-03-01T03:00:00.000Z'),
       priceCents: 60000,
+      timeZone: 'Asia/Manila',
+      currency: 'PHP',
     },
   ],
-  items: [{ productId: 'product-1', name: 'Paddle', unitPriceCents: 20000, quantity: 2 }],
+  items: [
+    {
+      productId: 'product-1',
+      name: 'Paddle',
+      unitPriceCents: 20000,
+      quantity: 2,
+      currency: 'PHP',
+    },
+  ],
 }
 
 beforeEach(() => {
@@ -55,11 +66,62 @@ describe('readStoredCart', () => {
     expect(readStoredCart()).toEqual(EMPTY_CART)
   })
 
+  it('restores the display context a court line was added with', () => {
+    writeStoredCart(CART)
+
+    expect(readStoredCart().courts[0]).toMatchObject({
+      courtName: 'Court 1',
+      timeZone: 'Asia/Manila',
+      currency: 'PHP',
+    })
+  })
+
+  it('drops a court line stored before names were kept, rather than rendering a nameless row', () => {
+    window.localStorage.setItem(
+      'pickleball.cart.v1',
+      JSON.stringify({
+        courts: [
+          {
+            courtId: 'court-1',
+            startsAt: '2026-03-01T02:00:00.000Z',
+            endsAt: '2026-03-01T03:00:00.000Z',
+            priceCents: 60000,
+          },
+        ],
+        items: [],
+      }),
+    )
+
+    expect(readStoredCart().courts).toEqual([])
+  })
+
+  it('drops an add-on line with no currency, which would price in the wrong symbol', () => {
+    window.localStorage.setItem(
+      'pickleball.cart.v1',
+      JSON.stringify({
+        courts: [],
+        items: [{ productId: 'product-1', name: 'Paddle', unitPriceCents: 20000, quantity: 2 }],
+      }),
+    )
+
+    expect(readStoredCart().items).toEqual([])
+  })
+
   it('drops a stored segment whose timestamps are unparseable rather than yielding Invalid Date', () => {
     window.localStorage.setItem(
       'pickleball.cart.v1',
       JSON.stringify({
-        courts: [{ courtId: 'court-1', startsAt: 'yesterday', endsAt: 'x', priceCents: 1 }],
+        courts: [
+          {
+            courtId: 'court-1',
+            courtName: 'Court 1',
+            startsAt: 'yesterday',
+            endsAt: 'x',
+            priceCents: 1,
+            timeZone: 'Asia/Manila',
+            currency: 'PHP',
+          },
+        ],
         items: [],
       }),
     )

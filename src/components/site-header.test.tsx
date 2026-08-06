@@ -4,24 +4,28 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { SiteHeader } from './site-header'
 import { CartProvider, useCart } from '@/features/cart/cart-provider'
 import { resetCartSnapshot } from '@/features/cart/cart-store'
-import type { CartItem, CourtSelection } from '@/lib/domain/types'
+import type { CartCourtLine, CartItemLine } from '@/lib/domain/cart'
 
-function selection(overrides: Partial<CourtSelection> = {}): CourtSelection {
+function selection(overrides: Partial<CartCourtLine> = {}): CartCourtLine {
   return {
     courtId: 'court-1',
+    courtName: 'Court 1',
     startsAt: new Date('2026-08-10T02:00:00.000Z'),
     endsAt: new Date('2026-08-10T03:00:00.000Z'),
     priceCents: 90000,
+    timeZone: 'Asia/Manila',
+    currency: 'PHP',
     ...overrides,
   }
 }
 
-function item(overrides: Partial<CartItem> = {}): CartItem {
+function item(overrides: Partial<CartItemLine> = {}): CartItemLine {
   return {
     productId: 'paddle-rental',
     name: 'Paddle rental',
     unitPriceCents: 15000,
     quantity: 1,
+    currency: 'PHP',
     ...overrides,
   }
 }
@@ -49,6 +53,11 @@ function renderHeader() {
       <CartSeeder />
     </CartProvider>,
   )
+}
+
+/** The header's cart control, by the accessible name it carries in every state. */
+function cartButton() {
+  return screen.getByRole('button', { name: /^cart/i })
 }
 
 afterEach(() => {
@@ -80,7 +89,7 @@ describe('SiteHeader', () => {
   it('describes an empty cart in words rather than showing a zero badge', () => {
     renderHeader()
 
-    expect(screen.getByRole('status')).toHaveTextContent('Cart empty')
+    expect(cartButton()).toHaveAccessibleName('Cart empty')
   })
 
   it('counts booked courts and add-on quantities together', async () => {
@@ -90,7 +99,7 @@ describe('SiteHeader', () => {
     await user.click(screen.getByRole('button', { name: 'seed court' }))
     await user.click(screen.getByRole('button', { name: 'seed items' }))
 
-    expect(screen.getByRole('status')).toHaveTextContent('Cart 3 items')
+    expect(cartButton()).toHaveAccessibleName('Cart 3 items')
   })
 
   it('says "1 item" rather than "1 items" for a single selection', async () => {
@@ -99,6 +108,52 @@ describe('SiteHeader', () => {
 
     await user.click(screen.getByRole('button', { name: 'seed court' }))
 
-    expect(screen.getByRole('status')).toHaveTextContent('Cart 1 item')
+    expect(cartButton()).toHaveAccessibleName('Cart 1 item')
+  })
+
+  it('opens the cart drawer when the cart is pressed', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+
+    await user.click(cartButton())
+
+    expect(screen.getByRole('dialog', { name: /your cart/i })).toBeInTheDocument()
+  })
+
+  it('shows what is in the cart once opened', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+
+    await user.click(screen.getByRole('button', { name: 'seed court' }))
+    await user.click(cartButton())
+
+    expect(screen.getByRole('dialog')).toHaveTextContent('Court 1')
+  })
+
+  it('keeps the drawer closed until the cart is pressed', () => {
+    renderHeader()
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(cartButton()).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('reports the drawer as expanded while it is open', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+
+    await user.click(cartButton())
+
+    expect(cartButton()).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('returns focus to the cart button when the drawer closes', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+
+    await user.click(cartButton())
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(cartButton()).toHaveFocus()
   })
 })

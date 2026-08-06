@@ -6,9 +6,12 @@ import { resetCartSnapshot, writeStoredCart } from './cart-store'
 
 const COURT_A = {
   courtId: 'court-1',
+  courtName: 'Court 1',
   startsAt: new Date('2026-03-01T02:00:00.000Z'),
   endsAt: new Date('2026-03-01T03:00:00.000Z'),
   priceCents: 60000,
+  timeZone: 'Asia/Manila',
+  currency: 'PHP',
 }
 
 /** Same court, overlapping window — the cart must refuse this. */
@@ -17,7 +20,13 @@ const COURT_A_OVERLAP = { ...COURT_A, startsAt: new Date('2026-03-01T02:30:00.00
 /** Same window, different court — legitimate for a group booking. */
 const COURT_B = { ...COURT_A, courtId: 'court-2' }
 
-const PADDLE = { productId: 'product-1', name: 'Paddle', unitPriceCents: 20000, quantity: 1 }
+const PADDLE = {
+  productId: 'product-1',
+  name: 'Paddle',
+  unitPriceCents: 20000,
+  quantity: 1,
+  currency: 'PHP',
+}
 
 function Harness() {
   const cart = useCart()
