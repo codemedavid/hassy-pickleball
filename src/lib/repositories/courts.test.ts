@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { callsFor, fakeClient, fakeTable } from '../../../test/postgrest-fake'
-import { createCourt, findCourtBySlug, listActiveCourts, listAllCourts, updateCourt } from './courts'
+import {
+  createCourt,
+  findCourtBySlug,
+  listActiveCourts,
+  listAllCourts,
+  updateCourt,
+} from './courts'
 
 const COURT_ROW = {
   id: 'court-1',

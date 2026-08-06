@@ -180,6 +180,7 @@ export type Database = {
           id: string
           items_subtotal_cents: number
           notes: string | null
+          party_size: number | null
           reference: string
           starts_at: string
           status: Database['public']['Enums']['booking_status']
@@ -201,6 +202,7 @@ export type Database = {
           id?: string
           items_subtotal_cents?: number
           notes?: string | null
+          party_size?: number | null
           reference: string
           starts_at: string
           status?: Database['public']['Enums']['booking_status']
@@ -222,6 +224,7 @@ export type Database = {
           id?: string
           items_subtotal_cents?: number
           notes?: string | null
+          party_size?: number | null
           reference?: string
           starts_at?: string
           status?: Database['public']['Enums']['booking_status']
@@ -312,6 +315,8 @@ export type Database = {
           includes: string[]
           is_active: boolean
           is_tournament_grade: boolean
+          max_players: number
+          min_players: number
           name: string
           notes: string[]
           slug: string
@@ -331,6 +336,8 @@ export type Database = {
           includes?: string[]
           is_active?: boolean
           is_tournament_grade?: boolean
+          max_players?: number
+          min_players?: number
           name: string
           notes?: string[]
           slug: string
@@ -350,6 +357,8 @@ export type Database = {
           includes?: string[]
           is_active?: boolean
           is_tournament_grade?: boolean
+          max_players?: number
+          min_players?: number
           name?: string
           notes?: string[]
           slug?: string

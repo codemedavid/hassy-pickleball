@@ -15,6 +15,12 @@ const BLOCK_KINDS = ['maintenance', 'league', 'private', 'closed'] as const
 const PRODUCT_TYPES = ['addon', 'cafe'] as const
 const RATE_KINDS = ['fixed', 'amount_delta', 'percent_delta'] as const
 const CUSTOMER_TIERS = ['standard', 'regular', 'pro'] as const
+const COURT_ENVIRONMENTS = ['indoor', 'outdoor'] as const
+
+/** Lowercase, digits, single hyphens: what survives a URL without escaping. */
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+/** A doubles court seats four; the ceiling leaves room for coaching sessions. */
+const MAX_PLAYERS_PER_COURT = 32
 
 /** Sunday is 0, matching Postgres `extract(dow ...)`. */
 const DAY_OF_WEEK_MAX = 6
@@ -44,6 +50,62 @@ export const createBlockSchema = z
   })
 
 export const removeBlockSchema = z.object({ blockId: z.uuid() })
+
+const courtFieldsSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  slug: z
+    .string()
+    .trim()
+    .min(1)
+    .max(80)
+    .regex(SLUG_PATTERN, 'Use lowercase letters, numbers, and single hyphens'),
+  surface: z.string().trim().min(1).max(120),
+  environment: z.enum(COURT_ENVIRONMENTS),
+  isTournamentGrade: z.boolean(),
+  blurb: z.string().trim().max(500).nullish(),
+  /** One "Good to know" line per entry — the detail page lists them. */
+  notes: z.array(z.string().trim().min(1).max(200)).max(12),
+  tags: z.array(z.string().trim().min(1).max(40)).max(12),
+  includes: z.array(z.string().trim().min(1).max(120)).max(12),
+  heroImageUrl: z.url().nullish(),
+  basePriceCents: z.number().int().min(0, 'A price cannot be negative'),
+  sortOrder: z.number().int().min(0).max(9999),
+  minPlayers: z.number().int().min(1).max(MAX_PLAYERS_PER_COURT),
+  maxPlayers: z.number().int().min(1).max(MAX_PLAYERS_PER_COURT),
+})
+
+/**
+ * Mirrors the `courts_players_ordered` check constraint, so an inverted band
+ * becomes a field error the editor can point at rather than a 23514.
+ */
+function hasOrderedCapacity(court: {
+  minPlayers?: number | null
+  maxPlayers?: number | null
+}): boolean {
+  const { minPlayers, maxPlayers } = court
+
+  if (minPlayers === undefined || minPlayers === null) return true
+  if (maxPlayers === undefined || maxPlayers === null) return true
+
+  return maxPlayers >= minPlayers
+}
+
+const CAPACITY_MESSAGE = 'The most players cannot be fewer than the fewest'
+
+export const createCourtSchema = courtFieldsSchema.refine(hasOrderedCapacity, {
+  message: CAPACITY_MESSAGE,
+  path: ['maxPlayers'],
+})
+
+/**
+ * A patch may move one end of the capacity band on its own. That case is
+ * checked against the stored row in the server module, which is the only place
+ * that knows the other end; the database check constraint is the backstop.
+ */
+export const courtPatchSchema = courtFieldsSchema
+  .partial()
+  .extend({ id: z.uuid(), isActive: z.boolean().optional() })
+  .refine(hasOrderedCapacity, { message: CAPACITY_MESSAGE, path: ['maxPlayers'] })
 
 const productFieldsSchema = z.object({
   name: z.string().trim().min(1).max(120),

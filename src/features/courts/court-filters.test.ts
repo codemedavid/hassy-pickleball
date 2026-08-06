@@ -19,6 +19,8 @@ function court(overrides: Partial<Court> = {}): Court {
     basePriceCents: 60000,
     sortOrder: 1,
     isActive: true,
+    minPlayers: 2,
+    maxPlayers: 4,
     ...overrides,
   }
 }

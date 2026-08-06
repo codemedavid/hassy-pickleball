@@ -41,6 +41,9 @@ export type Court = {
   readonly basePriceCents: number
   readonly sortOrder: number
   readonly isActive: boolean
+  /** Player capacity ("pax"). Bounds what a guest may pick at booking. */
+  readonly minPlayers: number
+  readonly maxPlayers: number
 }
 
 export type Product = {
@@ -133,6 +136,8 @@ export function toCourt(row: {
   base_price_cents: number
   sort_order: number
   is_active: boolean
+  min_players: number
+  max_players: number
 }): Court {
   return {
     id: row.id,
@@ -150,6 +155,8 @@ export function toCourt(row: {
     basePriceCents: row.base_price_cents,
     sortOrder: row.sort_order,
     isActive: row.is_active,
+    minPlayers: row.min_players,
+    maxPlayers: row.max_players,
   }
 }
 

@@ -54,6 +54,8 @@ export function makeCourt(overrides: Partial<Court> & { id: string }): Court {
     basePriceCents: 60_000,
     sortOrder: 1,
     isActive: true,
+    minPlayers: 2,
+    maxPlayers: 4,
     ...overrides,
   }
 }
