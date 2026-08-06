@@ -76,7 +76,9 @@ describe('CourtsBrowse', () => {
   })
 
   it('explains an empty result instead of showing a blank grid', () => {
-    render(<CourtsBrowse club={club()} courts={[court({ environment: 'indoor' })]} filter="outdoor" />)
+    render(
+      <CourtsBrowse club={club()} courts={[court({ environment: 'indoor' })]} filter="outdoor" />,
+    )
 
     expect(screen.getByText('No courts match that filter.')).toBeInTheDocument()
   })
