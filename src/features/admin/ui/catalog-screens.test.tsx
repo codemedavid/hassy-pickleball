@@ -135,7 +135,9 @@ describe('PricingScreen', () => {
     render(<PricingScreen rows={[]} />)
 
     // Assert
-    expect(screen.getByText('No pricing rules yet — every court bills at its base rate.')).toBeInTheDocument()
+    expect(
+      screen.getByText('No pricing rules yet — every court bills at its base rate.'),
+    ).toBeInTheDocument()
   })
 })
 

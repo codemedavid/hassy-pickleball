@@ -80,7 +80,9 @@ function courtMinutes(detail: BookingDetail): number {
 }
 
 function describeItems(detail: BookingDetail): string {
-  return [`Court ${formatMinutes(courtMinutes(detail))}`, ...detail.items.map(itemLabel)].join(' + ')
+  return [`Court ${formatMinutes(courtMinutes(detail))}`, ...detail.items.map(itemLabel)].join(
+    ' + ',
+  )
 }
 
 function statusOf(detail: BookingDetail): OrderStatus {
@@ -109,7 +111,9 @@ export function toOrderRows(bookings: readonly BookingDetail[], club: Club): rea
 
 export function toOrderDetail(detail: BookingDetail, club: Club): OrderDetail {
   const { booking } = detail
-  const courtNames = [...new Set(detail.segments.flatMap((s) => (s.courtName ? [s.courtName] : [])))]
+  const courtNames = [
+    ...new Set(detail.segments.flatMap((s) => (s.courtName ? [s.courtName] : []))),
+  ]
 
   return {
     id: booking.id,
