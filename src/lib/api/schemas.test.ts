@@ -174,7 +174,9 @@ describe('checkoutSchema', () => {
   })
 
   it('rejects a phone number too short to dial', () => {
-    expect(checkoutSchema.safeParse({ ...validCheckout(), contactPhone: '123' }).success).toBe(false)
+    expect(checkoutSchema.safeParse({ ...validCheckout(), contactPhone: '123' }).success).toBe(
+      false,
+    )
   })
 
   it('requires a payment method, so no booking arrives without a stated intent to pay', () => {

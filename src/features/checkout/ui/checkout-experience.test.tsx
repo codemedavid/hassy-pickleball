@@ -150,7 +150,10 @@ describe('CheckoutExperience', () => {
   })
 
   it('rejects a file that is not an image before anything is sent', async () => {
-    const user = userEvent.setup()
+    // applyAccept: false is the point of the test. The `accept` attribute is a
+    // hint the OS file dialog offers to respect, and a guest who switches it to
+    // "All files" gets past it — so the check has to be in our code too.
+    const user = userEvent.setup({ applyAccept: false })
     renderCheckout()
 
     await user.click(screen.getByRole('radio', { name: /gcash/i }))

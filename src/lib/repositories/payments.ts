@@ -35,6 +35,30 @@ export async function recordPayment(client: Client, input: RecordPaymentInput): 
   return toPayment(data as NonNullable<typeof data>)
 }
 
+/**
+ * Files the guest's screenshot against the payment `create_booking` opened.
+ *
+ * Restricted to the still-pending payment: once the desk has marked a payment
+ * paid or refunded, that record is reconciled, and a late upload must not be
+ * able to swap the evidence underneath it.
+ *
+ * `proof_url` holds a storage object key, not a link — the bucket is private
+ * and the console signs a URL when staff open it.
+ */
+export async function attachPaymentProof(
+  client: Client,
+  bookingId: string,
+  proofPath: string,
+): Promise<void> {
+  const { error } = await client
+    .from('payments')
+    .update({ proof_url: proofPath })
+    .eq('booking_id', bookingId)
+    .eq('status', 'pending')
+
+  raise('Failed to attach payment proof', error)
+}
+
 export async function markPaymentRefunded(client: Client, paymentId: string): Promise<Payment> {
   const { data, error } = await client
     .from('payments')

@@ -41,6 +41,33 @@ export const createBookingSchema = z.object({
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>
 
+/**
+ * Guest checkout.
+ *
+ * Stricter than createBookingSchema on two counts, both because this is the
+ * self-service path with no member on the other end: a phone number is required
+ * (the club settles payments manually and calls when a receipt does not match),
+ * and a published payment method must be named rather than a bare enum value
+ * the client could invent.
+ */
+
+/** Long enough to be a real number once spaces and a country code are allowed for. */
+const MIN_PHONE_LENGTH = 7
+
+export const checkoutSchema = createBookingSchema
+  .extend({
+    contactPhone: z
+      .string()
+      .trim()
+      .min(MIN_PHONE_LENGTH, 'Please give a phone number we can reach you on')
+      .max(32),
+    /** One of the club's published payment_methods rows, not the enum. */
+    paymentMethodId: z.uuid('Please choose how you would like to pay'),
+  })
+  .omit({ paymentMethod: true })
+
+export type CheckoutInput = z.infer<typeof checkoutSchema>
+
 export const bookingLookupSchema = z.object({
   reference: z
     .string()

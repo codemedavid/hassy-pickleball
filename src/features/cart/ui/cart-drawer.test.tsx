@@ -177,10 +177,27 @@ describe('CartDrawer', () => {
     expect(screen.getByRole('button', { name: /close cart/i })).toHaveFocus()
   })
 
-  it('offers no checkout while there is no checkout flow to send the customer to', () => {
+})
+
+describe('checkout', () => {
+  it('offers a way to check out once there is something in the cart', () => {
     renderDrawer({ courts: [COURT] })
 
-    expect(screen.queryByRole('button', { name: /checkout/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /checkout/i })).toHaveAttribute('href', '/checkout')
+  })
+
+  it('offers no checkout link while the cart is empty', () => {
+    renderDrawer({ courts: [], items: [] })
+
     expect(screen.queryByRole('link', { name: /checkout/i })).not.toBeInTheDocument()
+  })
+
+  it('closes the drawer when the guest leaves for checkout', async () => {
+    const user = userEvent.setup()
+    const { onClose } = renderDrawer({ courts: [COURT] })
+
+    await user.click(screen.getByRole('link', { name: /checkout/i }))
+
+    expect(onClose).toHaveBeenCalled()
   })
 })

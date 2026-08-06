@@ -1,4 +1,4 @@
-import type { CourtEnvironment, ProductType } from './rows'
+import type { CourtEnvironment, Enums, ProductType } from './rows'
 import type { CustomerTier, PricingRule, RateKind } from '@/lib/domain/types'
 
 /**
@@ -52,6 +52,26 @@ export type Product = {
   readonly priceCents: number
   readonly hasQuantity: boolean
   readonly imageUrl: string | null
+  readonly sortOrder: number
+  readonly isActive: boolean
+}
+
+/**
+ * A payment channel as the club publishes it. `method` is the enum the
+ * resulting `payments` row is filed under; everything else is copy the guest
+ * reads at checkout.
+ */
+export type PaymentMethod = {
+  readonly id: string
+  readonly clubId: string
+  readonly method: Enums['payment_method']
+  readonly label: string
+  readonly accountName: string | null
+  readonly accountNumber: string | null
+  readonly instructions: string | null
+  readonly qrImageUrl: string | null
+  /** Whether checkout must carry a screenshot of the transfer. */
+  readonly requiresProof: boolean
   readonly sortOrder: number
   readonly isActive: boolean
 }
@@ -186,5 +206,33 @@ export function toPricingRule(row: {
     valueCents: row.value_cents,
     valuePercent: toNullableNumber(row.value_percent),
     priority: row.priority,
+  }
+}
+
+export function toPaymentMethod(row: {
+  id: string
+  club_id: string
+  method: Enums['payment_method']
+  label: string
+  account_name: string | null
+  account_number: string | null
+  instructions: string | null
+  qr_image_url: string | null
+  requires_proof: boolean
+  sort_order: number
+  is_active: boolean
+}): PaymentMethod {
+  return {
+    id: row.id,
+    clubId: row.club_id,
+    method: row.method,
+    label: row.label,
+    accountName: row.account_name,
+    accountNumber: row.account_number,
+    instructions: row.instructions,
+    qrImageUrl: row.qr_image_url,
+    requiresProof: row.requires_proof,
+    sortOrder: row.sort_order,
+    isActive: row.is_active,
   }
 }

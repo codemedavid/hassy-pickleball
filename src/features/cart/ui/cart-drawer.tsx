@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useRef } from 'react'
 import { useCart } from '../cart-provider'
 import { QuantityStepper } from '@/components/ui/quantity-stepper'
@@ -12,8 +13,8 @@ import type { CartCourtLine, CartItemLine } from '@/lib/domain/cart'
  *
  * A panel rather than a page: a customer comparing courts should be able to
  * check what they have picked without losing the court they were looking at.
- * There is no checkout flow yet, so the drawer deliberately ends at the total —
- * a button to a route that does not exist would be worse than none.
+ * It ends at a checkout button, which is a link rather than an action — the
+ * cart is browser-side until the guest commits to it.
  */
 
 export interface CartDrawerProps {
@@ -170,14 +171,30 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           </div>
         )}
 
-        <div className="flex items-center justify-between border-t border-line px-5 py-4">
-          <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-muted">Total</p>
-          <p
-            data-testid="cart-total"
-            className="font-[family-name:var(--font-display)] text-[20px] font-bold tabular-nums text-ink"
-          >
-            {formatMoney(summary.totalCents, currency)}
-          </p>
+        <div className="border-t border-line px-5 py-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-muted">
+              Total
+            </p>
+            <p
+              data-testid="cart-total"
+              className="font-[family-name:var(--font-display)] text-[20px] font-bold tabular-nums text-ink"
+            >
+              {formatMoney(summary.totalCents, currency)}
+            </p>
+          </div>
+
+          {/* Closed on the way out: the panel is fixed-position, so leaving it
+              open would cover the page the guest just navigated to. */}
+          {isEmpty ? null : (
+            <Link
+              href="/checkout"
+              onClick={onClose}
+              className="mt-4 block rounded-[10px] bg-navy px-4 py-3 text-center text-[14px] font-bold text-white"
+            >
+              Checkout
+            </Link>
+          )}
         </div>
       </div>
     </div>

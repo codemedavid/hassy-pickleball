@@ -31,7 +31,13 @@ const GCASH = {
   isActive: true,
 }
 
-const CASH = { ...GCASH, id: METHOD_ID, method: 'cash' as const, label: 'Pay at the desk', requiresProof: false }
+const CASH = {
+  ...GCASH,
+  id: METHOD_ID,
+  method: 'cash' as const,
+  label: 'Pay at the desk',
+  requiresProof: false,
+}
 
 const BOOKING = {
   id: 'booking-1',
@@ -59,26 +65,25 @@ function order() {
   }
 }
 
-/** A stand-in for the browser File the form actually posts. */
+/**
+ * A real File, because FormData is the thing under test here: setting a
+ * plain object on a form field stringifies it, which is exactly the case
+ * `readProof` has to reject.
+ */
 function proofFile(overrides: { type?: string; size?: number } = {}) {
   const size = overrides.size ?? 120_000
 
-  return {
-    name: 'receipt.png',
+  return new File([new Uint8Array(size)], 'receipt.png', {
     type: overrides.type ?? 'image/png',
-    size,
-    arrayBuffer: () => Promise.resolve(new ArrayBuffer(size)),
-  }
+  })
 }
 
-function formDataFor(input: unknown, proof?: unknown): FormData {
+function formDataFor(input: unknown, proof?: File): FormData {
   const form = new FormData()
   form.set('order', JSON.stringify(input))
 
   if (proof) {
-    // A plain object stands in for File; submitCheckout must not depend on
-    // instanceof, which does not survive the server-action boundary reliably.
-    form.set('proof', proof as Blob)
+    form.set('proof', proof)
   }
 
   return form
@@ -134,7 +139,9 @@ describe('submitCheckout', () => {
   })
 
   it('refuses a proof that is not an image, before any booking is written', async () => {
-    const result = await submitCheckout(formDataFor(order(), proofFile({ type: 'application/pdf' })))
+    const result = await submitCheckout(
+      formDataFor(order(), proofFile({ type: 'application/pdf' })),
+    )
 
     expect(result).toMatchObject({ success: false })
     expect(createBooking).not.toHaveBeenCalled()
@@ -201,9 +208,7 @@ describe('submitCheckout', () => {
   })
 
   it('rejects a checkout with no phone number', async () => {
-    const result = await submitCheckout(
-      formDataFor({ ...order(), contactPhone: '' }, proofFile()),
-    )
+    const result = await submitCheckout(formDataFor({ ...order(), contactPhone: '' }, proofFile()))
 
     expect(result).toMatchObject({ success: false, code: 'INVALID' })
     expect(createBooking).not.toHaveBeenCalled()

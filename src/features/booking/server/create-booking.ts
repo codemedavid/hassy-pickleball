@@ -19,7 +19,18 @@ import { SLOT_TAKEN_CODES, type BookingSummary } from './booking-summary'
  * `priceCents` a client sends is dropped by the schema.
  */
 
-export async function createBooking(input: unknown): Promise<Result<BookingSummary>> {
+/**
+ * What creation returns, over and above a lookup.
+ *
+ * The row id is included because the caller usually has follow-up writes to
+ * make against this booking — checkout files the payment proof against it — and
+ * re-finding the row by reference would be a second round trip for something
+ * the insert already handed back. Lookup deliberately does NOT expose it: a
+ * guest authenticating with a reference has no use for the primary key.
+ */
+export type CreatedBooking = BookingSummary & { readonly id: string }
+
+export async function createBooking(input: unknown): Promise<Result<CreatedBooking>> {
   const parsed = createBookingSchema.safeParse(input)
 
   if (!parsed.success) {
@@ -84,6 +95,7 @@ export async function createBooking(input: unknown): Promise<Result<BookingSumma
     }
 
     return ok({
+      id: data.id,
       reference: data.reference,
       status: data.status,
       totalCents: data.total_cents,

@@ -91,3 +91,22 @@ insert into pricing_rules (club_id, label, days_of_week, applies_to_tier, kind, 
 values
   ('00000000-0000-4000-8000-000000000001', 'Pro member discount',
    '{}'::smallint[], 'pro', 'percent_delta', -15.000, 40);
+
+-- How the club takes payment. Instructions are copy the guest reads at checkout.
+insert into payment_methods (
+  club_id, method, label, account_name, account_number, instructions,
+  requires_proof, sort_order
+)
+values
+  ('00000000-0000-4000-8000-000000000001', 'gcash', 'GCash',
+   'Baseline Pickleball Club', '0917 123 4567',
+   'Send the exact total to the number above, then upload the receipt screenshot. Your court is held for 30 minutes while we verify.',
+   true, 1),
+  ('00000000-0000-4000-8000-000000000001', 'bank_transfer', 'Bank transfer (BPI)',
+   'Baseline Pickleball Club Inc.', '1234-5678-90',
+   'Transfer the exact total and upload the confirmation screenshot. Transfers after 5pm are verified the next morning.',
+   true, 2),
+  ('00000000-0000-4000-8000-000000000001', 'cash', 'Pay at the desk',
+   null, null,
+   'Settle in cash when you arrive. Please come 10 minutes before your slot so we can check you in.',
+   false, 3);

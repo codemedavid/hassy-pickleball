@@ -421,6 +421,62 @@ export type Database = {
           },
         ]
       }
+      payment_methods: {
+        Row: {
+          account_name: string | null
+          account_number: string | null
+          club_id: string
+          created_at: string
+          id: string
+          instructions: string | null
+          is_active: boolean
+          label: string
+          method: Database['public']['Enums']['payment_method']
+          qr_image_url: string | null
+          requires_proof: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          club_id: string
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          label: string
+          method: Database['public']['Enums']['payment_method']
+          qr_image_url?: string | null
+          requires_proof?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string | null
+          club_id?: string
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          label?: string
+          method?: Database['public']['Enums']['payment_method']
+          qr_image_url?: string | null
+          requires_proof?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'payment_methods_club_id_fkey'
+            columns: ['club_id']
+            isOneToOne: false
+            referencedRelation: 'clubs'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       payments: {
         Row: {
           amount_cents: number
@@ -430,6 +486,7 @@ export type Database = {
           id: string
           method: Database['public']['Enums']['payment_method']
           paid_at: string | null
+          proof_url: string | null
           recorded_by: string | null
           refunded_at: string | null
           status: Database['public']['Enums']['payment_status']
@@ -443,6 +500,7 @@ export type Database = {
           id?: string
           method: Database['public']['Enums']['payment_method']
           paid_at?: string | null
+          proof_url?: string | null
           recorded_by?: string | null
           refunded_at?: string | null
           status?: Database['public']['Enums']['payment_status']
@@ -456,6 +514,7 @@ export type Database = {
           id?: string
           method?: Database['public']['Enums']['payment_method']
           paid_at?: string | null
+          proof_url?: string | null
           recorded_by?: string | null
           refunded_at?: string | null
           status?: Database['public']['Enums']['payment_status']
