@@ -1,0 +1,185 @@
+import {
+  formatHourLabel,
+  isLive,
+  openHours,
+  openingWindow,
+  overlapMinutes,
+  toLocalInterval,
+  type OpeningWindow,
+} from './shared'
+import { formatMoney } from '@/lib/format/money'
+import { formatTimeInZone } from '@/lib/format/time'
+import type { AvailabilityBlock } from '@/lib/repositories/booking-mappers'
+import type { BookingDetail } from '@/lib/repositories/bookings'
+import type { Club, Court } from '@/lib/repositories/mappers'
+import type { Enums } from '@/lib/repositories/rows'
+
+/**
+ * The day view of the court schedule, as pure geometry.
+ *
+ * Every entry is placed as a percentage of the club's opening window rather
+ * than in pixels, so the component owns only the row height. Instants arrive in
+ * UTC and are read through the club's timezone — a booking must sit at the
+ * club's 5pm no matter where the browser is.
+ */
+
+export type ScheduleTone = 'confirmed' | 'awaiting' | 'blocked' | 'event'
+
+export type ScheduleEntry = {
+  readonly id: string
+  readonly title: string
+  readonly detail: string
+  readonly tone: ScheduleTone
+  readonly topPercent: number
+  readonly heightPercent: number
+}
+
+export type ScheduleColumn = {
+  readonly courtId: string
+  readonly courtName: string
+  /** "Indoor · ₱600/hr" — the sub-label under each column heading. */
+  readonly meta: string
+  readonly entries: readonly ScheduleEntry[]
+}
+
+export type ScheduleGrid = {
+  readonly hourLabels: readonly string[]
+  readonly columns: readonly ScheduleColumn[]
+}
+
+export type ScheduleGridInput = {
+  readonly club: Club
+  readonly courts: readonly Court[]
+  readonly bookings: readonly BookingDetail[]
+  readonly blocks: readonly AvailabilityBlock[]
+  /** Club-local calendar day, "YYYY-MM-DD". Present for symmetry with the loader. */
+  readonly day: string
+}
+
+const BLOCK_LABELS: Record<Enums['block_kind'], string> = {
+  maintenance: 'Maintenance',
+  league: 'League',
+  private: 'Private hire',
+  closed: 'Closed',
+}
+
+const BLOCK_TONES: Record<Enums['block_kind'], ScheduleTone> = {
+  maintenance: 'blocked',
+  closed: 'blocked',
+  league: 'event',
+  private: 'event',
+}
+
+type Placed = { readonly entry: ScheduleEntry; readonly from: number }
+
+/**
+ * Clips an interval to the opening window and turns it into percentages.
+ * Returns null when nothing of it is visible, so closed-hours work does not
+ * render as a zero-height sliver at the edge of the grid.
+ */
+function place(
+  from: number,
+  to: number,
+  window: OpeningWindow,
+): { readonly topPercent: number; readonly heightPercent: number; readonly from: number } | null {
+  const visible = overlapMinutes({ from, to }, { from: window.opensAt, to: window.closesAt })
+
+  if (visible <= 0) {
+    return null
+  }
+
+  const clippedFrom = Math.max(from, window.opensAt)
+
+  return {
+    topPercent: ((clippedFrom - window.opensAt) / window.totalMinutes) * 100,
+    heightPercent: (visible / window.totalMinutes) * 100,
+    from: clippedFrom,
+  }
+}
+
+function bookingTone(status: BookingDetail['booking']['status']): ScheduleTone {
+  return status === 'confirmed' || status === 'completed' ? 'confirmed' : 'awaiting'
+}
+
+function environmentLabel(environment: Court['environment']): string {
+  return environment.charAt(0).toUpperCase() + environment.slice(1)
+}
+
+function bookingEntries(
+  courtId: string,
+  input: ScheduleGridInput,
+  window: OpeningWindow,
+): Placed[] {
+  const timeZone = input.club.timeZone
+
+  return input.bookings.filter(isLive).flatMap((detail) =>
+    detail.segments
+      .filter((segment) => segment.courtId === courtId)
+      .flatMap((segment) => {
+        const { from, to } = toLocalInterval(segment.startsAt, segment.endsAt, timeZone)
+        const placed = place(from, to, window)
+
+        if (!placed) {
+          return []
+        }
+
+        return [
+          {
+            from: placed.from,
+            entry: {
+              id: segment.id,
+              title: detail.booking.contactName,
+              detail: `${formatTimeInZone(segment.startsAt, timeZone)} – ${formatTimeInZone(segment.endsAt, timeZone)}`,
+              tone: bookingTone(detail.booking.status),
+              topPercent: placed.topPercent,
+              heightPercent: placed.heightPercent,
+            },
+          },
+        ]
+      }),
+  )
+}
+
+function blockEntries(courtId: string, input: ScheduleGridInput, window: OpeningWindow): Placed[] {
+  const timeZone = input.club.timeZone
+
+  return input.blocks
+    .filter((block) => block.courtId === courtId)
+    .flatMap((block) => {
+      const { from, to } = toLocalInterval(block.startsAt, block.endsAt, timeZone)
+      const placed = place(from, to, window)
+
+      if (!placed) {
+        return []
+      }
+
+      return [
+        {
+          from: placed.from,
+          entry: {
+            id: block.id,
+            title: block.reason ?? BLOCK_LABELS[block.kind],
+            detail: `${formatTimeInZone(block.startsAt, timeZone)} – ${formatTimeInZone(block.endsAt, timeZone)}`,
+            tone: BLOCK_TONES[block.kind],
+            topPercent: placed.topPercent,
+            heightPercent: placed.heightPercent,
+          },
+        },
+      ]
+    })
+}
+
+export function buildScheduleGrid(input: ScheduleGridInput): ScheduleGrid {
+  const window = openingWindow(input.club)
+
+  const columns = input.courts.map((court) => ({
+    courtId: court.id,
+    courtName: court.name,
+    meta: `${environmentLabel(court.environment)} · ${formatMoney(court.basePriceCents, input.club.currency)}/hr`,
+    entries: [...bookingEntries(court.id, input, window), ...blockEntries(court.id, input, window)]
+      .sort((a, b) => a.from - b.from)
+      .map((placed) => placed.entry),
+  }))
+
+  return { hourLabels: openHours(window).map(formatHourLabel), columns }
+}

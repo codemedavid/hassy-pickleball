@@ -112,8 +112,13 @@ describe('buildScheduleGrid', () => {
     ]
 
     // Act
-    const [column] = buildScheduleGrid({ club, courts: [harbor], bookings, blocks, day: DAY })
-      .columns
+    const [column] = buildScheduleGrid({
+      club,
+      courts: [harbor],
+      bookings,
+      blocks,
+      day: DAY,
+    }).columns
 
     // Assert
     expect(column.entries.map((entry) => entry.tone)).toEqual([
@@ -198,9 +203,7 @@ describe('buildScheduleGrid', () => {
 
   it('clips an entry that starts before opening so it cannot overflow the grid', () => {
     // Arrange — an overnight block running from 05:00 to 09:00.
-    const blocks = [
-      makeBlock({ courtId: harbor.id, kind: 'closed', from: '05:00', to: '09:00' }),
-    ]
+    const blocks = [makeBlock({ courtId: harbor.id, kind: 'closed', from: '05:00', to: '09:00' })]
 
     // Act
     const [entry] = buildScheduleGrid({

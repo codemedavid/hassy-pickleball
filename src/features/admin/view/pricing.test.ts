@@ -80,7 +80,9 @@ describe('describePricingRules', () => {
     const [row] = describePricingRules([rule], [harbor], club)
 
     // Assert
-    expect(row.condition).toBe('Mon, Tue, Wed, Thu, Fri · 6:00 PM–10:00 PM · 1 hr 30 min or longer · Pro tier')
+    expect(row.condition).toBe(
+      'Mon, Tue, Wed, Thu, Fri · 6:00 PM–10:00 PM · 1 hr 30 min or longer · Pro tier',
+    )
   })
 
   it('describes an unconditional rule as applying always', () => {
