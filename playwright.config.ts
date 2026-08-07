@@ -14,7 +14,20 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: /.*\.mobile\.spec\.ts/,
+    },
+    // Layout regressions only show up at a real phone width, so the mobile
+    // specs run on their own project rather than at the desktop viewport.
+    {
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 5'] },
+      testMatch: /.*\.mobile\.spec\.ts/,
+    },
+  ],
   webServer: {
     command: 'pnpm build && pnpm start',
     url: BASE_URL,
