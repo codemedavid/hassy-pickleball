@@ -82,7 +82,7 @@ export default async function CourtPage({ params, searchParams }: CourtPageProps
     `/courts/${court.slug}?day=${next.day ?? day}&duration=${next.duration ?? durationMinutes}`
 
   return (
-    <main className="mx-auto max-w-[1280px] px-7 pb-20 pt-7">
+    <main className="mx-auto w-full max-w-[1280px] px-4 pb-16 pt-5 sm:px-7 sm:pb-20 sm:pt-7">
       {/* The catalog lives at the root; /courts only 308s here. */}
       <Link href="/" className="text-[14px] font-medium text-muted hover:text-olive">
         ← All courts
@@ -90,7 +90,7 @@ export default async function CourtPage({ params, searchParams }: CourtPageProps
 
       <div className="mt-4 flex flex-col gap-5">
         <article className="overflow-hidden rounded-[18px] border border-line bg-surface">
-          <div className="relative h-[300px] bg-surface-sunken">
+          <div className="relative h-[200px] bg-surface-sunken sm:h-[300px]">
             {court.heroImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- court photos are remote and no image loader domain is configured yet
               <img
@@ -105,21 +105,23 @@ export default async function CourtPage({ params, searchParams }: CourtPageProps
             )}
           </div>
 
-          <div className="p-6">
-            <div className="mb-4 flex items-start justify-between gap-5">
-              <div>
-                <h1 className="font-[family-name:var(--font-display)] text-[32px] font-bold leading-[1.05] tracking-[-0.03em]">
+          <div className="p-5 sm:p-6">
+            {/* Stacked on a phone: side by side, the price column steals more
+                than half the width and the court name wraps to three lines. */}
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-5">
+              <div className="min-w-0">
+                <h1 className="font-[family-name:var(--font-display)] text-[26px] font-bold leading-[1.05] tracking-[-0.03em] sm:text-[32px]">
                   {court.name}
                 </h1>
                 {court.blurb ? (
                   <p className="mt-1.5 text-[14px] text-muted">{court.blurb}</p>
                 ) : null}
               </div>
-              <p className="flex-none text-right">
-                <span className="block font-[family-name:var(--font-display)] text-[26px] font-bold">
+              <p className="flex-none sm:text-right">
+                <span className="font-[family-name:var(--font-display)] text-[24px] font-bold sm:block sm:text-[26px]">
                   {formatMoney(court.basePriceCents, club.currency)}
-                </span>
-                <span className="block text-[12px] text-muted">per hour, off-peak</span>
+                </span>{' '}
+                <span className="text-[12px] text-muted sm:block">per hour, off-peak</span>
               </p>
             </div>
 
@@ -175,14 +177,21 @@ export default async function CourtPage({ params, searchParams }: CourtPageProps
           </div>
         </article>
 
-        <div className="rounded-[18px] border border-line bg-surface p-6">
-          <nav aria-label="Booking day" className="flex gap-2.5 overflow-x-auto pb-1">
+        <div className="rounded-[18px] border border-line bg-surface p-5 sm:p-6">
+          {/* Marked as a scroll strip so the mobile layout test knows its
+              children are meant to sit outside the fold. The negative margin
+              lets the row bleed to the card edge instead of ending mid-gap. */}
+          <nav
+            data-scroll-strip
+            aria-label="Booking day"
+            className="-mx-5 flex gap-2.5 overflow-x-auto px-5 pb-1 sm:mx-0 sm:px-0"
+          >
             {dates.map((date) => (
               <Link
                 key={date.day}
                 href={hrefFor({ day: date.day })}
                 aria-current={date.isSelected ? 'date' : undefined}
-                className={`flex-none rounded-[11px] border px-4 py-2.5 text-center ${
+                className={`flex-none rounded-[11px] border px-4 py-3 text-center ${
                   date.isSelected
                     ? 'border-navy bg-navy text-white'
                     : 'border-line bg-surface text-slate hover:border-line-heavy'
@@ -206,7 +215,7 @@ export default async function CourtPage({ params, searchParams }: CourtPageProps
                   key={option.minutes}
                   href={hrefFor({ duration: option.minutes })}
                   aria-current={option.isSelected ? 'page' : undefined}
-                  className={`rounded-[8px] border px-3.5 py-2 text-[13.5px] font-semibold ${
+                  className={`flex min-h-[44px] items-center rounded-[8px] border px-3.5 text-[13.5px] font-semibold ${
                     option.isSelected
                       ? 'border-navy bg-navy text-white'
                       : 'border-line bg-surface text-slate hover:border-line-heavy'

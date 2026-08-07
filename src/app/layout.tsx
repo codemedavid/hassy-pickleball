@@ -30,7 +30,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             survive navigation between courts. */}
         <CartProvider>
           <SiteHeader />
-          {children}
+          {/* `body` is a column flex container, so a page whose content has a
+              min-content width wider than the phone stretches sideways rather
+              than wrapping. `w-full` pins every page to the viewport and lets
+              the scroll strips inside it do the scrolling. */}
+          <div className="w-full min-w-0 flex-1">{children}</div>
         </CartProvider>
       </body>
     </html>

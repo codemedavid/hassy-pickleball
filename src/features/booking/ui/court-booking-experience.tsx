@@ -134,9 +134,9 @@ export function CourtBookingExperience({
     <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr] lg:items-start">
       <section
         aria-labelledby="pick-your-time"
-        className="rounded-[18px] border border-line bg-surface p-6"
+        className="rounded-[18px] border border-line bg-surface p-5 sm:p-6"
       >
-        <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2
             id="pick-your-time"
             className="font-[family-name:var(--font-display)] text-[20px] font-bold tracking-[-0.02em]"
@@ -147,7 +147,7 @@ export function CourtBookingExperience({
           <div
             role="group"
             aria-label="Slot layout"
-            className="flex gap-0.5 rounded-[9px] bg-canvas p-0.5"
+            className="flex flex-none gap-0.5 rounded-[9px] bg-canvas p-0.5"
           >
             {(['timeline', 'grid'] as const).map((style) => (
               <button
@@ -155,7 +155,7 @@ export function CourtBookingExperience({
                 type="button"
                 aria-pressed={slotStyle === style}
                 onClick={() => setSlotStyle(style)}
-                className={`rounded-[7px] px-3 py-1.5 text-[13px] font-bold ${
+                className={`whitespace-nowrap rounded-[7px] px-3 py-2 text-[13px] font-bold ${
                   slotStyle === style ? 'bg-surface text-ink shadow-sm' : 'text-muted'
                 }`}
               >
@@ -171,7 +171,7 @@ export function CourtBookingExperience({
 
       <section
         aria-label="Your booking"
-        className="flex flex-col gap-4 rounded-[18px] border border-line bg-surface p-6 lg:sticky lg:top-[88px]"
+        className="flex flex-col gap-4 rounded-[18px] border border-line bg-surface p-5 sm:p-6 lg:sticky lg:top-[88px]"
       >
         <div>
           <h2 className="font-[family-name:var(--font-display)] text-[18px] font-bold">
@@ -212,7 +212,7 @@ export function CourtBookingExperience({
                       >
                         {isChosen ? '✓' : ''}
                       </span>
-                      <span className="flex-1">
+                      <span className="min-w-0 flex-1">
                         <span className="block text-[14px] font-semibold">{addon.name}</span>
                         {addon.description ? (
                           <span className="mt-px block text-[12.5px] text-muted">

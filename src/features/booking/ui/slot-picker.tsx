@@ -51,7 +51,7 @@ export function SlotPicker({ rows, slotStyle, onSelect }: SlotPickerProps) {
             disabled={!row.isSelectable}
             aria-pressed={row.state === 'selected'}
             onClick={() => onSelect(row)}
-            className={`rounded-[10px] border px-2 py-2.5 text-center disabled:cursor-not-allowed ${CHIP_TONE[row.state]}`}
+            className={`min-h-[46px] rounded-[10px] border px-2 py-2 text-center disabled:cursor-not-allowed ${CHIP_TONE[row.state]}`}
           >
             <span className="block text-[14px] font-bold tabular-nums">{row.time}</span>
             <span className="mt-0.5 block text-[11.5px] opacity-72">
@@ -72,10 +72,10 @@ export function SlotPicker({ rows, slotStyle, onSelect }: SlotPickerProps) {
           disabled={!row.isSelectable}
           aria-pressed={row.state === 'selected'}
           onClick={() => onSelect(row)}
-          className={`flex w-full items-center gap-3.5 border-b border-surface-sunken px-4 py-2.5 text-left text-[14px] last:border-b-0 disabled:cursor-not-allowed ${TIMELINE_TONE[row.state]}`}
+          className={`flex min-h-[44px] w-full items-center gap-3 border-b border-surface-sunken px-3.5 py-2.5 text-left text-[14px] last:border-b-0 disabled:cursor-not-allowed sm:gap-3.5 sm:px-4 ${TIMELINE_TONE[row.state]}`}
         >
-          <span className="w-16 flex-none font-medium tabular-nums">{row.time}</span>
-          <span className="flex-1">{row.label}</span>
+          <span className="w-[62px] flex-none font-medium tabular-nums sm:w-16">{row.time}</span>
+          <span className="min-w-0 flex-1 truncate">{row.label}</span>
           <span className="flex-none font-bold tabular-nums">{row.price}</span>
         </button>
       ))}
