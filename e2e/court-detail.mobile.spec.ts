@@ -54,6 +54,16 @@ test.describe('court detail on a phone', () => {
     expect(escaped).toEqual([])
   })
 
+  test('the page still fits on the narrowest phones', async ({ page }) => {
+    // 320 CSS px is the narrowest viewport in common use (iPhone SE 1st gen).
+    await page.setViewportSize({ width: 320, height: 800 })
+    await page.goto(COURT_PATH)
+
+    const { scrollWidth, clientWidth } = await measurePageWidth(page)
+
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth + OVERFLOW_TOLERANCE_PX)
+  })
+
   test('the court name is not squeezed into a narrow column by the price', async ({ page }) => {
     await page.goto(COURT_PATH)
 

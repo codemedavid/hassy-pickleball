@@ -27,10 +27,13 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 bg-navy text-white">
-      <div className="mx-auto flex h-16 w-full max-w-[1280px] items-center gap-4 px-5 sm:px-7">
+      <div className="mx-auto flex h-16 w-full max-w-[1280px] items-center gap-2 px-4 sm:gap-4 sm:px-7">
         {/* The mark and the wordmark are one link; the mark is decorative so
             the accessible name stays just the club name. */}
-        <Link href="/" className="mr-2 flex items-center gap-2.5 text-white hover:text-white">
+        <Link
+          href="/"
+          className="flex flex-none items-center gap-2 text-white hover:text-white sm:mr-2 sm:gap-2.5"
+        >
           <span
             aria-hidden
             className="grid size-[30px] place-items-center rounded-[9px] bg-lime font-[family-name:var(--font-display)] text-[16px] font-extrabold text-navy"
@@ -42,10 +45,10 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav aria-label="Main" className="flex items-center gap-1">
+        <nav aria-label="Main" className="flex flex-none items-center gap-1">
           <Link
             href="/"
-            className="rounded-lg bg-white/15 px-3.5 py-[7px] text-[13.5px] font-semibold text-white hover:text-white"
+            className="rounded-lg bg-white/15 px-3 py-[7px] text-[13.5px] font-semibold text-white hover:text-white sm:px-3.5"
           >
             Courts
           </Link>
@@ -57,11 +60,13 @@ export function SiteHeader() {
           aria-expanded={isCartOpen}
           aria-controls={CART_DRAWER_ID}
           onClick={() => setIsCartOpen((wasOpen) => !wasOpen)}
-          className="ml-auto flex items-center gap-2 rounded-[10px] border border-white/20 px-3.5 py-[7px] text-[13.5px] font-semibold text-white/85 hover:border-white/40 hover:text-white"
+          className="ml-auto flex flex-none items-center gap-2 rounded-[10px] border border-white/20 px-3 py-[7px] text-[13.5px] font-semibold text-white/85 hover:border-white/40 hover:text-white sm:px-3.5"
         >
           Cart{' '}
           {count === 0 ? (
-            <span className="text-white/60">empty</span>
+            // "empty" is the only droppable word in the bar; on the narrowest
+            // phones the badge's absence already says the same thing.
+            <span className="hidden text-white/60 sm:inline">empty</span>
           ) : (
             <>
               <span className="flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-lime px-1.5 text-[12px] font-bold text-navy">
