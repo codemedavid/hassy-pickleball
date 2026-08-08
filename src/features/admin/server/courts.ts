@@ -1,8 +1,10 @@
 import 'server-only'
 
+import { updateTag } from 'next/cache'
 import { courtPatchSchema, createCourtSchema } from '@/lib/api/admin-schemas'
 import { invalid, withStaff } from './session'
 import { createCourt, updateCourt } from '@/lib/repositories/courts'
+import { CATALOG_TAG } from '@/features/courts/catalog'
 import type { Court } from '@/lib/repositories/mappers'
 import type { Result } from '@/lib/api/result'
 
@@ -27,6 +29,28 @@ function withoutId<T extends { id: string }>(parsed: T): Omit<T, 'id'> {
   return Object.fromEntries(entries) as Omit<T, 'id'>
 }
 
+/**
+ * Drops the storefront's cached catalog.
+ *
+ * That catalog is tag-cached with a TTL (see src/features/courts/catalog.ts), so
+ * without this a new court — or one just taken offline — stays wrong for guests
+ * until the TTL happens to lapse. Only on success: if nothing was written,
+ * nothing is stale, and throwing away a warm cache costs every guest a slow
+ * page for no reason.
+ *
+ * `updateTag` rather than `revalidateTag`: this runs inside a Server Action, and
+ * only updateTag expires the entry immediately with read-your-own-writes
+ * semantics. revalidateTag would let the staff member's own next read still come
+ * back stale, which is precisely the bug being fixed.
+ */
+function revalidated(result: Result<Court>): Result<Court> {
+  if (result.success) {
+    updateTag(CATALOG_TAG)
+  }
+
+  return result
+}
+
 export async function saveCourt(input: unknown): Promise<Result<Court>> {
   if (hasId(input)) {
     const parsed = courtPatchSchema.safeParse(input)
@@ -37,7 +61,7 @@ export async function saveCourt(input: unknown): Promise<Result<Court>> {
 
     const patch = withoutId(parsed.data)
 
-    return withStaff(({ client }) => updateCourt(client, parsed.data.id, patch))
+    return revalidated(await withStaff(({ client }) => updateCourt(client, parsed.data.id, patch)))
   }
 
   const parsed = createCourtSchema.safeParse(input)
@@ -46,7 +70,7 @@ export async function saveCourt(input: unknown): Promise<Result<Court>> {
     return invalid(parsed.error.issues[0]?.message ?? 'Check the court details')
   }
 
-  return withStaff(({ staff, client }) =>
+  const created = await withStaff(({ staff, client }) =>
     createCourt(client, {
       clubId: staff.clubId,
       name: parsed.data.name,
@@ -65,4 +89,6 @@ export async function saveCourt(input: unknown): Promise<Result<Court>> {
       maxPlayers: parsed.data.maxPlayers,
     }),
   )
+
+  return revalidated(created)
 }

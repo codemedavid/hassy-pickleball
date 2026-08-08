@@ -15,9 +15,7 @@ const harbor = makeCourt({
   maxPlayers: 4,
 })
 
-function renderEditor(
-  overrides: Partial<React.ComponentProps<typeof CourtEditor>> = {},
-): {
+function renderEditor(overrides: Partial<React.ComponentProps<typeof CourtEditor>> = {}): {
   onSave: ReturnType<typeof vi.fn>
   onUpload: ReturnType<typeof vi.fn>
   onSaved: ReturnType<typeof vi.fn>

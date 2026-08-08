@@ -4,12 +4,12 @@ const getCurrentStaff = vi.fn()
 const createSupabaseServerClient = vi.fn()
 const createCourt = vi.fn()
 const updateCourt = vi.fn()
-const revalidateTag = vi.fn()
+const updateTag = vi.fn()
 
 vi.mock('@/lib/auth/staff', () => ({ getCurrentStaff }))
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseServerClient }))
 vi.mock('@/lib/repositories/courts', () => ({ createCourt, updateCourt }))
-vi.mock('next/cache', () => ({ revalidateTag }))
+vi.mock('next/cache', () => ({ updateTag }))
 
 const { saveCourt } = await import('./courts')
 const { CATALOG_TAG } = await import('@/features/courts/catalog')
@@ -143,25 +143,25 @@ describe('saveCourt cache invalidation', () => {
   it('drops the storefront catalog after creating a court', async () => {
     await saveCourt(NEW_COURT)
 
-    expect(revalidateTag).toHaveBeenCalledWith(CATALOG_TAG)
+    expect(updateTag).toHaveBeenCalledWith(CATALOG_TAG)
   })
 
   it('drops the storefront catalog after patching a court', async () => {
     await saveCourt({ id: COURT_ID, basePriceCents: 70_000 })
 
-    expect(revalidateTag).toHaveBeenCalledWith(CATALOG_TAG)
+    expect(updateTag).toHaveBeenCalledWith(CATALOG_TAG)
   })
 
   it('drops the storefront catalog when a court is taken offline', async () => {
     await saveCourt({ id: COURT_ID, isActive: false })
 
-    expect(revalidateTag).toHaveBeenCalledWith(CATALOG_TAG)
+    expect(updateTag).toHaveBeenCalledWith(CATALOG_TAG)
   })
 
   it('leaves the cache alone when the payload was rejected', async () => {
     await saveCourt({ ...NEW_COURT, slug: 'Court 4!' })
 
-    expect(revalidateTag).not.toHaveBeenCalled()
+    expect(updateTag).not.toHaveBeenCalled()
   })
 
   it('leaves the cache alone when the write failed', async () => {
@@ -173,6 +173,6 @@ describe('saveCourt cache invalidation', () => {
 
     // Assert
     expect(result).toMatchObject({ success: false })
-    expect(revalidateTag).not.toHaveBeenCalled()
+    expect(updateTag).not.toHaveBeenCalled()
   })
 })

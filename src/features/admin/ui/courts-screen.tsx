@@ -1,0 +1,220 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { AdminPageHeader, AdminScreen, CARD, CELL, EmptyState, TABLE_HEAD } from './primitives'
+import { Button } from '@/components/ui/button'
+import { CourtEditor } from './court-editor'
+import { type UploadedImage } from './image-upload-field'
+import { formatMoney } from '@/lib/format/money'
+import type { Court } from '@/lib/repositories/mappers'
+import type { CourtEnvironment } from '@/lib/repositories/rows'
+import type { Result } from '@/lib/api/result'
+
+/**
+ * The club's courts: what exists, what is bookable, and the editor for both.
+ *
+ * The editor opens inline beneath the row it belongs to rather than on its own
+ * route, because the console is tab-driven and has no nested pages to match.
+ * Only one row edits at a time — two open forms writing the same list is a way
+ * to lose an edit, not a feature.
+ *
+ * A court is never deleted. `booking_courts` references it with
+ * `on delete restrict`, so a court that has ever been booked cannot be removed
+ * and its history must keep resolving; taking it offline is the real operation,
+ * and the buttons say so.
+ */
+
+export interface CourtsScreenProps {
+  readonly courts: readonly Court[]
+  readonly currency: string
+  readonly onSave: (payload: unknown) => Promise<Result<Court>>
+  readonly onUpload: (form: FormData) => Promise<Result<UploadedImage>>
+}
+
+const COLUMNS = ['Court', 'Surface', 'Players', 'Price', 'Order', 'Status', ''] as const
+
+const ENVIRONMENT_LABELS: Record<CourtEnvironment, string> = {
+  indoor: 'Indoor',
+  outdoor: 'Outdoor',
+}
+
+/** Which row's editor is open. 'new' is the add form, which belongs to no row. */
+type EditTarget = string | 'new' | null
+
+export function CourtsScreen({ courts, currency, onSave, onUpload }: CourtsScreenProps) {
+  const router = useRouter()
+  const [editing, setEditing] = useState<EditTarget>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+
+  function handleSaved(): void {
+    setEditing(null)
+    router.refresh()
+  }
+
+  function toggleAvailability(court: Court): void {
+    setError(null)
+
+    startTransition(async () => {
+      const result = await onSave({ id: court.id, isActive: !court.isActive })
+
+      if (!result.success) {
+        setError(result.error)
+        return
+      }
+
+      router.refresh()
+    })
+  }
+
+  return (
+    <AdminScreen>
+      <AdminPageHeader title="Courts" subtitle="The courts guests can book, and what each one is">
+        <Button onClick={() => setEditing('new')} disabled={editing === 'new'}>
+          Add court
+        </Button>
+      </AdminPageHeader>
+
+      {error ? (
+        <p role="alert" className={`${CARD} mb-4 px-4 py-3 text-[13px] text-danger`}>
+          {error}
+        </p>
+      ) : null}
+
+      {editing === 'new' ? (
+        <div className={`${CARD} mb-4`}>
+          <CourtEditor
+            court={null}
+            currency={currency}
+            onSave={onSave}
+            onUpload={onUpload}
+            onSaved={handleSaved}
+            onCancel={() => setEditing(null)}
+          />
+        </div>
+      ) : null}
+
+      <div className={`${CARD} overflow-x-auto`}>
+        {courts.length === 0 ? (
+          <EmptyState>No courts yet. Add one to start taking bookings.</EmptyState>
+        ) : (
+          <table aria-label="Courts" className="w-full min-w-[820px] border-collapse text-[14px]">
+            <thead className={TABLE_HEAD}>
+              <tr>
+                {COLUMNS.map((column, index) => (
+                  <th key={column || index} scope="col" className={CELL}>
+                    {column}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {courts.map((court) => (
+                <CourtRow
+                  key={court.id}
+                  court={court}
+                  currency={currency}
+                  isPending={isPending}
+                  isEditing={editing === court.id}
+                  onEdit={() => setEditing(court.id)}
+                  onToggle={() => toggleAvailability(court)}
+                  onSave={onSave}
+                  onUpload={onUpload}
+                  onSaved={handleSaved}
+                  onCancel={() => setEditing(null)}
+                />
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </AdminScreen>
+  )
+}
+
+interface CourtRowProps {
+  readonly court: Court
+  readonly currency: string
+  readonly isPending: boolean
+  readonly isEditing: boolean
+  readonly onEdit: () => void
+  readonly onToggle: () => void
+  readonly onSave: CourtsScreenProps['onSave']
+  readonly onUpload: CourtsScreenProps['onUpload']
+  readonly onSaved: () => void
+  readonly onCancel: () => void
+}
+
+function CourtRow({
+  court,
+  currency,
+  isPending,
+  isEditing,
+  onEdit,
+  onToggle,
+  onSave,
+  onUpload,
+  onSaved,
+  onCancel,
+}: CourtRowProps) {
+  return (
+    <>
+      <tr className="border-t border-[#f2f5f8]">
+        <td className={CELL}>
+          <span className="block font-semibold">{court.name}</span>
+          <span className="mt-px block text-[12.5px] text-subtle">/{court.slug}</span>
+        </td>
+        <td className={`${CELL} text-slate`}>
+          <span className="block">{court.surface}</span>
+          <span className="mt-px block text-[12.5px] text-subtle">
+            {ENVIRONMENT_LABELS[court.environment]}
+            {court.isTournamentGrade ? ' · Tournament grade' : ''}
+          </span>
+        </td>
+        <td className={`${CELL} text-slate tabular-nums`}>
+          {court.minPlayers}–{court.maxPlayers}
+        </td>
+        <td className={`${CELL} text-slate tabular-nums`}>
+          {formatMoney(court.basePriceCents, currency)}
+        </td>
+        <td className={`${CELL} text-slate tabular-nums`}>{court.sortOrder}</td>
+        <td className={CELL}>
+          {/* Wording, not just colour: an offline court still sits in the list. */}
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase ${
+              court.isActive ? 'bg-success-bg text-success' : 'bg-surface-sunken text-muted'
+            }`}
+          >
+            {court.isActive ? 'Bookable' : 'Offline'}
+          </span>
+        </td>
+        <td className={CELL}>
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" size="sm" onClick={onEdit} disabled={isEditing}>
+              Edit
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onToggle} disabled={isPending}>
+              {court.isActive ? 'Take offline' : 'Bring back'}
+            </Button>
+          </div>
+        </td>
+      </tr>
+
+      {isEditing ? (
+        <tr className="border-t border-[#f2f5f8]">
+          <td colSpan={COLUMNS.length} className="bg-surface-alt p-0">
+            <CourtEditor
+              court={court}
+              currency={currency}
+              onSave={onSave}
+              onUpload={onUpload}
+              onSaved={onSaved}
+              onCancel={onCancel}
+            />
+          </td>
+        </tr>
+      ) : null}
+    </>
+  )
+}

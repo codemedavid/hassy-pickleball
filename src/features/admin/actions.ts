@@ -12,9 +12,10 @@
 import { markBookingPaid, refundBookingPayment, type PaidResult } from './server/payments'
 import { blockCourtTime, removeCourtBlock } from './server/blocks'
 import { savePricingRule, saveProduct } from './server/catalog'
+import { saveCourt } from './server/courts'
 import { uploadCatalogImage, type UploadedCatalogImage } from './server/media'
 import type { AvailabilityBlock, Payment } from '@/lib/repositories/booking-mappers'
-import type { Product } from '@/lib/repositories/mappers'
+import type { Court, Product } from '@/lib/repositories/mappers'
 import type { PricingRule } from '@/lib/domain/types'
 import type { Result } from '@/lib/api/result'
 
@@ -40,6 +41,10 @@ export async function saveProductAction(input: unknown): Promise<Result<Product>
 
 export async function savePricingRuleAction(input: unknown): Promise<Result<PricingRule>> {
   return savePricingRule(input)
+}
+
+export async function saveCourtAction(input: unknown): Promise<Result<Court>> {
+  return saveCourt(input)
 }
 
 /** Takes FormData rather than a plain object: the payload is a file. */

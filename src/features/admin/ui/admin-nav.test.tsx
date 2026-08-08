@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { AdminNav } from './admin-nav'
+import { ADMIN_NAV_ITEMS } from './nav-items'
 
 const pathname = vi.hoisted(() => ({ current: '/admin' }))
 
@@ -28,9 +29,15 @@ describe('AdminNav', () => {
     // Act
     render(<AdminNav clubName="Riverbend" staffName="Priya" />)
 
-    // Assert
+    // Assert — one link per configured section. The list itself is asserted in
+    // nav-items.test.ts, so counting a literal here would only duplicate it and
+    // break every time a section is added.
     const nav = screen.getByRole('navigation', { name: 'Admin sections' })
-    expect(nav.querySelectorAll('a')).toHaveLength(7)
+    expect(nav.querySelectorAll('a')).toHaveLength(ADMIN_NAV_ITEMS.length)
+
+    for (const item of ADMIN_NAV_ITEMS) {
+      expect(screen.getByRole('link', { name: item.label })).toHaveAttribute('href', item.href)
+    }
   })
 
   it('marks the section being viewed as current, for screen readers too', () => {
