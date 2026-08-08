@@ -1,6 +1,7 @@
 import {
   formatHourLabel,
   isLive,
+  MINUTES_PER_HOUR,
   openHours,
   openingWindow,
   overlapMinutes,
@@ -32,6 +33,12 @@ export type ScheduleEntry = {
   readonly tone: ScheduleTone
   readonly topPercent: number
   readonly heightPercent: number
+  /**
+   * Set only for staff-created holds. A block can be released; a booking is
+   * cancelled through its own screen, so the grid must be able to tell them
+   * apart without re-deriving it from the tone.
+   */
+  readonly blockId: string | null
 }
 
 export type ScheduleColumn = {
@@ -40,6 +47,10 @@ export type ScheduleColumn = {
   /** "Indoor · ₱600/hr" — the sub-label under each column heading. */
   readonly meta: string
   readonly entries: readonly ScheduleEntry[]
+  /** Minutes of the opening window still free on this court. */
+  readonly openMinutes: number
+  /** "12.5 hrs open", or "Fully booked" when nothing is left. */
+  readonly openLabel: string
 }
 
 export type ScheduleGrid = {
@@ -70,7 +81,12 @@ const BLOCK_TONES: Record<Enums['block_kind'], ScheduleTone> = {
   private: 'event',
 }
 
-type Placed = { readonly entry: ScheduleEntry; readonly from: number }
+type Placed = {
+  readonly entry: ScheduleEntry
+  /** Clipped club-local minutes, used for ordering and for the open total. */
+  readonly from: number
+  readonly to: number
+}
 
 /**
  * Clips an interval to the opening window and turns it into percentages.
@@ -81,7 +97,12 @@ function place(
   from: number,
   to: number,
   window: OpeningWindow,
-): { readonly topPercent: number; readonly heightPercent: number; readonly from: number } | null {
+): {
+  readonly topPercent: number
+  readonly heightPercent: number
+  readonly from: number
+  readonly to: number
+} | null {
   const visible = overlapMinutes({ from, to }, { from: window.opensAt, to: window.closesAt })
 
   if (visible <= 0) {
@@ -94,6 +115,7 @@ function place(
     topPercent: ((clippedFrom - window.opensAt) / window.totalMinutes) * 100,
     heightPercent: (visible / window.totalMinutes) * 100,
     from: clippedFrom,
+    to: clippedFrom + visible,
   }
 }
 
@@ -126,6 +148,7 @@ function bookingEntries(
         return [
           {
             from: placed.from,
+            to: placed.to,
             entry: {
               id: segment.id,
               title: detail.booking.contactName,
@@ -133,6 +156,7 @@ function bookingEntries(
               tone: bookingTone(detail.booking.status),
               topPercent: placed.topPercent,
               heightPercent: placed.heightPercent,
+              blockId: null,
             },
           },
         ]
@@ -156,6 +180,7 @@ function blockEntries(courtId: string, input: ScheduleGridInput, window: Opening
       return [
         {
           from: placed.from,
+          to: placed.to,
           entry: {
             id: block.id,
             title: block.reason ?? BLOCK_LABELS[block.kind],
@@ -163,23 +188,66 @@ function blockEntries(courtId: string, input: ScheduleGridInput, window: Opening
             tone: BLOCK_TONES[block.kind],
             topPercent: placed.topPercent,
             heightPercent: placed.heightPercent,
+            blockId: block.id,
           },
         },
       ]
     })
 }
 
+/**
+ * Minutes the court is spoken for, counting overlapping holds once.
+ *
+ * A block laid over a booking is two entries covering one stretch of time, so
+ * summing the entries would report more held minutes than the day contains and
+ * leave the open total negative.
+ */
+function heldMinutes(placed: readonly Placed[]): number {
+  const sorted = [...placed].sort((a, b) => a.from - b.from)
+
+  return sorted.reduce<{ readonly total: number; readonly coveredTo: number }>(
+    (state, span) => {
+      const from = Math.max(span.from, state.coveredTo)
+
+      return span.to <= from
+        ? state
+        : { total: state.total + (span.to - from), coveredTo: span.to }
+    },
+    { total: 0, coveredTo: -Infinity },
+  ).total
+}
+
+/** "12.5 hrs open" — halves are the finest granularity the club books in. */
+function openLabel(minutes: number): string {
+  if (minutes <= 0) {
+    return 'Fully booked'
+  }
+
+  const hours = Math.round((minutes / MINUTES_PER_HOUR) * 2) / 2
+
+  return `${hours} ${hours === 1 ? 'hr' : 'hrs'} open`
+}
+
 export function buildScheduleGrid(input: ScheduleGridInput): ScheduleGrid {
   const window = openingWindow(input.club)
 
-  const columns = input.courts.map((court) => ({
-    courtId: court.id,
-    courtName: court.name,
-    meta: `${environmentLabel(court.environment)} · ${formatMoney(court.basePriceCents, input.club.currency)}/hr`,
-    entries: [...bookingEntries(court.id, input, window), ...blockEntries(court.id, input, window)]
-      .sort((a, b) => a.from - b.from)
-      .map((placed) => placed.entry),
-  }))
+  const columns = input.courts.map((court) => {
+    const placed = [
+      ...bookingEntries(court.id, input, window),
+      ...blockEntries(court.id, input, window),
+    ].sort((a, b) => a.from - b.from)
+
+    const openMinutes = Math.max(0, window.totalMinutes - heldMinutes(placed))
+
+    return {
+      courtId: court.id,
+      courtName: court.name,
+      meta: `${environmentLabel(court.environment)} · ${formatMoney(court.basePriceCents, input.club.currency)}/hr`,
+      entries: placed.map((entry) => entry.entry),
+      openMinutes,
+      openLabel: openLabel(openMinutes),
+    }
+  })
 
   return { hourLabels: openHours(window).map(formatHourLabel), columns }
 }

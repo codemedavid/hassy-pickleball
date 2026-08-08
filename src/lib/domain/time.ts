@@ -4,6 +4,9 @@ const MINUTES_PER_HOUR = 60
 const MS_PER_MINUTE = 60_000
 const MINUTES_PER_DAY = 1440
 const CLOCK_TIME_PATTERN = /^(\d{2}):(\d{2})(?::(\d{2}))?$/
+const DAY_STRING_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+/** "YYYY-MM-DD" — the slice of an ISO string that is the calendar day. */
+const DAY_STRING_LENGTH = 10
 
 /** Sunday = 0, matching the Postgres `dow` convention used by pricing_rules. */
 const WEEKDAY_INDEX: Record<string, number> = {
@@ -50,6 +53,25 @@ export function parseClockTime(value: string): number {
   }
 
   return hours * MINUTES_PER_HOUR + minutes
+}
+
+/**
+ * The calendar day `days` away from `day`, as "YYYY-MM-DD".
+ *
+ * Arithmetic is done in UTC on purpose: a calendar day is a label here, not an
+ * instant, so no timezone can shorten or lengthen the step. That keeps the
+ * schedule's previous/next controls landing on consecutive days even in a zone
+ * whose local midnight moves for daylight saving.
+ */
+export function shiftDayString(day: string, days: number): string {
+  if (!DAY_STRING_PATTERN.test(day)) {
+    throw new Error(`Invalid day: ${day}`)
+  }
+
+  const [year, month, date] = day.split('-').map(Number)
+  const shifted = new Date(Date.UTC(year, month - 1, date + days))
+
+  return shifted.toISOString().slice(0, DAY_STRING_LENGTH)
 }
 
 /**
