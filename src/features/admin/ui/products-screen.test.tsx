@@ -100,6 +100,20 @@ describe('ProductsScreen — adding a product', () => {
     expect(screen.getByLabelText(/^product name/i)).toHaveValue('')
   })
 
+  it('closes the add form when cancelled, leaving the catalog untouched', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const { onSave } = renderScreen()
+
+    // Act
+    await user.click(screen.getByRole('button', { name: /add product/i }))
+    await user.click(screen.getByRole('button', { name: /cancel/i }))
+
+    // Assert
+    expect(screen.queryByLabelText(/^product name/i)).not.toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
   it('refreshes the list once the new product is saved', async () => {
     // Arrange
     const user = userEvent.setup()
@@ -139,6 +153,20 @@ describe('ProductsScreen — editing a product', () => {
 
     // Assert
     expect(screen.getByLabelText(/product image/i)).toBeInTheDocument()
+  })
+
+  it('closes a row’s editor when cancelled, without saving the edit', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const { onSave } = renderScreen()
+
+    // Act
+    await user.click(within(rowFor('Paddle rental')).getByRole('button', { name: /edit/i }))
+    await user.click(screen.getByRole('button', { name: /cancel/i }))
+
+    // Assert
+    expect(screen.queryByLabelText(/^product name/i)).not.toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
   })
 
   it('hides a product rather than deleting it, because booking history references it', async () => {
