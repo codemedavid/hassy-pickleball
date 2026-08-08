@@ -165,6 +165,38 @@ export type Database = {
           },
         ]
       }
+      booking_players: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          name: string
+          position: number
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          name: string
+          position: number
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'booking_players_booking_id_fkey'
+            columns: ['booking_id']
+            isOneToOne: false
+            referencedRelation: 'bookings'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       bookings: {
         Row: {
           cancelled_at: string | null
@@ -177,6 +209,7 @@ export type Database = {
           created_at: string
           customer_id: string | null
           ends_at: string
+          extra_players_fee_cents: number
           id: string
           items_subtotal_cents: number
           notes: string | null
@@ -199,6 +232,7 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           ends_at: string
+          extra_players_fee_cents?: number
           id?: string
           items_subtotal_cents?: number
           notes?: string | null
@@ -221,6 +255,7 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           ends_at?: string
+          extra_players_fee_cents?: number
           id?: string
           items_subtotal_cents?: number
           notes?: string | null
@@ -310,8 +345,10 @@ export type Database = {
           club_id: string
           created_at: string
           environment: Database['public']['Enums']['court_environment']
+          extra_player_fee_cents: number
           hero_image_url: string | null
           id: string
+          included_players: number
           includes: string[]
           is_active: boolean
           is_tournament_grade: boolean
@@ -331,8 +368,10 @@ export type Database = {
           club_id: string
           created_at?: string
           environment?: Database['public']['Enums']['court_environment']
+          extra_player_fee_cents?: number
           hero_image_url?: string | null
           id?: string
+          included_players?: number
           includes?: string[]
           is_active?: boolean
           is_tournament_grade?: boolean
@@ -352,8 +391,10 @@ export type Database = {
           club_id?: string
           created_at?: string
           environment?: Database['public']['Enums']['court_environment']
+          extra_player_fee_cents?: number
           hero_image_url?: string | null
           id?: string
+          included_players?: number
           includes?: string[]
           is_active?: boolean
           is_tournament_grade?: boolean
