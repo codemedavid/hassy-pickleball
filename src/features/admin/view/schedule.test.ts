@@ -281,3 +281,122 @@ describe('buildScheduleGrid', () => {
     expect(column.entries.map((entry) => entry.title)).toEqual(['Earlier', 'Later'])
   })
 })
+
+describe('buildScheduleGrid availability', () => {
+  it('reports a court with nothing on it as open for the whole day', () => {
+    // Act
+    const grid = emptyGrid()
+
+    // Assert — the club opens 07:00 and closes 22:00.
+    expect(grid.columns[0].openMinutes).toBe(900)
+    expect(grid.columns[0].openLabel).toBe('15 hrs open')
+  })
+
+  it('takes booked and blocked time off the open total', () => {
+    // Arrange — 90 minutes booked, 60 minutes blocked.
+    const grid = buildScheduleGrid({
+      club,
+      courts: [harbor],
+      bookings: [
+        makeBooking({ segments: [{ courtId: harbor.id, from: '17:00', to: '18:30' }] }),
+      ],
+      blocks: [makeBlock({ courtId: harbor.id, kind: 'maintenance', from: '09:00', to: '10:00' })],
+      day: DAY,
+    })
+
+    // Assert
+    expect(grid.columns[0].openMinutes).toBe(750)
+    expect(grid.columns[0].openLabel).toBe('12.5 hrs open')
+  })
+
+  it('counts overlapping holds once so open time can never go negative', () => {
+    // Arrange — a block sitting inside a longer booking on the same court.
+    const grid = buildScheduleGrid({
+      club,
+      courts: [harbor],
+      bookings: [
+        makeBooking({ segments: [{ courtId: harbor.id, from: '09:00', to: '12:00' }] }),
+      ],
+      blocks: [makeBlock({ courtId: harbor.id, kind: 'closed', from: '10:00', to: '11:00' })],
+      day: DAY,
+    })
+
+    // Assert
+    expect(grid.columns[0].openMinutes).toBe(720)
+  })
+
+  it('says a fully held court is fully booked rather than "0 hrs open"', () => {
+    // Arrange
+    const grid = buildScheduleGrid({
+      club,
+      courts: [harbor],
+      bookings: [],
+      blocks: [makeBlock({ courtId: harbor.id, kind: 'closed', from: '07:00', to: '22:00' })],
+      day: DAY,
+    })
+
+    // Assert
+    expect(grid.columns[0].openMinutes).toBe(0)
+    expect(grid.columns[0].openLabel).toBe('Fully booked')
+  })
+
+  it('ignores a cancelled booking, whose court time is open again', () => {
+    // Arrange
+    const grid = buildScheduleGrid({
+      club,
+      courts: [harbor],
+      bookings: [
+        makeBooking({
+          status: 'cancelled',
+          segments: [{ courtId: harbor.id, from: '17:00', to: '18:30' }],
+        }),
+      ],
+      blocks: [],
+      day: DAY,
+    })
+
+    // Assert
+    expect(grid.columns[0].openMinutes).toBe(900)
+  })
+})
+
+describe('buildScheduleGrid releasable entries', () => {
+  it('carries the block id so the screen can offer to release it', () => {
+    // Arrange
+    const grid = buildScheduleGrid({
+      club,
+      courts: [harbor],
+      bookings: [],
+      blocks: [
+        makeBlock({
+          id: 'block-7',
+          courtId: harbor.id,
+          kind: 'maintenance',
+          reason: 'Net repair',
+          from: '09:00',
+          to: '10:00',
+        }),
+      ],
+      day: DAY,
+    })
+
+    // Assert
+    expect(grid.columns[0].entries[0].blockId).toBe('block-7')
+  })
+
+  it('leaves a booking with no block id — a booking is cancelled, not released', () => {
+    // Arrange
+    const grid = buildScheduleGrid({
+      club,
+      courts: [harbor],
+      bookings: [
+        makeBooking({ segments: [{ courtId: harbor.id, from: '17:00', to: '18:30' }] }),
+      ],
+      blocks: [],
+      day: DAY,
+    })
+
+    // Assert
+    expect(grid.columns[0].entries[0].blockId).toBeNull()
+  })
+})

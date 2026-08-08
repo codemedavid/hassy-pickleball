@@ -6,6 +6,7 @@ import {
   getZonedParts,
   parseClockTime,
   rangesOverlap,
+  shiftDayString,
 } from './time'
 
 const MANILA = 'Asia/Manila'
@@ -190,5 +191,37 @@ describe('enumerateStartTimes', () => {
         durationMinutes: 60,
       }),
     ).toThrow(/slotMinutes/i)
+  })
+})
+
+describe('shiftDayString', () => {
+  it('steps forward to the next calendar day', () => {
+    // Act & Assert
+    expect(shiftDayString('2026-08-04', 1)).toBe('2026-08-05')
+  })
+
+  it('steps back across a month boundary', () => {
+    // Act & Assert
+    expect(shiftDayString('2026-08-01', -1)).toBe('2026-07-31')
+  })
+
+  it('rolls over a year end', () => {
+    // Act & Assert
+    expect(shiftDayString('2026-12-31', 1)).toBe('2027-01-01')
+  })
+
+  it('handles a leap day rather than skipping it', () => {
+    // Act & Assert
+    expect(shiftDayString('2028-02-28', 1)).toBe('2028-02-29')
+  })
+
+  it('returns the same day when nothing is shifted', () => {
+    // Act & Assert
+    expect(shiftDayString('2026-08-04', 0)).toBe('2026-08-04')
+  })
+
+  it('rejects a day it cannot parse instead of returning "NaN-NaN-NaN"', () => {
+    // Act & Assert
+    expect(() => shiftDayString('04/08/2026', 1)).toThrow(/day/i)
   })
 })
