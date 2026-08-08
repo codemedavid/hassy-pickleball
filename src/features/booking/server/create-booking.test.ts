@@ -157,3 +157,50 @@ describe('createBooking', () => {
     expect(result).toMatchObject({ success: false, code: 'UNEXPECTED' })
   })
 })
+
+describe('createBooking with players', () => {
+  it('sends the named players to the database', async () => {
+    await createBooking({ ...VALID, players: ['Ana Cruz', 'Ben Uy'] })
+
+    expect(rpc.mock.calls[0]?.[1]?.p_players).toEqual(['Ana Cruz', 'Ben Uy'])
+  })
+
+  it('sends no players when the booking did not name any', async () => {
+    // A staff-side booking may still be taken without a roster; the RPC leaves
+    // party_size null rather than inventing one.
+    await createBooking(VALID)
+
+    expect(rpc.mock.calls[0]?.[1]?.p_players).toEqual([])
+  })
+
+  it('refuses a roster larger than a court could ever seat', async () => {
+    const result = await createBooking({
+      ...VALID,
+      players: Array.from({ length: 40 }, (_, index) => `Player ${index}`),
+    })
+
+    expect(result).toMatchObject({ success: false, code: 'INVALID' })
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it('refuses a blank player name rather than filing an unnamed player', async () => {
+    const result = await createBooking({ ...VALID, players: ['Ana Cruz', '  '] })
+
+    expect(result).toMatchObject({ success: false, code: 'INVALID' })
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it('explains a party the court cannot seat instead of reporting a database error', async () => {
+    // 23514 is the check_violation create_booking raises when the party size
+    // falls outside the band of the courts chosen.
+    rpc.mockResolvedValue({
+      data: null,
+      error: { code: '23514', message: 'party size 9 is outside the 2 to 6 this court seats' },
+    })
+
+    const result = await createBooking({ ...VALID, players: ['A', 'B'] })
+
+    expect(result).toMatchObject({ success: false, code: 'INVALID' })
+    expect((result as { error: string }).error).toMatch(/players/i)
+  })
+})
