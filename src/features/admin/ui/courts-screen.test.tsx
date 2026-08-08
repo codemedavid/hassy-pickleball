@@ -20,7 +20,9 @@ const harbor = makeCourt({
   basePriceCents: 60_000,
   sortOrder: 1,
   minPlayers: 2,
-  maxPlayers: 4,
+  includedPlayers: 4,
+  maxPlayers: 6,
+  extraPlayerFeeCents: 15_000,
   isActive: true,
 })
 
@@ -34,7 +36,9 @@ const riverside = makeCourt({
   basePriceCents: 45_000,
   sortOrder: 2,
   minPlayers: 2,
+  includedPlayers: 8,
   maxPlayers: 8,
+  extraPlayerFeeCents: 0,
   isActive: false,
 })
 
@@ -220,5 +224,27 @@ describe('CourtsScreen — taking a court offline', () => {
     // Assert
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not save/i)
     expect(refresh).not.toHaveBeenCalled()
+  })
+})
+
+describe('CourtsScreen pax pricing', () => {
+  it('states what the slot price covers and what a further head costs', () => {
+    renderScreen()
+
+    const row = screen.getByRole('row', { name: /harbor court/i })
+
+    expect(row).toHaveTextContent('2–6')
+    expect(row).toHaveTextContent(/4 covered/i)
+    expect(row).toHaveTextContent(/₱150\.00/)
+  })
+
+  it('says nothing about a fee on a court that charges none', () => {
+    // The whole court is sold for the slot price, so a "0 per extra player"
+    // line would be noise on every row that has not opted in.
+    renderScreen()
+
+    const row = screen.getByRole('row', { name: /riverside court/i })
+
+    expect(row).not.toHaveTextContent(/covered/i)
   })
 })
