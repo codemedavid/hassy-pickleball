@@ -4,12 +4,15 @@ const getCurrentStaff = vi.fn()
 const createSupabaseServerClient = vi.fn()
 const createCourt = vi.fn()
 const updateCourt = vi.fn()
+const revalidateTag = vi.fn()
 
 vi.mock('@/lib/auth/staff', () => ({ getCurrentStaff }))
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseServerClient }))
 vi.mock('@/lib/repositories/courts', () => ({ createCourt, updateCourt }))
+vi.mock('next/cache', () => ({ revalidateTag }))
 
 const { saveCourt } = await import('./courts')
+const { CATALOG_TAG } = await import('@/features/courts/catalog')
 
 const STAFF = {
   id: 'staff-1',
@@ -128,5 +131,48 @@ describe('saveCourt', () => {
 
     expect(result).toMatchObject({ success: false, code: 'INVALID' })
     expect(createCourt).not.toHaveBeenCalled()
+  })
+})
+
+/**
+ * The storefront reads courts through a tag-cached catalog with a TTL, so a
+ * saved court that does not drop that entry stays invisible to customers until
+ * the TTL happens to expire. See src/features/courts/catalog.ts.
+ */
+describe('saveCourt cache invalidation', () => {
+  it('drops the storefront catalog after creating a court', async () => {
+    await saveCourt(NEW_COURT)
+
+    expect(revalidateTag).toHaveBeenCalledWith(CATALOG_TAG)
+  })
+
+  it('drops the storefront catalog after patching a court', async () => {
+    await saveCourt({ id: COURT_ID, basePriceCents: 70_000 })
+
+    expect(revalidateTag).toHaveBeenCalledWith(CATALOG_TAG)
+  })
+
+  it('drops the storefront catalog when a court is taken offline', async () => {
+    await saveCourt({ id: COURT_ID, isActive: false })
+
+    expect(revalidateTag).toHaveBeenCalledWith(CATALOG_TAG)
+  })
+
+  it('leaves the cache alone when the payload was rejected', async () => {
+    await saveCourt({ ...NEW_COURT, slug: 'Court 4!' })
+
+    expect(revalidateTag).not.toHaveBeenCalled()
+  })
+
+  it('leaves the cache alone when the write failed', async () => {
+    // Arrange — nothing changed in the database, so nothing is stale.
+    updateCourt.mockRejectedValue(new Error('connection reset'))
+
+    // Act
+    const result = await saveCourt({ id: COURT_ID, basePriceCents: 70_000 })
+
+    // Assert
+    expect(result).toMatchObject({ success: false })
+    expect(revalidateTag).not.toHaveBeenCalled()
   })
 })

@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { ADMIN_NAV_ITEMS, isNavItemActive } from './nav-items'
 
 describe('ADMIN_NAV_ITEMS', () => {
-  it('lists the seven console sections in the order the design shows them', () => {
+  it('lists the eight console sections in the order the design shows them', () => {
+    // Courts sits with Products and Pricing: those three configure what is for
+    // sale, while Schedule, Bookings, and Orders run the day.
     expect(ADMIN_NAV_ITEMS.map((item) => item.label)).toEqual([
       'Schedule',
       'Bookings',
       'Orders',
+      'Courts',
       'Products',
       'Pricing',
       'Customers',
