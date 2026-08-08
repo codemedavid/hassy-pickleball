@@ -130,6 +130,17 @@ describe('CourtsScreen — adding and editing', () => {
     expect(screen.queryByLabelText(/^court name/i)).not.toBeInTheDocument()
   })
 
+  it('closes the add form when it is cancelled', async () => {
+    const user = userEvent.setup()
+    const { onSave } = renderScreen()
+
+    await user.click(screen.getByRole('button', { name: /add court/i }))
+    await user.click(screen.getByRole('button', { name: /cancel/i }))
+
+    expect(screen.queryByLabelText(/^court name/i)).not.toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
   it('leaves the list untouched when the edit is cancelled', async () => {
     const user = userEvent.setup()
     const { onSave } = renderScreen()

@@ -83,6 +83,34 @@ describe('CourtEditor — adding a court', () => {
     )
   })
 
+  it('carries the descriptive fields through to the payload', async () => {
+    // Arrange — these four are the easiest to wire up wrong and never notice,
+    // because nothing else in the form depends on them.
+    const user = userEvent.setup()
+    const { onSave } = renderEditor()
+
+    // Act
+    await fillRequired(user)
+    await user.type(screen.getByLabelText(/blurb/i), 'Sunset side')
+    await user.type(screen.getByLabelText(/tags/i), 'Outdoor\nCovered')
+    await user.type(screen.getByLabelText(/included/i), 'Net and posts')
+    await user.clear(screen.getByLabelText(/sort order/i))
+    await user.type(screen.getByLabelText(/sort order/i), '4')
+    await user.click(screen.getByRole('button', { name: /save court/i }))
+
+    // Assert
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          blurb: 'Sunset side',
+          tags: ['Outdoor', 'Covered'],
+          includes: ['Net and posts'],
+          sortOrder: 4,
+        }),
+      ),
+    )
+  })
+
   it('creates rather than patches, sending no id', async () => {
     const user = userEvent.setup()
     const { onSave } = renderEditor()
