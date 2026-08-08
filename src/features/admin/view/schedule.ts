@@ -209,9 +209,7 @@ function heldMinutes(placed: readonly Placed[]): number {
     (state, span) => {
       const from = Math.max(span.from, state.coveredTo)
 
-      return span.to <= from
-        ? state
-        : { total: state.total + (span.to - from), coveredTo: span.to }
+      return span.to <= from ? state : { total: state.total + (span.to - from), coveredTo: span.to }
     },
     { total: 0, coveredTo: -Infinity },
   ).total

@@ -1,3 +1,4 @@
+import { toCents, toInteger, toMajorUnits } from './money-fields'
 import type { Court } from '@/lib/repositories/mappers'
 import type { CourtEnvironment } from '@/lib/repositories/rows'
 
@@ -12,8 +13,6 @@ import type { CourtEnvironment } from '@/lib/repositories/rows'
  * Kept out of the component so the mapping is testable without a DOM, matching
  * the other modules under ../view.
  */
-
-const CENTS_PER_UNIT = 100
 
 export type CourtFormState = {
   readonly name: string
@@ -140,22 +139,6 @@ function toList(value: string): string[] {
     .split('\n')
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0)
-}
-
-function toCents(value: string): number {
-  return Math.round(Number(value.trim()) * CENTS_PER_UNIT)
-}
-
-function toInteger(value: string): number {
-  return Math.round(Number(value.trim()))
-}
-
-/** Trailing zeros dropped, so a whole price shows as "600" rather than "600.00". */
-function toMajorUnits(cents: number): string {
-  const hasFraction = cents % CENTS_PER_UNIT !== 0
-  const units = cents / CENTS_PER_UNIT
-
-  return hasFraction ? units.toFixed(2) : String(units)
 }
 
 /**
