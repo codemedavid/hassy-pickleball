@@ -1,15 +1,10 @@
 import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { CustomersScreen } from './customers-screen'
-import { PricingScreen } from './pricing-screen'
 import { ProductsScreen } from './products-screen'
-import { describePricingRules } from '../view/pricing'
-import { club, at, makeCourt } from '../../../../test/admin-fixtures'
+import { club, at } from '../../../../test/admin-fixtures'
 import type { Customer } from '@/lib/repositories/booking-mappers'
 import type { Product } from '@/lib/repositories/mappers'
-import type { PricingRule } from '@/lib/domain/types'
-
-const harbor = makeCourt({ id: 'court-1', name: 'Harbor Court' })
 
 const products: Product[] = [
   {
@@ -38,22 +33,6 @@ const products: Product[] = [
   },
 ]
 
-const rules: PricingRule[] = [
-  {
-    id: 'rule-1',
-    label: 'Evening peak',
-    courtId: harbor.id,
-    daysOfWeek: [1, 2, 3, 4, 5],
-    startsAtTime: '18:00',
-    endsAtTime: '22:00',
-    minDurationMinutes: null,
-    appliesToTier: null,
-    kind: 'fixed',
-    valueCents: 75_000,
-    valuePercent: null,
-    priority: 20,
-  },
-]
 
 const customers: Customer[] = [
   {
@@ -107,37 +86,6 @@ describe('ProductsScreen', () => {
 
     // Assert
     expect(screen.getByText('No products yet.')).toBeInTheDocument()
-  })
-})
-
-describe('PricingScreen', () => {
-  it('shows rules in evaluation order with their conditions, scope, and rate', () => {
-    // Act
-    render(<PricingScreen rows={describePricingRules(rules, [harbor], club)} />)
-
-    // Assert
-    expect(screen.getByText('Evening peak')).toBeInTheDocument()
-    expect(screen.getByText(/6:00 PM–10:00 PM/)).toBeInTheDocument()
-    expect(screen.getByText('Harbor Court')).toBeInTheDocument()
-    expect(screen.getByText('₱750/hr')).toBeInTheDocument()
-  })
-
-  it('explains that the first matching rule wins, because the order is the behaviour', () => {
-    // Act
-    render(<PricingScreen rows={describePricingRules(rules, [harbor], club)} />)
-
-    // Assert
-    expect(screen.getByText(/first match sets the rate/i)).toBeInTheDocument()
-  })
-
-  it('says no rules are set rather than implying pricing is broken', () => {
-    // Act
-    render(<PricingScreen rows={[]} />)
-
-    // Assert
-    expect(
-      screen.getByText('No pricing rules yet — every court bills at its base rate.'),
-    ).toBeInTheDocument()
   })
 })
 

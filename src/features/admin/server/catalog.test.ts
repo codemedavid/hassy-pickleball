@@ -4,15 +4,12 @@ const getCurrentStaff = vi.fn()
 const createSupabaseServerClient = vi.fn()
 const createProduct = vi.fn()
 const updateProduct = vi.fn()
-const createPricingRule = vi.fn()
-const updatePricingRule = vi.fn()
 
 vi.mock('@/lib/auth/staff', () => ({ getCurrentStaff }))
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseServerClient }))
 vi.mock('@/lib/repositories/products', () => ({ createProduct, updateProduct }))
-vi.mock('@/lib/repositories/pricing-rules', () => ({ createPricingRule, updatePricingRule }))
 
-const { saveProduct, savePricingRule } = await import('./catalog')
+const { saveProduct } = await import('./catalog')
 
 const STAFF = {
   id: 'staff-1',
@@ -23,7 +20,6 @@ const STAFF = {
 }
 
 const PRODUCT_ID = '55555555-5555-4555-8555-555555555555'
-const RULE_ID = '66666666-6666-4666-8666-666666666666'
 const OTHER_CLUB = '77777777-7777-4777-8777-777777777777'
 
 const NEW_PRODUCT = {
@@ -36,19 +32,6 @@ const NEW_PRODUCT = {
   sortOrder: 1,
 }
 
-const NEW_RULE = {
-  courtId: null,
-  label: 'Weekend peak',
-  daysOfWeek: [6, 0],
-  startsAtTime: '16:00',
-  endsAtTime: '21:00',
-  minDurationMinutes: null,
-  appliesToTier: null,
-  kind: 'percent_delta',
-  valueCents: null,
-  valuePercent: 20,
-  priority: 10,
-}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -56,8 +39,6 @@ beforeEach(() => {
   getCurrentStaff.mockResolvedValue(STAFF)
   createProduct.mockResolvedValue({ id: PRODUCT_ID })
   updateProduct.mockResolvedValue({ id: PRODUCT_ID })
-  createPricingRule.mockResolvedValue({ id: RULE_ID })
-  updatePricingRule.mockResolvedValue({ id: RULE_ID })
 })
 
 describe('saveProduct', () => {
@@ -112,56 +93,5 @@ describe('saveProduct', () => {
     const result = await saveProduct({ ...NEW_PRODUCT, type: 'merch' })
 
     expect(result).toMatchObject({ success: false, code: 'INVALID' })
-  })
-})
-
-describe('savePricingRule', () => {
-  it('refuses a caller with no staff session', async () => {
-    getCurrentStaff.mockResolvedValue(null)
-
-    const result = await savePricingRule(NEW_RULE)
-
-    expect(result).toMatchObject({ success: false, code: 'UNAUTHORIZED' })
-    expect(createPricingRule).not.toHaveBeenCalled()
-  })
-
-  it('creates the rule under the staff member’s club', async () => {
-    await savePricingRule(NEW_RULE)
-
-    expect(createPricingRule).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ clubId: 'club-1', label: 'Weekend peak' }),
-    )
-  })
-
-  it('rejects a percentage rule that carries no percentage', async () => {
-    const result = await savePricingRule({ ...NEW_RULE, valuePercent: null })
-
-    expect(result).toMatchObject({ success: false, code: 'INVALID' })
-    expect(createPricingRule).not.toHaveBeenCalled()
-  })
-
-  it('rejects a cash rule that carries no amount', async () => {
-    const result = await savePricingRule({
-      ...NEW_RULE,
-      kind: 'fixed',
-      valuePercent: null,
-      valueCents: null,
-    })
-
-    expect(result).toMatchObject({ success: false, code: 'INVALID' })
-  })
-
-  it('rejects a day-of-week outside 0–6', async () => {
-    const result = await savePricingRule({ ...NEW_RULE, daysOfWeek: [7] })
-
-    expect(result).toMatchObject({ success: false, code: 'INVALID' })
-  })
-
-  it('patches an existing rule when an id is supplied', async () => {
-    await savePricingRule({ id: RULE_ID, isActive: false })
-
-    expect(createPricingRule).not.toHaveBeenCalled()
-    expect(updatePricingRule).toHaveBeenCalledWith(expect.anything(), RULE_ID, { isActive: false })
   })
 })

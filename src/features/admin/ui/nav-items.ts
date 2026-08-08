@@ -11,7 +11,6 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
   { label: 'Orders', href: '/admin/orders' },
   { label: 'Courts', href: '/admin/courts' },
   { label: 'Products', href: '/admin/products' },
-  { label: 'Pricing', href: '/admin/pricing' },
   { label: 'Customers', href: '/admin/customers' },
   { label: 'Reports', href: '/admin/reports' },
 ]

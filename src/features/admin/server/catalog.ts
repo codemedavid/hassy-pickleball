@@ -1,23 +1,16 @@
 import 'server-only'
 
-import {
-  createPricingRuleSchema,
-  createProductSchema,
-  pricingRulePatchSchema,
-  productPatchSchema,
-} from '@/lib/api/admin-schemas'
+import { createProductSchema, productPatchSchema } from '@/lib/api/admin-schemas'
 import { invalid, withStaff } from './session'
 import { createProduct, updateProduct } from '@/lib/repositories/products'
-import { createPricingRule, updatePricingRule } from '@/lib/repositories/pricing-rules'
 import type { Product } from '@/lib/repositories/mappers'
-import type { PricingRule } from '@/lib/domain/types'
 import type { Result } from '@/lib/api/result'
 
 /**
- * The product and pricing-rule editors.
+ * The product editor.
  *
- * One entry point per aggregate, create or patch decided by the presence of an
- * id, because the editor screen is the same form either way.
+ * Create or patch is decided by the presence of an id, because the editor
+ * screen is the same form either way.
  *
  * `clubId` is never read from the request. It comes from the staff session, so
  * a staff member of one club cannot create rows under another — a filter the
@@ -64,43 +57,6 @@ export async function saveProduct(input: unknown): Promise<Result<Product>> {
       hasQuantity: parsed.data.hasQuantity,
       imageUrl: parsed.data.imageUrl ?? null,
       sortOrder: parsed.data.sortOrder,
-    }),
-  )
-}
-
-export async function savePricingRule(input: unknown): Promise<Result<PricingRule>> {
-  if (hasId(input)) {
-    const parsed = pricingRulePatchSchema.safeParse(input)
-
-    if (!parsed.success) {
-      return invalid('Check the pricing rule')
-    }
-
-    const patch = withoutId(parsed.data)
-
-    return withStaff(({ client }) => updatePricingRule(client, parsed.data.id, patch))
-  }
-
-  const parsed = createPricingRuleSchema.safeParse(input)
-
-  if (!parsed.success) {
-    return invalid('Check the pricing rule')
-  }
-
-  return withStaff(({ staff, client }) =>
-    createPricingRule(client, {
-      clubId: staff.clubId,
-      courtId: parsed.data.courtId ?? null,
-      label: parsed.data.label,
-      daysOfWeek: parsed.data.daysOfWeek,
-      startsAtTime: parsed.data.startsAtTime ?? null,
-      endsAtTime: parsed.data.endsAtTime ?? null,
-      minDurationMinutes: parsed.data.minDurationMinutes ?? null,
-      appliesToTier: parsed.data.appliesToTier ?? null,
-      kind: parsed.data.kind,
-      valueCents: parsed.data.valueCents ?? null,
-      valuePercent: parsed.data.valuePercent ?? null,
-      priority: parsed.data.priority,
     }),
   )
 }
