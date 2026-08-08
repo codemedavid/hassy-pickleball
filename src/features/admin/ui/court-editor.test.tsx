@@ -12,7 +12,9 @@ const harbor = makeCourt({
   slug: 'harbor-court',
   basePriceCents: 60_000,
   minPlayers: 2,
-  maxPlayers: 4,
+  includedPlayers: 4,
+  maxPlayers: 6,
+  extraPlayerFeeCents: 15_000,
 })
 
 function renderEditor(overrides: Partial<React.ComponentProps<typeof CourtEditor>> = {}): {
@@ -284,6 +286,56 @@ describe('CourtEditor — failure paths', () => {
     await user.click(screen.getByRole('button', { name: /cancel/i }))
 
     expect(onCancel).toHaveBeenCalledTimes(1)
+    expect(onSave).not.toHaveBeenCalled()
+  })
+})
+
+describe('CourtEditor — pax pricing', () => {
+  it('sends the covered player count and the per-head fee in cents', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const { onSave } = renderEditor()
+
+    // Act
+    await fillRequired(user)
+    await user.clear(screen.getByLabelText(/players covered by the price/i))
+    await user.type(screen.getByLabelText(/players covered by the price/i), '4')
+    await user.clear(screen.getByLabelText(/fee per extra player/i))
+    await user.type(screen.getByLabelText(/fee per extra player/i), '150')
+    await user.clear(screen.getByLabelText(/most players/i))
+    await user.type(screen.getByLabelText(/most players/i), '6')
+    await user.click(screen.getByRole('button', { name: /save court/i }))
+
+    // Assert
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({ includedPlayers: 4, extraPlayerFeeCents: 15_000 }),
+      ),
+    )
+  })
+
+  it('loads the stored pax pricing when editing an existing court', () => {
+    renderEditor({ court: harbor })
+
+    expect(screen.getByLabelText(/players covered by the price/i)).toHaveValue('4')
+    expect(screen.getByLabelText(/fee per extra player/i)).toHaveValue('150')
+  })
+
+  it('refuses covering more players than the court seats, without a round trip', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const { onSave } = renderEditor()
+
+    // Act
+    await fillRequired(user)
+    await user.clear(screen.getByLabelText(/most players/i))
+    await user.type(screen.getByLabelText(/most players/i), '4')
+    await user.clear(screen.getByLabelText(/players covered by the price/i))
+    await user.type(screen.getByLabelText(/players covered by the price/i), '9')
+    await user.click(screen.getByRole('button', { name: /save court/i }))
+
+    // Assert
+    expect(await screen.findByRole('alert')).toHaveTextContent(/covered by the price/i)
     expect(onSave).not.toHaveBeenCalled()
   })
 })
