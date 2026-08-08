@@ -30,6 +30,8 @@ export type CreateCourtInput = {
   readonly sortOrder: number
   readonly minPlayers: number
   readonly maxPlayers: number
+  readonly includedPlayers: number
+  readonly extraPlayerFeeCents: number
 }
 
 /** Every field optional: the editor patches what changed and nothing else. */
@@ -48,6 +50,8 @@ export type CourtPatch = {
   readonly sortOrder?: number
   readonly minPlayers?: number
   readonly maxPlayers?: number
+  readonly includedPlayers?: number
+  readonly extraPlayerFeeCents?: number
   readonly isActive?: boolean
 }
 
@@ -115,6 +119,8 @@ export async function createCourt(client: Client, input: CreateCourtInput): Prom
       sort_order: input.sortOrder,
       min_players: input.minPlayers,
       max_players: input.maxPlayers,
+      included_players: input.includedPlayers,
+      extra_player_fee_cents: input.extraPlayerFeeCents,
     })
     .select('*')
     .single()
@@ -141,6 +147,9 @@ function toCourtRowPatch(patch: CourtPatch): CourtUpdate {
   if (patch.sortOrder !== undefined) columns.sort_order = patch.sortOrder
   if (patch.minPlayers !== undefined) columns.min_players = patch.minPlayers
   if (patch.maxPlayers !== undefined) columns.max_players = patch.maxPlayers
+  if (patch.includedPlayers !== undefined) columns.included_players = patch.includedPlayers
+  if (patch.extraPlayerFeeCents !== undefined)
+    columns.extra_player_fee_cents = patch.extraPlayerFeeCents
   if (patch.isActive !== undefined) columns.is_active = patch.isActive
 
   return columns

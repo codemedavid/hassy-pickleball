@@ -32,6 +32,10 @@ export type CourtFormState = {
   readonly sortOrder: string
   readonly minPlayers: string
   readonly maxPlayers: string
+  /** How many players the slot price covers before the per-head fee starts. */
+  readonly includedPlayers: string
+  /** Major units, like basePrice. ₱150 per extra head, not 15000. */
+  readonly extraPlayerFee: string
 }
 
 /** A doubles court is the common case, so a new court starts there. */
@@ -50,6 +54,8 @@ export const BLANK_COURT_FORM: CourtFormState = {
   sortOrder: '0',
   minPlayers: '2',
   maxPlayers: '4',
+  includedPlayers: '4',
+  extraPlayerFee: '0',
 }
 
 export function toFormState(court: Court | null): CourtFormState {
@@ -72,6 +78,8 @@ export function toFormState(court: Court | null): CourtFormState {
     sortOrder: String(court.sortOrder),
     minPlayers: String(court.minPlayers),
     maxPlayers: String(court.maxPlayers),
+    includedPlayers: String(court.includedPlayers),
+    extraPlayerFee: toMajorUnits(court.extraPlayerFeeCents),
   }
 }
 
@@ -91,6 +99,8 @@ export type CourtPayload = {
   readonly sortOrder: number
   readonly minPlayers: number
   readonly maxPlayers: number
+  readonly includedPlayers: number
+  readonly extraPlayerFeeCents: number
 }
 
 /**
@@ -117,6 +127,8 @@ export function toCourtPayload(state: CourtFormState, courtId?: string): CourtPa
     sortOrder: toInteger(state.sortOrder),
     minPlayers: toInteger(state.minPlayers),
     maxPlayers: toInteger(state.maxPlayers),
+    includedPlayers: toInteger(state.includedPlayers),
+    extraPlayerFeeCents: toCents(state.extraPlayerFee),
   }
 
   return courtId === undefined ? fields : { id: courtId, ...fields }

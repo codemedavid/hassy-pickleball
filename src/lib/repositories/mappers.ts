@@ -44,6 +44,10 @@ export type Court = {
   /** Player capacity ("pax"). Bounds what a guest may pick at booking. */
   readonly minPlayers: number
   readonly maxPlayers: number
+  /** How many players the slot price already covers. */
+  readonly includedPlayers: number
+  /** Charged per head beyond `includedPlayers`. */
+  readonly extraPlayerFeeCents: number
 }
 
 export type Product = {
@@ -138,6 +142,8 @@ export function toCourt(row: {
   is_active: boolean
   min_players: number
   max_players: number
+  included_players: number
+  extra_player_fee_cents: number
 }): Court {
   return {
     id: row.id,
@@ -157,6 +163,8 @@ export function toCourt(row: {
     isActive: row.is_active,
     minPlayers: row.min_players,
     maxPlayers: row.max_players,
+    includedPlayers: row.included_players,
+    extraPlayerFeeCents: row.extra_player_fee_cents,
   }
 }
 

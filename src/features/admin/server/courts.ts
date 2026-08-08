@@ -87,6 +87,8 @@ export async function saveCourt(input: unknown): Promise<Result<Court>> {
       sortOrder: parsed.data.sortOrder,
       minPlayers: parsed.data.minPlayers,
       maxPlayers: parsed.data.maxPlayers,
+      includedPlayers: parsed.data.includedPlayers,
+      extraPlayerFeeCents: parsed.data.extraPlayerFeeCents,
     }),
   )
 
