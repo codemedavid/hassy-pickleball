@@ -33,6 +33,7 @@ export interface CourtEditorProps {
 }
 
 const CAPACITY_MESSAGE = 'The most players cannot be fewer than the fewest'
+const INCLUDED_MESSAGE = 'Players covered by the price must sit inside the court capacity'
 
 const FIELD =
   'h-10 rounded-xl border border-line-strong bg-surface px-3 text-[14px] text-ink ' +
@@ -86,6 +87,14 @@ export function CourtEditor({
 
     if (payload.maxPlayers < payload.minPlayers) {
       setError(CAPACITY_MESSAGE)
+      return
+    }
+
+    if (
+      payload.includedPlayers < payload.minPlayers ||
+      payload.includedPlayers > payload.maxPlayers
+    ) {
+      setError(INCLUDED_MESSAGE)
       return
     }
 
@@ -191,6 +200,34 @@ export function CourtEditor({
         />
       </Field>
 
+      <Field
+        id={ids.includedPlayers}
+        label="Players covered by the price"
+        hint="Anyone beyond this pays the fee below."
+      >
+        <input
+          id={ids.includedPlayers}
+          value={form.includedPlayers}
+          onChange={(event) => update('includedPlayers', event.target.value)}
+          inputMode="numeric"
+          className={FIELD}
+        />
+      </Field>
+
+      <Field
+        id={ids.extraPlayerFee}
+        label={`Fee per extra player (${currency})`}
+        hint="Leave at 0 to sell the whole court for the slot price."
+      >
+        <input
+          id={ids.extraPlayerFee}
+          value={form.extraPlayerFee}
+          onChange={(event) => update('extraPlayerFee', event.target.value)}
+          inputMode="decimal"
+          className={FIELD}
+        />
+      </Field>
+
       <label className="flex items-center gap-2.5 self-end sm:col-span-2">
         <input
           type="checkbox"
@@ -286,6 +323,8 @@ function useFieldIds() {
     sortOrder: `${prefix}-sort-order`,
     minPlayers: `${prefix}-min-players`,
     maxPlayers: `${prefix}-max-players`,
+    includedPlayers: `${prefix}-included-players`,
+    extraPlayerFee: `${prefix}-extra-player-fee`,
     blurb: `${prefix}-blurb`,
     notes: `${prefix}-notes`,
     includes: `${prefix}-includes`,

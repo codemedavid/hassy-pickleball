@@ -235,7 +235,7 @@ describe('CourtsScreen pax pricing', () => {
 
     expect(row).toHaveTextContent('2–6')
     expect(row).toHaveTextContent(/4 covered/i)
-    expect(row).toHaveTextContent(/₱150\.00/)
+    expect(row).toHaveTextContent(/₱150 each/)
   })
 
   it('says nothing about a fee on a court that charges none', () => {

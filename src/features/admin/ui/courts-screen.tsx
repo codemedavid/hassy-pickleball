@@ -173,7 +173,17 @@ function CourtRow({
           </span>
         </td>
         <td className={`${CELL} text-slate tabular-nums`}>
-          {court.minPlayers}–{court.maxPlayers}
+          <span className="block">
+            {court.minPlayers}–{court.maxPlayers}
+          </span>
+          {/* Only where staff opted in: a "0 per extra player" line would be
+              noise on every court that is still sold whole for the slot price. */}
+          {court.extraPlayerFeeCents > 0 ? (
+            <span className="mt-px block text-[12.5px] text-subtle">
+              {court.includedPlayers} covered · {formatMoney(court.extraPlayerFeeCents, currency)}{' '}
+              each
+            </span>
+          ) : null}
         </td>
         <td className={`${CELL} text-slate tabular-nums`}>
           {formatMoney(court.basePriceCents, currency)}
