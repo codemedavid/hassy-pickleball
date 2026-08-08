@@ -2,19 +2,24 @@ import { describe, expect, it } from 'vitest'
 import { ADMIN_NAV_ITEMS, isNavItemActive } from './nav-items'
 
 describe('ADMIN_NAV_ITEMS', () => {
-  it('lists the eight console sections in the order the design shows them', () => {
-    // Courts sits with Products and Pricing: those three configure what is for
-    // sale, while Schedule, Bookings, and Orders run the day.
+  it('lists the seven console sections in the order the design shows them', () => {
+    // Courts sits with Products: those two configure what is for sale, while
+    // Schedule, Bookings, and Orders run the day.
     expect(ADMIN_NAV_ITEMS.map((item) => item.label)).toEqual([
       'Schedule',
       'Bookings',
       'Orders',
       'Courts',
       'Products',
-      'Pricing',
       'Customers',
       'Reports',
     ])
+  })
+
+  it('offers no Pricing tab, because the console cannot edit pricing rules', () => {
+    // Rules still drive every quote, but they are seeded and edited in the
+    // database — a read-only tab implied an editor the console never had.
+    expect(ADMIN_NAV_ITEMS.map((item) => item.href)).not.toContain('/admin/pricing')
   })
 
   it('points every section at a route under /admin', () => {
