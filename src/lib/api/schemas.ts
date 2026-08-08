@@ -21,6 +21,19 @@ const courtSelectionSchema = z
     path: ['endsAt'],
   })
 
+/**
+ * A named player. The ceiling matches MAX_PLAYERS_PER_COURT in admin-schemas:
+ * no court can seat more, so a longer roster is a mistake or an attack, not a
+ * booking worth sending to the database.
+ */
+const MAX_PLAYERS_PER_BOOKING = 32
+
+const playerNameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Please name every player, or remove the empty row')
+  .max(120)
+
 const bookingItemSchema = z.object({
   productId: z.uuid(),
   quantity: z.number().int().positive().max(99),
@@ -35,6 +48,12 @@ export const createBookingSchema = z.object({
   notes: z.string().trim().max(500).nullish(),
   courts: z.array(courtSelectionSchema).min(1, 'Pick at least one court and time'),
   items: z.array(bookingItemSchema).max(50).default([]),
+  /**
+   * Everyone playing. The server counts these to get the party size rather
+   * than accepting a separate number, so the roster and the size cannot
+   * disagree. Empty is allowed: a staff-side booking may have no roster yet.
+   */
+  players: z.array(playerNameSchema).max(MAX_PLAYERS_PER_BOOKING).default([]),
   /** How the guest intends to pay. Staff confirm settlement later. */
   paymentMethod: z.enum(['cash', 'card', 'bank_transfer', 'gcash', 'online']).nullish(),
 })

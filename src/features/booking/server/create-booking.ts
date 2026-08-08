@@ -10,6 +10,9 @@ import { listActivePricingRules } from '@/lib/repositories/pricing-rules'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { SLOT_TAKEN_CODES, type BookingSummary } from './booking-summary'
 
+/** Postgres check_violation — how create_booking reports an unseatable party. */
+const PARTY_SIZE_VIOLATION = '23514'
+
 /**
  * Booking creation.
  *
@@ -84,11 +87,23 @@ export async function createBooking(input: unknown): Promise<Result<CreatedBooki
         product_id: item.productId,
         quantity: item.quantity,
       })),
+      p_players: [...booking.players],
     })
 
     if (error) {
       if (SLOT_TAKEN_CODES.has(error.code ?? '')) {
         return err('Someone just took that slot. Please pick another time.', 'SLOT_TAKEN')
+      }
+
+      // create_booking raises check_violation when the party falls outside what
+      // the chosen courts seat. That is the guest's mistake to fix, not an
+      // outage, so it is reported as such — with the bound the database named,
+      // which is the only place that knows every court in the booking.
+      if (error.code === PARTY_SIZE_VIOLATION) {
+        return err(
+          'That is more players than these courts seat. Please check who is playing.',
+          'INVALID',
+        )
       }
 
       return err('We could not complete that booking. Please try again.', 'DB_ERROR')

@@ -1,4 +1,5 @@
 import { summariseCart, type Cart } from '@/lib/domain/cart'
+import { extraPlayerFeeCents, type CapacityBand } from '@/lib/domain/pax'
 import { formatMoney } from '@/lib/format/money'
 import { formatDayInZone, formatTimeInZone } from '@/lib/format/time'
 
@@ -36,12 +37,25 @@ export type OrderItemLine = {
   readonly price: string
 }
 
+/** The heads beyond what the slot price covers, as one line on the summary. */
+export type OrderExtraPlayersLine = {
+  readonly quantity: number
+  readonly price: string
+}
+
 export type OrderSummary = {
   readonly courtLines: readonly OrderCourtLine[]
   readonly itemLines: readonly OrderItemLine[]
+  readonly extraPlayersLine: OrderExtraPlayersLine | null
   readonly total: string
   readonly totalCents: number
   readonly isEmpty: boolean
+}
+
+/** Who is playing, and the seating terms of the courts they are playing on. */
+export type PartyPricing = {
+  readonly partySize: number
+  readonly band: CapacityBand
 }
 
 export type CheckoutContact = {
@@ -51,10 +65,23 @@ export type CheckoutContact = {
   readonly notes: string
 }
 
-export function buildOrderSummary(cart: Cart, currency: string): OrderSummary {
+export function buildOrderSummary(
+  cart: Cart,
+  currency: string,
+  party?: PartyPricing,
+): OrderSummary {
   const summary = summariseCart(cart)
+  // Zero until the guest has named enough players to exceed what the court
+  // price covers, so the line stays absent for the common case.
+  const extraFeeCents = party ? extraPlayerFeeCents(party.partySize, party.band) : 0
+  const extraPlayers = party ? Math.max(0, party.partySize - party.band.includedPlayers) : 0
+  const totalCents = summary.totalCents + extraFeeCents
 
   return {
+    extraPlayersLine:
+      extraFeeCents > 0
+        ? { quantity: extraPlayers, price: formatMoney(extraFeeCents, currency) }
+        : null,
     courtLines: cart.courts.map((court) => ({
       key: `${court.courtId}-${court.startsAt.toISOString()}`,
       name: court.courtName,
@@ -72,8 +99,8 @@ export function buildOrderSummary(cart: Cart, currency: string): OrderSummary {
       // checking the line, not the unit.
       price: formatMoney(item.unitPriceCents * item.quantity, item.currency),
     })),
-    total: formatMoney(summary.totalCents, currency),
-    totalCents: summary.totalCents,
+    total: formatMoney(totalCents, currency),
+    totalCents,
     isEmpty: cart.courts.length === 0 && cart.items.length === 0,
   }
 }
@@ -91,6 +118,9 @@ export type CheckoutOrder = {
     readonly endsAt: string
   }>
   readonly items: ReadonlyArray<{ readonly productId: string; readonly quantity: number }>
+  /** Everyone playing, in the order the booker named them. Counting them is
+   *  how the server derives the party size. */
+  readonly players: readonly string[]
 }
 
 /**
@@ -105,11 +135,13 @@ export function buildCheckoutOrder({
   cart,
   contact,
   paymentMethodId,
+  players = [],
 }: {
   readonly clubId: string
   readonly cart: Cart
   readonly contact: CheckoutContact
   readonly paymentMethodId: string
+  readonly players?: readonly string[]
 }): CheckoutOrder {
   const notes = contact.notes.trim()
 
@@ -126,5 +158,8 @@ export function buildCheckoutOrder({
       endsAt: court.endsAt.toISOString(),
     })),
     items: cart.items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+    // Blank rows are dropped rather than sent: the booker leaving the last row
+    // empty means a smaller party, not a player with no name.
+    players: players.map((player) => player.trim()).filter((player) => player.length > 0),
   }
 }
