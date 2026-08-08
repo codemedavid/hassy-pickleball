@@ -7,7 +7,7 @@ import type {
   BookingSegment,
   Payment,
 } from '@/lib/repositories/booking-mappers'
-import type { Club, Court } from '@/lib/repositories/mappers'
+import type { Club, Court, Product } from '@/lib/repositories/mappers'
 import type { BookingStatus } from '@/lib/domain/types'
 
 /**
@@ -58,6 +58,21 @@ export function makeCourt(overrides: Partial<Court> & { id: string }): Court {
     includedPlayers: 4,
     maxPlayers: 4,
     extraPlayerFeeCents: 0,
+    ...overrides,
+  }
+}
+
+export function makeProduct(overrides: Partial<Product> & { id: string }): Product {
+  return {
+    clubId: club.id,
+    name: 'Paddle rental',
+    description: null,
+    type: 'addon',
+    priceCents: 10_000,
+    hasQuantity: true,
+    imageUrl: null,
+    sortOrder: 1,
+    isActive: true,
     ...overrides,
   }
 }
