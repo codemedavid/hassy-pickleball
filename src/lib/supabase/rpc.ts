@@ -39,7 +39,12 @@ export async function callPendingRpc<K extends keyof PendingRpcArgs, T>(
   name: K,
   args: PendingRpcArgs[K],
 ): Promise<RpcResult<T>> {
-  const rpc = client.rpc as unknown as (n: string, a: unknown) => Promise<RpcResult<T>>
+  // Bound, not detached: `rpc` is a prototype method that reads `this.rest`,
+  // so calling it as a bare function throws before the request is ever made.
+  const rpc = client.rpc.bind(client) as unknown as (
+    n: string,
+    a: unknown,
+  ) => Promise<RpcResult<T>>
 
   return rpc(name, args)
 }
