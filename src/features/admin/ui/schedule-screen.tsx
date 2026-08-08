@@ -1,6 +1,16 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { AdminPageHeader, AdminScreen, CARD, EmptyState, StatCards } from './primitives'
+import { BlockTimeForm } from './block-time-form'
+import { shiftDayString } from '@/lib/domain/time'
 import type { ScheduleGrid, ScheduleTone } from '../view/schedule'
 import type { StatCard } from '../view/schedule-stats'
+import type { AvailabilityBlock } from '@/lib/repositories/booking-mappers'
+import type { Club, Court } from '@/lib/repositories/mappers'
+import type { Result } from '@/lib/api/result'
 
 /**
  * The day view of the court schedule.
@@ -8,6 +18,11 @@ import type { StatCard } from '../view/schedule-stats'
  * Entries are positioned as percentages of the column, which the view model
  * has already worked out. The colour of an entry is never its only meaning:
  * every entry prints its own time range, and the legend names each tone.
+ *
+ * The day is navigated with links rather than client state: the schedule is
+ * server-rendered per day, so ?day= is what actually loads another day's
+ * bookings, and a staff member can bookmark or share the date they are looking
+ * at. Today is the bare /admin, so the console's landing page stays canonical.
  */
 
 const ROW_HEIGHT_PX = 58
@@ -27,23 +42,65 @@ const LEGEND: readonly { readonly tone: ScheduleTone; readonly label: string }[]
 ]
 
 export interface ScheduleScreenProps {
+  /** Club-local calendar day being viewed, "YYYY-MM-DD". */
+  readonly day: string
+  readonly dayLabel: string
+  readonly club: Club
+  readonly courts: readonly Court[]
   readonly grid: ScheduleGrid
   readonly stats: readonly StatCard[]
-  readonly dayLabel: string
+  readonly onBlock: (payload: unknown) => Promise<Result<AvailabilityBlock>>
+  readonly onRelease: (payload: unknown) => Promise<Result<{ blockId: string }>>
 }
 
-export function ScheduleScreen({ grid, stats, dayLabel }: ScheduleScreenProps) {
+export function ScheduleScreen({
+  day,
+  dayLabel,
+  club,
+  courts,
+  grid,
+  stats,
+  onBlock,
+  onRelease,
+}: ScheduleScreenProps) {
+  const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+
   const columnTemplate = `74px repeat(${grid.columns.length}, minmax(150px, 1fr))`
   const bodyHeight = grid.hourLabels.length * ROW_HEIGHT_PX
+
+  function handleRelease(blockId: string): void {
+    setError(null)
+
+    startTransition(async () => {
+      const result = await onRelease({ blockId })
+
+      if (!result.success) {
+        setError(result.error)
+        return
+      }
+
+      router.refresh()
+    })
+  }
 
   return (
     <AdminScreen>
       <AdminPageHeader
         title="Court schedule"
         subtitle={`${dayLabel} · bookings and blocked time across every court`}
-      />
+      >
+        <DayNav day={day} />
+      </AdminPageHeader>
 
       <StatCards stats={stats} />
+
+      {error ? (
+        <p role="alert" className="mb-3 text-[13px] font-semibold text-danger">
+          {error}
+        </p>
+      ) : null}
 
       <div className={`${CARD} overflow-x-auto`}>
         {grid.columns.length === 0 ? (
@@ -71,6 +128,9 @@ export function ScheduleScreen({ grid, stats, dayLabel }: ScheduleScreenProps) {
                     <span className="block text-[14.5px] font-bold">{column.courtName}</span>
                     <span className="mt-0.5 block text-[12px] font-normal text-subtle">
                       {column.meta}
+                    </span>
+                    <span className="mt-0.5 block text-[12px] font-semibold text-olive">
+                      {column.openLabel}
                     </span>
                   </span>
                 ))}
@@ -124,6 +184,17 @@ export function ScheduleScreen({ grid, stats, dayLabel }: ScheduleScreenProps) {
                         <span className="mt-0.5 block text-[11.5px] opacity-80">
                           {entry.detail}
                         </span>
+                        {entry.blockId ? (
+                          <button
+                            type="button"
+                            aria-label={`Release ${entry.title}`}
+                            disabled={isPending}
+                            onClick={() => handleRelease(entry.blockId as string)}
+                            className="mt-1 text-[11.5px] font-semibold underline underline-offset-2 disabled:opacity-55"
+                          >
+                            Release
+                          </button>
+                        ) : null}
                       </span>
                     ))}
                   </span>
@@ -133,6 +204,10 @@ export function ScheduleScreen({ grid, stats, dayLabel }: ScheduleScreenProps) {
           </div>
         )}
       </div>
+
+      {courts.length > 0 ? (
+        <BlockTimeForm day={day} club={club} courts={courts} onBlock={onBlock} />
+      ) : null}
 
       <ul
         aria-label="Schedule legend"
@@ -146,5 +221,34 @@ export function ScheduleScreen({ grid, stats, dayLabel }: ScheduleScreenProps) {
         ))}
       </ul>
     </AdminScreen>
+  )
+}
+
+const DAY_LINK =
+  'inline-flex h-10 items-center rounded-xl border border-line-strong bg-surface px-3.5 ' +
+  'text-[13px] font-semibold text-ink hover:border-line-heavy'
+
+/** Previous day, today, next day — the only three moves the desk ever makes. */
+function DayNav({ day }: { readonly day: string }) {
+  return (
+    <nav aria-label="Schedule day" className="flex gap-2">
+      <Link
+        href={`/admin?day=${shiftDayString(day, -1)}`}
+        aria-label="Previous day"
+        className={DAY_LINK}
+      >
+        ‹
+      </Link>
+      <Link href="/admin" className={DAY_LINK}>
+        Today
+      </Link>
+      <Link
+        href={`/admin?day=${shiftDayString(day, 1)}`}
+        aria-label="Next day"
+        className={DAY_LINK}
+      >
+        ›
+      </Link>
+    </nav>
   )
 }

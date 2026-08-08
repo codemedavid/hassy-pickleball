@@ -51,16 +51,19 @@ export type DayWindow = {
 
 const MINUTES_PER_DAY = 1440
 
-/** The club-local day containing `now`, as a UTC half-open interval. */
-export function todayWindow(club: Club, now: Date = new Date()): DayWindow {
-  const day = toDayStringInZone(now, club.timeZone)
-
+/** A named club-local day, as a UTC half-open interval. */
+export function dayWindow(club: Club, day: string): DayWindow {
   return {
     day,
     from: zonedTimeToUtc(day, 0, club.timeZone),
     to: zonedTimeToUtc(day, MINUTES_PER_DAY, club.timeZone),
     days: 1,
   }
+}
+
+/** The club-local day containing `now`, as a UTC half-open interval. */
+export function todayWindow(club: Club, now: Date = new Date()): DayWindow {
+  return dayWindow(club, toDayStringInZone(now, club.timeZone))
 }
 
 /** The `days`-long club-local window ending at the end of today. */
