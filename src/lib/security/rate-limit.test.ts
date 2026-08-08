@@ -62,6 +62,35 @@ describe('consumeRateLimit', () => {
     await expect(consumeRateLimit('booking', 'ip:abc123')).resolves.toBe(false)
   })
 
+  // Failing closed is right; failing closed silently is not. A broken counter
+  // is indistinguishable from a genuinely exhausted one at the UI, so without
+  // this the guest sees "Too many requests" and no one can tell why.
+  it('reports the reason when the counter errors', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+    rpc.mockResolvedValue({ data: null, error: { message: 'function does not exist' } })
+
+    await consumeRateLimit('booking', 'ip:abc123')
+
+    expect(logged).toHaveBeenCalledWith(
+      expect.stringMatching(/rate limit/i),
+      expect.objectContaining({ bucket: 'booking', reason: 'function does not exist' }),
+    )
+    logged.mockRestore()
+  })
+
+  it('reports the reason when the counter throws', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+    rpc.mockRejectedValue(new Error('connection refused'))
+
+    await consumeRateLimit('booking', 'ip:abc123')
+
+    expect(logged).toHaveBeenCalledWith(
+      expect.stringMatching(/rate limit/i),
+      expect.objectContaining({ bucket: 'booking', reason: 'connection refused' }),
+    )
+    logged.mockRestore()
+  })
+
   it('fails closed when the counter returns nothing', async () => {
     rpc.mockResolvedValue({ data: null, error: null })
 

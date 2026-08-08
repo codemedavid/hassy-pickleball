@@ -50,7 +50,7 @@ export async function consumeRateLimit(
   const policy = RATE_LIMITS[bucket]
 
   try {
-    const { data } = await callPendingRpc<'record_lookup_attempt', boolean>(
+    const { data, error } = await callPendingRpc<'record_lookup_attempt', boolean>(
       createSupabaseAdminClient(),
       'record_lookup_attempt',
       {
@@ -62,10 +62,32 @@ export async function consumeRateLimit(
       },
     )
 
+    if (error) {
+      reportBrokenCounter(bucket, error.message)
+
+      return false
+    }
+
     return data === true
-  } catch {
+  } catch (error: unknown) {
+    reportBrokenCounter(bucket, describe(error))
+
     return false
   }
+}
+
+function describe(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+/**
+ * A broken counter and an exhausted one are the same refusal to the caller, by
+ * design — the guest must not learn which. That makes this log the only place
+ * the difference survives, so it must never be dropped. The identity is
+ * deliberately absent: it is the one field here that is personal data.
+ */
+function reportBrokenCounter(bucket: RateLimitBucket, reason: string): void {
+  console.error('Rate limit counter unavailable; refusing the call', { bucket, reason })
 }
 
 /**
