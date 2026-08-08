@@ -39,7 +39,9 @@ const NEW_COURT = {
   basePriceCents: 60_000,
   sortOrder: 4,
   minPlayers: 2,
-  maxPlayers: 4,
+  includedPlayers: 4,
+  maxPlayers: 6,
+  extraPlayerFeeCents: 15_000,
 }
 
 beforeEach(() => {
@@ -112,6 +114,44 @@ describe('saveCourt', () => {
 
     expect(result).toMatchObject({ success: false, code: 'INVALID' })
     expect(updateCourt).not.toHaveBeenCalled()
+  })
+
+  it('rejects an included count above what the court seats', async () => {
+    // Mirrors courts_included_within_capacity: covering more players than the
+    // court holds would make the extra-player fee unreachable.
+    const result = await saveCourt({ ...NEW_COURT, includedPlayers: 9, maxPlayers: 6 })
+
+    expect(result).toMatchObject({ success: false, code: 'INVALID' })
+    expect(createCourt).not.toHaveBeenCalled()
+  })
+
+  it('rejects an included count below the fewest players the court takes', async () => {
+    const result = await saveCourt({ ...NEW_COURT, minPlayers: 4, includedPlayers: 2 })
+
+    expect(result).toMatchObject({ success: false, code: 'INVALID' })
+    expect(createCourt).not.toHaveBeenCalled()
+  })
+
+  it('rejects a negative extra-player fee', async () => {
+    const result = await saveCourt({ ...NEW_COURT, extraPlayerFeeCents: -1 })
+
+    expect(result).toMatchObject({ success: false, code: 'INVALID' })
+    expect(createCourt).not.toHaveBeenCalled()
+  })
+
+  it('accepts a court that charges nothing for extra players', async () => {
+    const result = await saveCourt({ ...NEW_COURT, extraPlayerFeeCents: 0 })
+
+    expect(result).toMatchObject({ success: true })
+  })
+
+  it('carries the pax pricing through to the repository', async () => {
+    await saveCourt(NEW_COURT)
+
+    expect(createCourt).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ includedPlayers: 4, extraPlayerFeeCents: 15_000 }),
+    )
   })
 
   it('rejects a negative base price', async () => {

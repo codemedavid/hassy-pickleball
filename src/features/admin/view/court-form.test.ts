@@ -19,7 +19,9 @@ const harbor = makeCourt({
   basePriceCents: 60_000,
   sortOrder: 3,
   minPlayers: 2,
-  maxPlayers: 4,
+  includedPlayers: 4,
+  maxPlayers: 6,
+  extraPlayerFeeCents: 15_000,
 })
 
 describe('toFormState', () => {
@@ -37,7 +39,14 @@ describe('toFormState', () => {
     expect(state.heroImageUrl).toBe('https://ik.imagekit.io/test/harbor.png')
     expect(state.sortOrder).toBe('3')
     expect(state.minPlayers).toBe('2')
-    expect(state.maxPlayers).toBe('4')
+    expect(state.maxPlayers).toBe('6')
+  })
+
+  it('fills the pax pricing fields, the fee in major units like the base price', () => {
+    const state = toFormState(harbor)
+
+    expect(state.includedPlayers).toBe('4')
+    expect(state.extraPlayerFee).toBe('150')
   })
 
   it('shows the price in major units, because that is how staff think about it', () => {
@@ -69,6 +78,13 @@ describe('toFormState', () => {
   it('starts blank for a court that does not exist yet', () => {
     expect(toFormState(null)).toEqual(BLANK_COURT_FORM)
   })
+
+  it('starts a new court covering its whole capacity for free', () => {
+    // A new court that silently charged per head would surprise the staff
+    // member who created it, so the fee is opt-in.
+    expect(BLANK_COURT_FORM.includedPlayers).toBe('4')
+    expect(BLANK_COURT_FORM.extraPlayerFee).toBe('0')
+  })
 })
 
 describe('toCourtPayload', () => {
@@ -94,8 +110,22 @@ describe('toCourtPayload', () => {
       basePriceCents: 60_000,
       sortOrder: 3,
       minPlayers: 2,
-      maxPlayers: 4,
+      includedPlayers: 4,
+      extraPlayerFeeCents: 15_000,
+      maxPlayers: 6,
     })
+  })
+
+  it('converts the extra-player fee to cents, like the base price', () => {
+    const state = { ...toFormState(harbor), extraPlayerFee: '99.50' }
+
+    expect(toCourtPayload(state).extraPlayerFeeCents).toBe(9_950)
+  })
+
+  it('leaves an unparseable fee as NaN so the schema refuses it', () => {
+    const state = { ...toFormState(harbor), extraPlayerFee: 'free' }
+
+    expect(toCourtPayload(state).extraPlayerFeeCents).toBeNaN()
   })
 
   it('carries the id when editing, so the server patches instead of creating', () => {
