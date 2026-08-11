@@ -150,11 +150,16 @@ All files    |   95.44 |    87.24 |   98.51 |   97.28 |
 
 Above the 80% threshold on all four metrics.
 
-The two exclusions are **pre-existing untracked WIP files** unrelated to this
+The two exclusions were **pre-existing untracked WIP files** unrelated to this
 change (`skeleton.test.tsx` imports a `./skeleton` module that does not exist;
 `loading-states.test.tsx` imports four `loading` modules that do not exist).
-They break `pnpm test:coverage` and `pnpm typecheck` today, on `main` as much as
-here. They were left untouched rather than folded into this change.
+They broke `pnpm test:coverage` and `pnpm typecheck` at the time, on `main` as
+much as here. They were left untouched rather than folded into this change.
+
+> **Resolved since.** Those two files were implemented in
+> [`loading-states.tdd.md`](./loading-states.tdd.md). `test:coverage` now runs
+> clean with no exclusions, so the command above no longer needs the two
+> `--exclude` flags.
 
 ## Known gaps
 
