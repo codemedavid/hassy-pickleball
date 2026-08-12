@@ -57,6 +57,11 @@ export type Payment = {
   readonly externalReference: string | null
   readonly paidAt: Date | null
   readonly refundedAt: Date | null
+  /**
+   * Storage object key for the guest's uploaded proof, not a link. The bucket
+   * is private; the console signs a time-boxed URL when staff open it.
+   */
+  readonly proofUrl: string | null
 }
 
 export type Customer = {
@@ -169,6 +174,7 @@ export function toPayment(row: {
   external_reference: string | null
   paid_at: string | null
   refunded_at: string | null
+  proof_url: string | null
 }): Payment {
   return {
     id: row.id,
@@ -179,6 +185,7 @@ export function toPayment(row: {
     externalReference: row.external_reference,
     paidAt: toNullableDate(row.paid_at),
     refundedAt: toNullableDate(row.refunded_at),
+    proofUrl: row.proof_url,
   }
 }
 

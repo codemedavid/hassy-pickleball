@@ -103,6 +103,8 @@ type PaymentSpec = {
   readonly method: Payment['method']
   readonly status: Payment['status']
   readonly amountCents?: number
+  /** Storage object key for an uploaded proof, as `attachPaymentProof` writes it. */
+  readonly proofUrl?: string | null
 }
 
 export type BookingSpec = {
@@ -182,6 +184,7 @@ export function makeBooking(spec: BookingSpec): BookingDetail {
     externalReference: null,
     paidAt: payment.status === 'paid' ? at('09:12') : null,
     refundedAt: payment.status === 'refunded' ? at('10:30') : null,
+    proofUrl: payment.proofUrl ?? null,
   }))
 
   return { booking, segments, items, payments }

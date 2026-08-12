@@ -151,6 +151,7 @@ describe('toPayment', () => {
       external_reference: 'GC-123',
       paid_at: '2026-02-21T04:00:00.000Z',
       refunded_at: null,
+      proof_url: null,
     })
 
     expect(payment).toMatchObject({
@@ -161,6 +162,38 @@ describe('toPayment', () => {
     })
     expect(payment.paidAt?.toISOString()).toBe('2026-02-21T04:00:00.000Z')
     expect(payment.refundedAt).toBeNull()
+  })
+
+  it('carries the stored proof path so the console can sign a link to it', () => {
+    const payment = toPayment({
+      id: 'payment-1',
+      booking_id: 'booking-1',
+      method: 'bank_transfer',
+      status: 'pending',
+      amount_cents: 60000,
+      external_reference: null,
+      paid_at: null,
+      refunded_at: null,
+      proof_url: 'PB-4G6JVH/proof.png',
+    })
+
+    expect(payment.proofUrl).toBe('PB-4G6JVH/proof.png')
+  })
+
+  it('reads a cash payment with no uploaded proof as having none', () => {
+    const payment = toPayment({
+      id: 'payment-2',
+      booking_id: 'booking-1',
+      method: 'cash',
+      status: 'paid',
+      amount_cents: 60000,
+      external_reference: null,
+      paid_at: '2026-02-21T04:00:00.000Z',
+      refunded_at: null,
+      proof_url: null,
+    })
+
+    expect(payment.proofUrl).toBeNull()
   })
 })
 

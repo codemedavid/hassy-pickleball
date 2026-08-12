@@ -26,7 +26,7 @@ const DETAIL_COLUMNS = `
   *,
   booking_courts (id, court_id, status, starts_at, ends_at, price_cents, courts (name)),
   booking_items (id, product_id, name_snapshot, unit_price_cents, quantity, line_total_cents),
-  payments (id, booking_id, method, status, amount_cents, external_reference, paid_at, refunded_at)
+  payments (id, booking_id, method, status, amount_cents, external_reference, paid_at, refunded_at, proof_url)
 `
 
 type DetailRow = Parameters<typeof toBooking>[0] & {

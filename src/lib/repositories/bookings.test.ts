@@ -77,6 +77,19 @@ describe('loadBookingDetail', () => {
     expect(columns).toContain('payments')
   })
 
+  it('selects the payment proof path, which the console signs a link from', async () => {
+    const bookings = fakeTable({
+      data: { ...BOOKING_ROW, booking_courts: [], booking_items: [], payments: [] },
+      error: null,
+    })
+
+    await loadBookingDetail(fakeClient({ bookings }), 'booking-1')
+
+    const [select] = callsFor(bookings, 'select')
+
+    expect(String(select?.args[0] ?? '')).toContain('proof_url')
+  })
+
   it('maps every related collection onto the detail', async () => {
     const bookings = fakeTable({
       data: {
