@@ -1,10 +1,16 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SiteHeader } from './site-header'
 import { CartProvider, useCart } from '@/features/cart/cart-provider'
 import { resetCartSnapshot } from '@/features/cart/cart-store'
 import type { CartCourtLine, CartItemLine } from '@/lib/domain/cart'
+
+const pathname = vi.hoisted(() => ({ current: '/' }))
+
+vi.mock('next/navigation', () => ({
+  usePathname: () => pathname.current,
+}))
 
 function selection(overrides: Partial<CartCourtLine> = {}): CartCourtLine {
   return {
@@ -59,6 +65,12 @@ function renderHeader() {
 function cartButton() {
   return screen.getByRole('button', { name: /^cart/i })
 }
+
+beforeEach(() => {
+  // Every storefront expectation below assumes a customer-facing route; the
+  // admin cases opt in by setting this themselves.
+  pathname.current = '/'
+})
 
 afterEach(() => {
   window.localStorage.clear()
@@ -164,5 +176,51 @@ describe('SiteHeader', () => {
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(cartButton()).toHaveFocus()
+  })
+
+  describe('on the admin console', () => {
+    it('renders no storefront chrome on the console root', () => {
+      // Arrange
+      pathname.current = '/admin'
+
+      // Act
+      renderHeader()
+
+      // Assert
+      expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+    })
+
+    it('renders no storefront chrome on a nested console section', () => {
+      // Arrange
+      pathname.current = '/admin/courts'
+
+      // Act
+      renderHeader()
+
+      // Assert
+      expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+    })
+
+    it('hides the cart control along with the rest of the header', () => {
+      // Arrange
+      pathname.current = '/admin/products'
+
+      // Act
+      renderHeader()
+
+      // Assert
+      expect(screen.queryByRole('button', { name: /^cart/i })).not.toBeInTheDocument()
+    })
+
+    it('keeps the header on a storefront route that merely starts with the same letters', () => {
+      // Arrange
+      pathname.current = '/administration-guide'
+
+      // Act
+      renderHeader()
+
+      // Assert
+      expect(screen.getByRole('banner')).toBeInTheDocument()
+    })
   })
 })
