@@ -30,6 +30,24 @@ export const markBookingPaidSchema = z.object({
 
 export const refundPaymentSchema = z.object({ paymentId: z.uuid() })
 
+/**
+ * The statuses the desk can move a booking to. `pending` is absent: it is what
+ * `create_booking` opens a booking as, not somewhere staff send one back to.
+ * Which of these is reachable from where the booking is now is decided in
+ * src/features/admin/server/bookings.ts, against the stored row.
+ */
+const SETTABLE_BOOKING_STATUSES = [
+  'awaiting_payment',
+  'confirmed',
+  'completed',
+  'cancelled',
+] as const
+
+export const setBookingStatusSchema = z.object({
+  bookingId: z.uuid(),
+  status: z.enum(SETTABLE_BOOKING_STATUSES),
+})
+
 export const createBlockSchema = z
   .object({
     courtId: z.uuid(),
@@ -128,6 +146,9 @@ export const courtPatchSchema = courtFieldsSchema
   .extend({ id: z.uuid(), isActive: z.boolean().optional() })
   .refine(hasOrderedCapacity, { message: CAPACITY_MESSAGE, path: ['maxPlayers'] })
   .refine(hasIncludedWithinCapacity, { message: INCLUDED_MESSAGE, path: ['includedPlayers'] })
+  .refine((court) => Object.keys(court).some((key) => key !== 'id'), {
+    message: 'Choose at least one court detail to change',
+  })
 
 const productFieldsSchema = z.object({
   name: z.string().trim().min(1).max(120),

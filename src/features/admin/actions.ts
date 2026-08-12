@@ -10,11 +10,12 @@
  */
 
 import { markBookingPaid, refundBookingPayment, type PaidResult } from './server/payments'
+import { setBookingStatus } from './server/bookings'
 import { blockCourtTime, removeCourtBlock } from './server/blocks'
 import { saveProduct } from './server/catalog'
 import { saveCourt } from './server/courts'
 import { uploadCatalogImage, type UploadedCatalogImage } from './server/media'
-import type { AvailabilityBlock, Payment } from '@/lib/repositories/booking-mappers'
+import type { AvailabilityBlock, Booking, Payment } from '@/lib/repositories/booking-mappers'
 import type { Court, Product } from '@/lib/repositories/mappers'
 import type { Result } from '@/lib/api/result'
 
@@ -24,6 +25,10 @@ export async function markBookingPaidAction(input: unknown): Promise<Result<Paid
 
 export async function refundPaymentAction(input: unknown): Promise<Result<Payment>> {
   return refundBookingPayment(input)
+}
+
+export async function setBookingStatusAction(input: unknown): Promise<Result<Booking>> {
+  return setBookingStatus(input)
 }
 
 export async function blockCourtTimeAction(input: unknown): Promise<Result<AvailabilityBlock>> {
