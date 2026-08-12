@@ -3,6 +3,7 @@ import 'server-only'
 import { setBookingStatusSchema } from '@/lib/api/admin-schemas'
 import { invalid, withStaff } from './session'
 import { loadBookingDetail, updateBookingStatus } from '@/lib/repositories/bookings'
+import { canTransition } from '@/lib/domain/booking-status'
 import type { Booking } from '@/lib/repositories/booking-mappers'
 import type { BookingStatus } from '@/lib/domain/types'
 import type { Result } from '@/lib/api/result'
@@ -12,24 +13,10 @@ import type { Result } from '@/lib/api/result'
  *
  * The transition is judged against the stored row rather than anything the
  * caller sends, so two staff members acting from screens that loaded a minute
- * apart cannot both confirm the same booking out of the same stale status.
+ * apart cannot both confirm the same booking out of the same stale status. The
+ * table itself lives in @/lib/domain/booking-status, shared with the console so
+ * the buttons offered are exactly the moves accepted here.
  */
-
-/**
- * Where a booking can go from where it is.
- *
- * `cancelled` and `completed` are terminal. Reviving either would re-arm
- * `booking_courts_no_double_booking` against a slot that may have been resold
- * in the meantime; the desk rebooks instead, which goes through the
- * availability check like any other booking.
- */
-const ALLOWED_TRANSITIONS: Record<BookingStatus, readonly BookingStatus[]> = {
-  pending: ['awaiting_payment', 'confirmed', 'cancelled'],
-  awaiting_payment: ['confirmed', 'cancelled'],
-  confirmed: ['completed', 'cancelled'],
-  completed: [],
-  cancelled: [],
-}
 
 const MISSING_MESSAGE = 'That booking is no longer there'
 
@@ -57,7 +44,7 @@ export async function setBookingStatus(input: unknown): Promise<Result<Booking>>
 
     const current = detail.booking.status
 
-    if (!ALLOWED_TRANSITIONS[current].includes(status)) {
+    if (!canTransition(current, status)) {
       return invalid(refusal(current, status))
     }
 
