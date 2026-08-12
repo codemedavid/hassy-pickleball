@@ -1,9 +1,17 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { useCart } from '@/features/cart/cart-provider'
 import { CART_DRAWER_ID, CartDrawer } from '@/features/cart/ui/cart-drawer'
+
+const ADMIN_ROOT = '/admin'
+
+/** The admin console brings its own nav, so the storefront chrome stands down. */
+function isAdminRoute(pathname: string) {
+  return pathname === ADMIN_ROOT || pathname.startsWith(`${ADMIN_ROOT}/`)
+}
 
 /**
  * Site chrome for the storefront.
@@ -13,6 +21,7 @@ import { CART_DRAWER_ID, CartDrawer } from '@/features/cart/ui/cart-drawer'
  * state lives here because the same component owns both halves of the pair.
  */
 export function SiteHeader() {
+  const pathname = usePathname()
   const { summary } = useCart()
   const count = summary.courtCount + summary.itemCount
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -23,6 +32,12 @@ export function SiteHeader() {
     // The drawer took focus on open; dropping it on the body would restart
     // keyboard navigation at the top of the page.
     cartRef.current?.focus()
+  }
+
+  // Placed after the hooks so the hook order stays stable across navigation
+  // between the storefront and the console.
+  if (isAdminRoute(pathname)) {
+    return null
   }
 
   return (
