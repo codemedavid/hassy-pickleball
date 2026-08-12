@@ -63,9 +63,5 @@ export function extraPlayerFeeCents(partySize: number, band: CapacityBand): numb
  * before they submit rather than after the transaction rolls back.
  */
 export function isPartySizeAllowed(partySize: number, band: CapacityBand): boolean {
-  return (
-    Number.isInteger(partySize) &&
-    partySize >= band.minPlayers &&
-    partySize <= band.maxPlayers
-  )
+  return Number.isInteger(partySize) && partySize >= band.minPlayers && partySize <= band.maxPlayers
 }

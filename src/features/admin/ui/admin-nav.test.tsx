@@ -42,13 +42,13 @@ describe('AdminNav', () => {
 
   it('marks the section being viewed as current, for screen readers too', () => {
     // Arrange
-    pathname.current = '/admin/orders/ORD-2291'
+    pathname.current = '/admin/bookings/PB-4821'
 
     // Act
     render(<AdminNav clubName="Riverbend" staffName="Priya" />)
 
     // Assert — colour alone would not tell a screen reader where it is.
-    expect(screen.getByRole('link', { name: 'Orders' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Bookings' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Schedule' })).not.toHaveAttribute('aria-current')
   })
 

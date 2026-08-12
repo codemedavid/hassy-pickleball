@@ -81,6 +81,24 @@ export async function listAllCourts(client: Client, clubId: string): Promise<Cou
   return (data ?? []).map(toCourt)
 }
 
+/** Loads the stored row before an admin patch, including an offline court. */
+export async function findCourtById(
+  client: Client,
+  clubId: string,
+  courtId: string,
+): Promise<Court | null> {
+  const { data, error } = await client
+    .from('courts')
+    .select('*')
+    .eq('club_id', clubId)
+    .eq('id', courtId)
+    .maybeSingle()
+
+  raise('Failed to load court', error)
+
+  return data ? toCourt(data) : null
+}
+
 /** Backs the court detail page. Slugs are unique per club, not globally. */
 export async function findCourtBySlug(
   client: Client,

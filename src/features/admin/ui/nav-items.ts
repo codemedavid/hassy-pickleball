@@ -7,8 +7,10 @@ export type AdminNavItem = {
 
 export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
   { label: 'Schedule', href: '/admin' },
+  // Bookings and payments are one section: an order was only ever a booking
+  // seen through its payments, and two tabs meant reconciling on one and
+  // confirming on the other.
   { label: 'Bookings', href: '/admin/bookings' },
-  { label: 'Orders', href: '/admin/orders' },
   { label: 'Courts', href: '/admin/courts' },
   { label: 'Products', href: '/admin/products' },
   { label: 'Customers', href: '/admin/customers' },
@@ -22,7 +24,7 @@ const CONSOLE_ROOT = '/admin'
  *
  * The schedule lives at the console root, so it is matched exactly — a prefix
  * match there would light up Schedule on every other page. Every other section
- * also claims its nested detail routes, so /admin/orders/ORD-1 keeps Orders lit.
+ * also claims its nested detail routes, so /admin/bookings/PB-4821 keeps Bookings lit.
  */
 export function isNavItemActive(pathname: string, href: string): boolean {
   if (href === CONSOLE_ROOT) {

@@ -22,6 +22,8 @@ function court(overrides: Partial<Court> = {}): Court {
     isActive: true,
     minPlayers: 2,
     maxPlayers: 4,
+    includedPlayers: 4,
+    extraPlayerFeeCents: 0,
     ...overrides,
   }
 }

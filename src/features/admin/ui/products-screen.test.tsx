@@ -178,9 +178,7 @@ describe('ProductsScreen — editing a product', () => {
     await user.click(within(rowFor('Paddle rental')).getByRole('button', { name: /hide/i }))
 
     // Assert
-    await waitFor(() =>
-      expect(onSave).toHaveBeenCalledWith({ id: PADDLE_ID, isActive: false }),
-    )
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ id: PADDLE_ID, isActive: false }))
   })
 
   it('puts a hidden product back on sale', async () => {

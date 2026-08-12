@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { callsFor, fakeClient, fakeTable } from '../../../test/postgrest-fake'
 import {
   createCourt,
+  findCourtById,
   findCourtBySlug,
   listActiveCourts,
   listAllCourts,
@@ -26,6 +27,8 @@ const COURT_ROW = {
   is_active: true,
   min_players: 2,
   max_players: 4,
+  included_players: 4,
+  extra_player_fee_cents: 0,
 }
 
 const CREATE_INPUT = {
@@ -44,6 +47,8 @@ const CREATE_INPUT = {
   sortOrder: 3,
   minPlayers: 2,
   maxPlayers: 4,
+  includedPlayers: 4,
+  extraPlayerFeeCents: 0,
 }
 
 describe('listActiveCourts', () => {
@@ -112,6 +117,18 @@ describe('findCourtBySlug', () => {
     await expect(findCourtBySlug(client, 'club-1', 'court-3')).rejects.toThrow(
       /Failed to load court/,
     )
+  })
+})
+
+describe('findCourtById', () => {
+  it('scopes the id to the staff member’s club and includes offline courts', async () => {
+    const courts = fakeTable({ data: COURT_ROW, error: null })
+
+    await findCourtById(fakeClient({ courts }), 'club-1', 'court-1')
+
+    expect(courts.calls).toContainEqual({ method: 'eq', args: ['club_id', 'club-1'] })
+    expect(courts.calls).toContainEqual({ method: 'eq', args: ['id', 'court-1'] })
+    expect(courts.calls).not.toContainEqual({ method: 'eq', args: ['is_active', true] })
   })
 })
 

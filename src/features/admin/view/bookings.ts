@@ -117,7 +117,9 @@ function describeItem(item: BookingItemLine): string {
 
 function courtNames(detail: BookingDetail): readonly string[] {
   return [
-    ...new Set(detail.segments.flatMap((segment) => (segment.courtName ? [segment.courtName] : []))),
+    ...new Set(
+      detail.segments.flatMap((segment) => (segment.courtName ? [segment.courtName] : [])),
+    ),
   ]
 }
 

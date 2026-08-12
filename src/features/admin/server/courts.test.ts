@@ -3,12 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const getCurrentStaff = vi.fn()
 const createSupabaseServerClient = vi.fn()
 const createCourt = vi.fn()
+const findCourtById = vi.fn()
 const updateCourt = vi.fn()
 const updateTag = vi.fn()
 
 vi.mock('@/lib/auth/staff', () => ({ getCurrentStaff }))
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseServerClient }))
-vi.mock('@/lib/repositories/courts', () => ({ createCourt, updateCourt }))
+vi.mock('@/lib/repositories/courts', () => ({ createCourt, findCourtById, updateCourt }))
 vi.mock('next/cache', () => ({ updateTag }))
 
 const { saveCourt } = await import('./courts')
@@ -49,6 +50,12 @@ beforeEach(() => {
   createSupabaseServerClient.mockResolvedValue({})
   getCurrentStaff.mockResolvedValue(STAFF)
   createCourt.mockResolvedValue({ id: COURT_ID })
+  findCourtById.mockResolvedValue({
+    id: COURT_ID,
+    clubId: STAFF.clubId,
+    isActive: true,
+    ...NEW_COURT,
+  })
   updateCourt.mockResolvedValue({ id: COURT_ID })
 })
 
@@ -95,6 +102,18 @@ describe('saveCourt', () => {
     expect(updateCourt).toHaveBeenCalledWith(expect.anything(), COURT_ID, { isActive: false })
   })
 
+  it('rejects an id-only patch as invalid instead of reporting a database failure', async () => {
+    const result = await saveCourt({ id: COURT_ID })
+
+    expect(result).toMatchObject({
+      success: false,
+      code: 'INVALID',
+      error: 'Choose at least one court detail to change',
+    })
+    expect(findCourtById).not.toHaveBeenCalled()
+    expect(updateCourt).not.toHaveBeenCalled()
+  })
+
   it('rejects a capacity whose maximum is below its minimum', async () => {
     const result = await saveCourt({ ...NEW_COURT, minPlayers: 6, maxPlayers: 4 })
 
@@ -113,6 +132,28 @@ describe('saveCourt', () => {
     const result = await saveCourt({ id: COURT_ID, minPlayers: 8, maxPlayers: 2 })
 
     expect(result).toMatchObject({ success: false, code: 'INVALID' })
+    expect(updateCourt).not.toHaveBeenCalled()
+  })
+
+  it('rejects a one-sided capacity patch that conflicts with the stored maximum', async () => {
+    const result = await saveCourt({ id: COURT_ID, minPlayers: 8 })
+
+    expect(result).toMatchObject({
+      success: false,
+      code: 'INVALID',
+      error: 'The most players cannot be fewer than the fewest',
+    })
+    expect(updateCourt).not.toHaveBeenCalled()
+  })
+
+  it('rejects an included-player patch above the stored court capacity', async () => {
+    const result = await saveCourt({ id: COURT_ID, includedPlayers: 9 })
+
+    expect(result).toMatchObject({
+      success: false,
+      code: 'INVALID',
+      error: 'Players covered by the price must sit inside the court capacity',
+    })
     expect(updateCourt).not.toHaveBeenCalled()
   })
 

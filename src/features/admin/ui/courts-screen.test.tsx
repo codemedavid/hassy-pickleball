@@ -225,6 +225,18 @@ describe('CourtsScreen — taking a court offline', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not save/i)
     expect(refresh).not.toHaveBeenCalled()
   })
+
+  it('keeps the screen usable when the availability action rejects', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockRejectedValue(new Error('connection lost'))
+    renderScreen({ onSave })
+
+    await user.click(within(rowFor('Harbor Court')).getByRole('button', { name: /take offline/i }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/could not save.*try again/i)
+    expect(screen.getByText('Harbor Court')).toBeInTheDocument()
+    expect(refresh).not.toHaveBeenCalled()
+  })
 })
 
 describe('CourtsScreen pax pricing', () => {

@@ -222,6 +222,18 @@ describe('CourtEditor — editing a court', () => {
 })
 
 describe('CourtEditor — failure paths', () => {
+  it('shows a recoverable error when the save action rejects', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockRejectedValue(new Error('connection lost'))
+    const { onSaved } = renderEditor({ onSave })
+
+    await fillRequired(user)
+    await user.click(screen.getByRole('button', { name: /save court/i }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/could not save.*try again/i)
+    expect(onSaved).not.toHaveBeenCalled()
+  })
+
   it('shows the reason the server refused the save', async () => {
     // Arrange
     const user = userEvent.setup()

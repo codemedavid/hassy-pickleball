@@ -3,7 +3,8 @@ import 'server-only'
 import { updateTag } from 'next/cache'
 import { courtPatchSchema, createCourtSchema } from '@/lib/api/admin-schemas'
 import { invalid, withStaff } from './session'
-import { createCourt, updateCourt } from '@/lib/repositories/courts'
+import { createCourt, findCourtById, updateCourt } from '@/lib/repositories/courts'
+import { RepositoryError } from '@/lib/repositories/support'
 import { CATALOG_TAG } from '@/features/courts/catalog'
 import type { Court } from '@/lib/repositories/mappers'
 import type { Result } from '@/lib/api/result'
@@ -60,8 +61,25 @@ export async function saveCourt(input: unknown): Promise<Result<Court>> {
     }
 
     const patch = withoutId(parsed.data)
+    const written = await withStaff<Result<Court>>(async ({ staff, client }) => {
+      const existing = await findCourtById(client, staff.clubId, parsed.data.id)
 
-    return revalidated(await withStaff(({ client }) => updateCourt(client, parsed.data.id, patch)))
+      if (!existing) {
+        throw new RepositoryError('Court not found')
+      }
+
+      // Partial patches must still satisfy relationships with stored fields.
+      // For example, raising minPlayers alone may exceed the current maximum.
+      const merged = createCourtSchema.safeParse({ ...existing, ...patch })
+
+      if (!merged.success) {
+        return invalid(merged.error.issues[0]?.message ?? 'Check the court details')
+      }
+
+      return { success: true, data: await updateCourt(client, parsed.data.id, patch) }
+    })
+
+    return written.success ? revalidated(written.data) : written
   }
 
   const parsed = createCourtSchema.safeParse(input)

@@ -4,7 +4,7 @@ import { toPayment, type Payment } from './booking-mappers'
 import { raise, type Client } from './support'
 import type { Enums } from './rows'
 
-/** Payment records. Written by staff from the admin Orders screen. */
+/** Payment records. Written by staff from the admin Bookings screen. */
 
 export type RecordPaymentInput = {
   readonly bookingId: string

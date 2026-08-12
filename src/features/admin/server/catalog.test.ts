@@ -32,7 +32,6 @@ const NEW_PRODUCT = {
   sortOrder: 1,
 }
 
-
 beforeEach(() => {
   vi.clearAllMocks()
   createSupabaseServerClient.mockResolvedValue({})

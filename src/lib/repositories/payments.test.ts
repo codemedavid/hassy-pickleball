@@ -115,7 +115,10 @@ describe('markPaymentRefunded', () => {
 
 describe('attachPaymentProof', () => {
   it('records the stored proof against the booking’s pending payment', async () => {
-    const payments = fakeTable({ data: { ...PAYMENT_ROW, proof_url: 'PB-4G6JVH/proof.png' }, error: null })
+    const payments = fakeTable({
+      data: { ...PAYMENT_ROW, proof_url: 'PB-4G6JVH/proof.png' },
+      error: null,
+    })
 
     await attachPaymentProof(fakeClient({ payments }), 'booking-1', 'PB-4G6JVH/proof.png')
 

@@ -38,6 +38,7 @@ const ENVIRONMENT_LABELS: Record<CourtEnvironment, string> = {
   indoor: 'Indoor',
   outdoor: 'Outdoor',
 }
+const SAVE_FAILURE_MESSAGE = 'We could not save that change. Please try again.'
 
 /** Which row's editor is open. 'new' is the add form, which belongs to no row. */
 type EditTarget = string | 'new' | null
@@ -57,14 +58,18 @@ export function CourtsScreen({ courts, currency, onSave, onUpload }: CourtsScree
     setError(null)
 
     startTransition(async () => {
-      const result = await onSave({ id: court.id, isActive: !court.isActive })
+      try {
+        const result = await onSave({ id: court.id, isActive: !court.isActive })
 
-      if (!result.success) {
-        setError(result.error)
-        return
+        if (!result.success) {
+          setError(result.error)
+          return
+        }
+
+        router.refresh()
+      } catch {
+        setError(SAVE_FAILURE_MESSAGE)
       }
-
-      router.refresh()
     })
   }
 

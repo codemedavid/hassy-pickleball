@@ -176,7 +176,6 @@ describe('CartDrawer', () => {
 
     expect(screen.getByRole('button', { name: /close cart/i })).toHaveFocus()
   })
-
 })
 
 describe('checkout', () => {

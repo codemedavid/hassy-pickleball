@@ -2,18 +2,23 @@ import { describe, expect, it } from 'vitest'
 import { ADMIN_NAV_ITEMS, isNavItemActive } from './nav-items'
 
 describe('ADMIN_NAV_ITEMS', () => {
-  it('lists the seven console sections in the order the design shows them', () => {
+  it('lists the six console sections in the order the design shows them', () => {
     // Courts sits with Products: those two configure what is for sale, while
-    // Schedule, Bookings, and Orders run the day.
+    // Schedule and Bookings run the day.
     expect(ADMIN_NAV_ITEMS.map((item) => item.label)).toEqual([
       'Schedule',
       'Bookings',
-      'Orders',
       'Courts',
       'Products',
       'Customers',
       'Reports',
     ])
+  })
+
+  it('offers no Orders tab: a booking and its payments are one section', () => {
+    // Two tabs meant reconciling a transfer on one and confirming the booking
+    // on the other. There was never a second kind of record behind Orders.
+    expect(ADMIN_NAV_ITEMS.map((item) => item.href)).not.toContain('/admin/orders')
   })
 
   it('offers no Pricing tab, because the console cannot edit pricing rules', () => {
@@ -35,7 +40,7 @@ describe('isNavItemActive', () => {
   })
 
   it('marks a section active on a nested route beneath it', () => {
-    expect(isNavItemActive('/admin/orders/ORD-2291', '/admin/orders')).toBe(true)
+    expect(isNavItemActive('/admin/bookings/PB-4821', '/admin/bookings')).toBe(true)
   })
 
   it('does not mark a section active for a sibling with a shared prefix', () => {

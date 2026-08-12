@@ -297,9 +297,7 @@ describe('buildScheduleGrid availability', () => {
     const grid = buildScheduleGrid({
       club,
       courts: [harbor],
-      bookings: [
-        makeBooking({ segments: [{ courtId: harbor.id, from: '17:00', to: '18:30' }] }),
-      ],
+      bookings: [makeBooking({ segments: [{ courtId: harbor.id, from: '17:00', to: '18:30' }] })],
       blocks: [makeBlock({ courtId: harbor.id, kind: 'maintenance', from: '09:00', to: '10:00' })],
       day: DAY,
     })
@@ -314,9 +312,7 @@ describe('buildScheduleGrid availability', () => {
     const grid = buildScheduleGrid({
       club,
       courts: [harbor],
-      bookings: [
-        makeBooking({ segments: [{ courtId: harbor.id, from: '09:00', to: '12:00' }] }),
-      ],
+      bookings: [makeBooking({ segments: [{ courtId: harbor.id, from: '09:00', to: '12:00' }] })],
       blocks: [makeBlock({ courtId: harbor.id, kind: 'closed', from: '10:00', to: '11:00' })],
       day: DAY,
     })
@@ -389,9 +385,7 @@ describe('buildScheduleGrid releasable entries', () => {
     const grid = buildScheduleGrid({
       club,
       courts: [harbor],
-      bookings: [
-        makeBooking({ segments: [{ courtId: harbor.id, from: '17:00', to: '18:30' }] }),
-      ],
+      bookings: [makeBooking({ segments: [{ courtId: harbor.id, from: '17:00', to: '18:30' }] })],
       blocks: [],
       day: DAY,
     })

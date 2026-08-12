@@ -8,7 +8,7 @@ import type { Payment } from '@/lib/repositories/booking-mappers'
 import type { Result } from '@/lib/api/result'
 
 /**
- * Settling and reversing payments from the admin Orders screen.
+ * Settling and reversing payments from the admin Bookings screen.
  *
  * `recordedBy` always comes from the session, so the audit trail records who
  * actually took the money rather than whoever the form claimed.

@@ -79,6 +79,8 @@ describe('toCourt', () => {
     is_active: true,
     min_players: 2,
     max_players: 4,
+    included_players: 4,
+    extra_player_fee_cents: 0,
   }
 
   it('maps a court row to the domain shape', () => {
@@ -99,6 +101,13 @@ describe('toCourt', () => {
 
     expect(court.minPlayers).toBe(2)
     expect(court.maxPlayers).toBe(6)
+  })
+
+  it('carries pax pricing through for court management and booking quotes', () => {
+    const court = toCourt({ ...row, included_players: 4, extra_player_fee_cents: 15_000 })
+
+    expect(court.includedPlayers).toBe(4)
+    expect(court.extraPlayerFeeCents).toBe(15_000)
   })
 
   it('preserves array columns as arrays', () => {

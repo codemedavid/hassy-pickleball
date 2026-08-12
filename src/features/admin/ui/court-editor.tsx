@@ -34,6 +34,7 @@ export interface CourtEditorProps {
 
 const CAPACITY_MESSAGE = 'The most players cannot be fewer than the fewest'
 const INCLUDED_MESSAGE = 'Players covered by the price must sit inside the court capacity'
+const SAVE_FAILURE_MESSAGE = 'We could not save that change. Please try again.'
 
 const FIELD =
   'h-10 rounded-xl border border-line-strong bg-surface px-3 text-[14px] text-ink ' +
@@ -101,14 +102,18 @@ export function CourtEditor({
     setError(null)
 
     startTransition(async () => {
-      const result = await onSave(payload)
+      try {
+        const result = await onSave(payload)
 
-      if (!result.success) {
-        setError(result.error)
-        return
+        if (!result.success) {
+          setError(result.error)
+          return
+        }
+
+        onSaved()
+      } catch {
+        setError(SAVE_FAILURE_MESSAGE)
       }
-
-      onSaved()
     })
   }
 
