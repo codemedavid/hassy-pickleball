@@ -20,6 +20,81 @@ const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 /** A doubles court seats four; the ceiling leaves room for coaching sessions. */
 const MAX_PLAYERS_PER_COURT = 32
 
+const paymentMethodFieldsSchema = z.object({
+  method: z.enum(PAYMENT_METHODS),
+  label: z.string().trim().min(1).max(120),
+  accountName: z.string().trim().max(160).nullish(),
+  accountNumber: z.string().trim().max(160).nullish(),
+  instructions: z.string().trim().max(1000).nullish(),
+  qrImageUrl: z.url().nullish(),
+  requiresProof: z.boolean(),
+})
+
+function hasWrittenPaymentGuidance(method: {
+  accountName?: string | null
+  accountNumber?: string | null
+  instructions?: string | null
+}): boolean {
+  return [method.accountName, method.accountNumber, method.instructions].some(
+    (value) => typeof value === 'string' && value.trim().length > 0,
+  )
+}
+
+function hasPublishedPaymentGuidance(method: {
+  accountName?: string | null
+  accountNumber?: string | null
+  instructions?: string | null
+  qrImageUrl?: string | null
+}): boolean {
+  return hasWrittenPaymentGuidance(method) || Boolean(method.qrImageUrl)
+}
+
+/** A new row has no id for a QR upload yet, so it needs useful written guidance. */
+export const createPaymentMethodSchema = paymentMethodFieldsSchema.refine(
+  hasWrittenPaymentGuidance,
+  {
+    message: 'Add account details or payment instructions',
+    path: ['instructions'],
+  },
+)
+
+/** Full stored-state validation after an admin patch has been merged. */
+export const publishedPaymentMethodSchema = paymentMethodFieldsSchema.refine(
+  hasPublishedPaymentGuidance,
+  {
+    message: 'Add account details, payment instructions, or a QR image',
+    path: ['instructions'],
+  },
+)
+
+const PAYMENT_METHOD_PATCH_FIELDS = [
+  'method',
+  'label',
+  'accountName',
+  'accountNumber',
+  'instructions',
+  'qrImageUrl',
+  'requiresProof',
+  'isActive',
+] as const
+
+export const paymentMethodPatchSchema = paymentMethodFieldsSchema
+  .partial()
+  .extend({
+    id: z.uuid(),
+    isActive: z.boolean().optional(),
+    acknowledgeCheckoutPause: z.boolean().optional(),
+  })
+  .refine(
+    (method) => PAYMENT_METHOD_PATCH_FIELDS.some((field) => method[field] !== undefined),
+    { message: 'Choose at least one payment method detail to change' },
+  )
+
+export const movePaymentMethodSchema = z.object({
+  id: z.uuid(),
+  direction: z.enum(['up', 'down']),
+})
+
 export const markBookingPaidSchema = z.object({
   bookingId: z.uuid(),
   method: z.enum(PAYMENT_METHODS),

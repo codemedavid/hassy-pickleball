@@ -1,4 +1,5 @@
 import { rangesOverlap } from './time'
+import type { CourtCapacity } from './pax'
 import type { CartItem, CourtSelection } from './types'
 
 export type CartSummary = {
@@ -22,7 +23,7 @@ export type CartCourtLine = CourtSelection & {
   readonly courtName: string
   readonly timeZone: string
   readonly currency: string
-}
+} & Partial<CourtCapacity>
 
 /** Likewise for an add-on: the price is meaningless without its currency. */
 export type CartItemLine = CartItem & {

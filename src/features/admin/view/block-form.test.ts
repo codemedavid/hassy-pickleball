@@ -11,22 +11,23 @@ import { at, club, DAY } from '../../../../test/admin-fixtures'
 const harbor = 'court-1'
 
 function form(overrides: Partial<ReturnType<typeof blankBlockForm>> = {}) {
-  return { ...blankBlockForm({ courtId: harbor, opensAt: club.opensAt }), ...overrides }
+  return { ...blankBlockForm({ courtId: harbor, opensAt: club.opensAt, day: DAY }), ...overrides }
 }
 
 describe('blankBlockForm', () => {
   it('opens on the club’s first bookable hour so the common case needs no typing', () => {
     // Act
-    const state = blankBlockForm({ courtId: harbor, opensAt: club.opensAt })
+    const state = blankBlockForm({ courtId: harbor, opensAt: club.opensAt, day: DAY })
 
     // Assert
+    expect(state.day).toBe(DAY)
     expect(state.startTime).toBe('07:00')
     expect(state.endTime).toBe('08:00')
   })
 
   it('defaults to maintenance, the reason most court time is held', () => {
     // Act
-    const state = blankBlockForm({ courtId: harbor, opensAt: club.opensAt })
+    const state = blankBlockForm({ courtId: harbor, opensAt: club.opensAt, day: DAY })
 
     // Assert
     expect(state.kind).toBe('maintenance')
@@ -47,6 +48,14 @@ describe('blockFormError', () => {
 
     // Assert
     expect(error).toMatch(/court/i)
+  })
+
+  it('asks for the unavailable date when it is missing', () => {
+    // Act
+    const error = blockFormError(form({ day: '' }))
+
+    // Assert
+    expect(error).toMatch(/date/i)
   })
 
   it('asks for both times when one is missing', () => {
@@ -75,12 +84,24 @@ describe('blockFormError', () => {
 })
 
 describe('toBlockPayload', () => {
+  it('uses the unavailable date selected in the form', () => {
+    // Arrange
+    const state = form({ day: '2026-08-09', startTime: '09:00', endTime: '10:30' })
+
+    // Act
+    const payload = toBlockPayload(state, { timeZone: club.timeZone })
+
+    // Assert
+    expect(payload.startsAt.toISOString()).toBe(at('09:00', '2026-08-09').toISOString())
+    expect(payload.endsAt.toISOString()).toBe(at('10:30', '2026-08-09').toISOString())
+  })
+
   it('reads the typed times through the club’s timezone, not the browser’s', () => {
     // Arrange
     const state = form({ startTime: '09:00', endTime: '10:30' })
 
     // Act
-    const payload = toBlockPayload(state, { day: DAY, timeZone: club.timeZone })
+    const payload = toBlockPayload(state, { timeZone: club.timeZone })
 
     // Assert
     expect(payload.startsAt.toISOString()).toBe(at('09:00').toISOString())
@@ -92,7 +113,7 @@ describe('toBlockPayload', () => {
     const state = form({ kind: 'league' })
 
     // Act
-    const payload = toBlockPayload(state, { day: DAY, timeZone: club.timeZone })
+    const payload = toBlockPayload(state, { timeZone: club.timeZone })
 
     // Assert
     expect(payload.courtId).toBe(harbor)
@@ -104,7 +125,7 @@ describe('toBlockPayload', () => {
     const state = form({ reason: '   ' })
 
     // Act
-    const payload = toBlockPayload(state, { day: DAY, timeZone: club.timeZone })
+    const payload = toBlockPayload(state, { timeZone: club.timeZone })
 
     // Assert
     expect(payload.reason).toBeNull()
@@ -115,7 +136,7 @@ describe('toBlockPayload', () => {
     const state = form({ reason: '  Net repair ' })
 
     // Act
-    const payload = toBlockPayload(state, { day: DAY, timeZone: club.timeZone })
+    const payload = toBlockPayload(state, { timeZone: club.timeZone })
 
     // Assert
     expect(payload.reason).toBe('Net repair')

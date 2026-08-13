@@ -39,6 +39,10 @@ function renderExperience(overrides: Partial<Parameters<typeof CourtBookingExper
         timeZone="Asia/Manila"
         currency="PHP"
         cancellationWindowHours={12}
+        minPlayers={2}
+        maxPlayers={4}
+        includedPlayers={4}
+        extraPlayerFeeCents={0}
         {...overrides}
       />
     </CartProvider>,

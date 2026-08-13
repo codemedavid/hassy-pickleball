@@ -219,6 +219,17 @@ describe('toBookingRows', () => {
 })
 
 describe('toBookingDetailView', () => {
+  it('carries every named player into the detail staff manages', () => {
+    const booking = makeBooking({
+      players: ['Ana Cruz', 'Ben Uy'],
+      segments: [{ courtId: 'court-1', from: '17:00', to: '18:00' }],
+    })
+
+    const detail = toBookingDetailView(booking, club)
+
+    expect(detail.players).toEqual(['Ana Cruz', 'Ben Uy'])
+  })
+
   it('breaks the total into the court and add-on lines behind it', () => {
     // Arrange
     const booking = makeBooking({

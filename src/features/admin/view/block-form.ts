@@ -4,7 +4,7 @@ import type { Enums } from '@/lib/repositories/rows'
 /**
  * The "hold this court" form, as data.
  *
- * Times are held as the "HH:MM" strings a time input carries and converted
+ * The date and times are held as the strings native inputs carry and converted
  * once, on submit, through the club's timezone — a block typed as 9:00 must
  * hold the club's 9:00 whatever zone the browser is in. The conversion lives
  * here rather than in the component so it is testable without a DOM, matching
@@ -19,11 +19,14 @@ const DEFAULT_BLOCK_MINUTES = 60
 const MINUTES_PER_HOUR = 60
 /** "HH:MM" — the form a time input reads and writes. */
 const CLOCK_LENGTH = 5
+const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 export type BlockFormState = {
   readonly courtId: string
   readonly kind: Enums['block_kind']
   readonly reason: string
+  /** Club-local calendar day, "YYYY-MM-DD". */
+  readonly day: string
   /** Club-local wall clock, "HH:MM". */
   readonly startTime: string
   readonly endTime: string
@@ -38,8 +41,6 @@ export type BlockPayload = {
 }
 
 export type BlockFormContext = {
-  /** Club-local calendar day, "YYYY-MM-DD". */
-  readonly day: string
   readonly timeZone: string
 }
 
@@ -56,6 +57,7 @@ function toClock(minutesOfDay: number): string {
  */
 export function blankBlockForm(input: {
   readonly courtId: string
+  readonly day: string
   /** The club's opening time, "HH:MM" or the "HH:MM:SS" Postgres returns. */
   readonly opensAt: string
 }): BlockFormState {
@@ -65,6 +67,7 @@ export function blankBlockForm(input: {
     courtId: input.courtId,
     kind: 'maintenance',
     reason: '',
+    day: input.day,
     startTime: toClock(opensAt),
     endTime: toClock(opensAt + DEFAULT_BLOCK_MINUTES),
   }
@@ -74,6 +77,10 @@ export function blankBlockForm(input: {
 export function blockFormError(form: BlockFormState): string | null {
   if (form.courtId === '') {
     return 'Choose the court to block'
+  }
+
+  if (!DAY_PATTERN.test(form.day)) {
+    return 'Choose the date that will be unavailable'
   }
 
   if (form.startTime.length < CLOCK_LENGTH || form.endTime.length < CLOCK_LENGTH) {
@@ -94,7 +101,7 @@ export function toBlockPayload(form: BlockFormState, context: BlockFormContext):
     courtId: form.courtId,
     kind: form.kind,
     reason: reason === '' ? null : reason,
-    startsAt: zonedTimeToUtc(context.day, parseClockTime(form.startTime), context.timeZone),
-    endsAt: zonedTimeToUtc(context.day, parseClockTime(form.endTime), context.timeZone),
+    startsAt: zonedTimeToUtc(form.day, parseClockTime(form.startTime), context.timeZone),
+    endsAt: zonedTimeToUtc(form.day, parseClockTime(form.endTime), context.timeZone),
   }
 }

@@ -115,6 +115,7 @@ export type BookingSpec = {
   readonly contactPhone?: string | null
   readonly status?: BookingStatus
   readonly notes?: string | null
+  readonly players?: readonly string[]
   readonly segments: readonly SegmentSpec[]
   readonly items?: readonly ItemSpec[]
   readonly payments?: readonly PaymentSpec[]
@@ -187,7 +188,7 @@ export function makeBooking(spec: BookingSpec): BookingDetail {
     proofUrl: payment.proofUrl ?? null,
   }))
 
-  return { booking, segments, items, payments }
+  return { booking, segments, items, players: spec.players ?? [], payments }
 }
 
 export function makeBlock(spec: {

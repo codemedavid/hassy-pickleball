@@ -271,11 +271,11 @@ create or replace function report_club_totals(
   p_to timestamptz
 )
 returns table (
-  bookings bigint,
+  bookings_count bigint,
   courts_revenue_cents bigint,
   items_revenue_cents bigint,
-  court_minutes bigint,
-  capacity_minutes bigint
+  booked_minutes bigint,
+  open_minutes bigint
 )
 language sql
 security definer

@@ -18,34 +18,34 @@ rate limits. Journeys were derived during this TDD run; there was no plan file.
 
 ## Task report
 
-| Task | Validation command | RED | GREEN |
-|---|---|---|---|
-| Fail-closed limiter (`consumeRateLimit`) | `pnpm vitest run src/lib/security` | module absent — import failure | 20 passed |
-| Client-address identity | `pnpm vitest run src/lib/security` | module absent — import failure | included above |
-| Rate limit on `cancelBooking` | `pnpm vitest run src/features/booking/server` | `expected {success:true} to match {code:'RATE_LIMITED'}` | passed |
-| Fail-closed on lookup + reschedule | `pnpm vitest run src/features/booking/server` | same, 4 cases | passed |
-| `countOpenSlots` without duplicate reads | `pnpm vitest run src/features/booking/server` | module absent — import failure | 8 passed |
-| `parseCourtFilter` | `pnpm vitest run src/features/courts/court-filters.test.ts` | `parseCourtFilter is not a function` | 4 passed |
-| `parseDayString` | `pnpm vitest run src/lib/format/time.test.ts` | `parseDayString is not a function` | 5 passed |
+| Task                                     | Validation command                                          | RED                                                      | GREEN          |
+| ---------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------- | -------------- |
+| Fail-closed limiter (`consumeRateLimit`) | `pnpm vitest run src/lib/security`                          | module absent — import failure                           | 20 passed      |
+| Client-address identity                  | `pnpm vitest run src/lib/security`                          | module absent — import failure                           | included above |
+| Rate limit on `cancelBooking`            | `pnpm vitest run src/features/booking/server`               | `expected {success:true} to match {code:'RATE_LIMITED'}` | passed         |
+| Fail-closed on lookup + reschedule       | `pnpm vitest run src/features/booking/server`               | same, 4 cases                                            | passed         |
+| `countOpenSlots` without duplicate reads | `pnpm vitest run src/features/booking/server`               | module absent — import failure                           | 8 passed       |
+| `parseCourtFilter`                       | `pnpm vitest run src/features/courts/court-filters.test.ts` | `parseCourtFilter is not a function`                     | 4 passed       |
+| `parseDayString`                         | `pnpm vitest run src/lib/format/time.test.ts`               | `parseDayString is not a function`                       | 5 passed       |
 
 Full RED run: `Test Files 9 failed | 44 passed`, `Tests 16 failed | 465 passed`.
 Full GREEN run over the touched scope: `Test Files 10 passed`, `Tests 115 passed`.
 
 ## What is guaranteed
 
-| # | Guarantee | Test | Type |
-|---|---|---|---|
-| 1 | The limiter denies when its RPC errors, returns null, or throws | `src/lib/security/rate-limit.test.ts` | unit |
-| 2 | Buckets are namespaced, so browsing cannot exhaust booking | `src/lib/security/rate-limit.test.ts` | unit |
-| 3 | The action does not run once the limit is spent | `src/lib/security/rate-limit.test.ts` | unit |
-| 4 | Callers are keyed on a hashed client address, never the raw one | `src/lib/security/request-identity.test.ts` | unit |
-| 5 | `cancelBooking` refuses when limited or when the limiter breaks | `src/features/booking/server/lifecycle.test.ts` | unit |
-| 6 | Email casing does not open a fresh lookup budget | `src/features/booking/server/lifecycle.test.ts` | unit |
-| 7 | Open-slot counts never re-read the club, courts, or pricing rules | `src/features/booking/server/open-slots.test.ts` | unit |
-| 8 | A failed availability read yields `undefined`, not a wrong count | `src/features/booking/server/open-slots.test.ts` | unit |
-| 9 | Busy ranges are asked for over the club-local day, not a UTC one | `src/features/booking/server/open-slots.test.ts` | unit |
-| 10 | An unrecognised `?filter=` normalises to `all` before reaching links | `src/features/courts/court-filters.test.ts` | unit |
-| 11 | A malformed `?day=` falls back instead of becoming `Invalid Date` | `src/lib/format/time.test.ts` | unit |
+| #   | Guarantee                                                            | Test                                             | Type |
+| --- | -------------------------------------------------------------------- | ------------------------------------------------ | ---- |
+| 1   | The limiter denies when its RPC errors, returns null, or throws      | `src/lib/security/rate-limit.test.ts`            | unit |
+| 2   | Buckets are namespaced, so browsing cannot exhaust booking           | `src/lib/security/rate-limit.test.ts`            | unit |
+| 3   | The action does not run once the limit is spent                      | `src/lib/security/rate-limit.test.ts`            | unit |
+| 4   | Callers are keyed on a hashed client address, never the raw one      | `src/lib/security/request-identity.test.ts`      | unit |
+| 5   | `cancelBooking` refuses when limited or when the limiter breaks      | `src/features/booking/server/lifecycle.test.ts`  | unit |
+| 6   | Email casing does not open a fresh lookup budget                     | `src/features/booking/server/lifecycle.test.ts`  | unit |
+| 7   | Open-slot counts never re-read the club, courts, or pricing rules    | `src/features/booking/server/open-slots.test.ts` | unit |
+| 8   | A failed availability read yields `undefined`, not a wrong count     | `src/features/booking/server/open-slots.test.ts` | unit |
+| 9   | Busy ranges are asked for over the club-local day, not a UTC one     | `src/features/booking/server/open-slots.test.ts` | unit |
+| 10  | An unrecognised `?filter=` normalises to `all` before reaching links | `src/features/courts/court-filters.test.ts`      | unit |
+| 11  | A malformed `?day=` falls back instead of becoming `Invalid Date`    | `src/lib/format/time.test.ts`                    | unit |
 
 ## Known gaps
 

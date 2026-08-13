@@ -62,6 +62,14 @@ function toCourtLine(value: unknown): CartCourtLine | null {
     priceCents: value.priceCents,
     timeZone: value.timeZone,
     currency: value.currency,
+    ...(typeof value.minPlayers === 'number' ? { minPlayers: value.minPlayers } : {}),
+    ...(typeof value.maxPlayers === 'number' ? { maxPlayers: value.maxPlayers } : {}),
+    ...(typeof value.includedPlayers === 'number'
+      ? { includedPlayers: value.includedPlayers }
+      : {}),
+    ...(typeof value.extraPlayerFeeCents === 'number'
+      ? { extraPlayerFeeCents: value.extraPlayerFeeCents }
+      : {}),
   }
 }
 

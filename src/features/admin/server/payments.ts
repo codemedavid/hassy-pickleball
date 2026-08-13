@@ -35,7 +35,7 @@ export async function markBookingPaid(input: unknown): Promise<Result<PaidResult
       status: 'paid',
       amountCents,
       externalReference: externalReference ?? null,
-      recordedBy: staff.id,
+      recordedBy: staff.userId,
     })
 
     // Only after the money is recorded. If the insert throws, the booking is

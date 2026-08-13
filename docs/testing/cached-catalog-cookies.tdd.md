@@ -28,11 +28,11 @@ visitor, so they never needed a cookie-bound client in the first place.
 
 ## Task report
 
-| Step | Summary |
-|---|---|
-| RED | Added `src/features/courts/catalog.test.ts`, which stands in an `unstable_cache` scope and makes the cookie-bound client throw the exact production error inside it. Ran the target: 3 failed for that reason. |
-| GREEN | Added `createSupabasePublicClient()` (anon key, no cookies, no session) and switched `readCatalog` to it. Same target: 3 passed. |
-| Refactor | None needed — the fix is a two-line swap plus one new factory. |
+| Step     | Summary                                                                                                                                                                                                        |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RED      | Added `src/features/courts/catalog.test.ts`, which stands in an `unstable_cache` scope and makes the cookie-bound client throw the exact production error inside it. Ran the target: 3 failed for that reason. |
+| GREEN    | Added `createSupabasePublicClient()` (anon key, no cookies, no session) and switched `readCatalog` to it. Same target: 3 passed.                                                                               |
+| Refactor | None needed — the fix is a two-line swap plus one new factory.                                                                                                                                                 |
 
 ### RED
 
@@ -79,12 +79,12 @@ storefront `<h1>`.
 
 ## Test specification
 
-| # | What is guaranteed | Test | Type | Result | Evidence |
-|---|---|---|---|---|---|
-| 1 | The cached catalog read never touches per-request state, so `/` renders instead of throwing | `src/features/courts/catalog.test.ts:reads the club and its courts without touching request state` | unit | PASS | `npx vitest run src/features/courts/catalog.test.ts` |
-| 2 | An unknown club slug yields `null` and skips the court query | `src/features/courts/catalog.test.ts:returns null when the club slug does not exist` | unit | PASS | same |
-| 3 | Club and courts are read through one client, not two | `src/features/courts/catalog.test.ts:reads courts with the same client used for the club` | unit | PASS | same |
-| 4 | The storefront root responds 200 with the fix applied | manual dev-server check | smoke | PASS | `curl http://localhost:3000/` → 200 |
+| #   | What is guaranteed                                                                          | Test                                                                                               | Type  | Result | Evidence                                             |
+| --- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----- | ------ | ---------------------------------------------------- |
+| 1   | The cached catalog read never touches per-request state, so `/` renders instead of throwing | `src/features/courts/catalog.test.ts:reads the club and its courts without touching request state` | unit  | PASS   | `npx vitest run src/features/courts/catalog.test.ts` |
+| 2   | An unknown club slug yields `null` and skips the court query                                | `src/features/courts/catalog.test.ts:returns null when the club slug does not exist`               | unit  | PASS   | same                                                 |
+| 3   | Club and courts are read through one client, not two                                        | `src/features/courts/catalog.test.ts:reads courts with the same client used for the club`          | unit  | PASS   | same                                                 |
+| 4   | The storefront root responds 200 with the fix applied                                       | manual dev-server check                                                                            | smoke | PASS   | `curl http://localhost:3000/` → 200                  |
 
 ## Coverage
 
@@ -103,7 +103,7 @@ Above the 80% threshold on every metric.
 - `src/lib/supabase/**` is excluded from coverage by `vitest.config.ts` (thin SDK factories with no
   branching), so `createSupabasePublicClient` itself is covered only indirectly — the dev-server
   200 is what proves it constructs a working client against a real project.
-- The tests assert the *absence* of request-state access by simulating the cache scope. They do not
+- The tests assert the _absence_ of request-state access by simulating the cache scope. They do not
   exercise the real `unstable_cache`; the live `GET /` check covers that.
 - Anon RLS is what keeps this client safe for shared caching. If the catalog ever needs a row that
   is not public, it must move out of the cached path rather than switch clients here.

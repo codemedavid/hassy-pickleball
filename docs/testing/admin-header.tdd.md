@@ -57,13 +57,13 @@ bare string prefix.
 
 ## Test specification
 
-| # | What is guaranteed | Test file or command | Test type | Result | Evidence |
-|---|--------------------|----------------------|-----------|--------|----------|
-| 1 | No banner landmark renders on the console root `/admin` | `src/components/site-header.test.tsx:renders no storefront chrome on the console root` | unit | PASS | `npx vitest run src/components/site-header.test.tsx` |
-| 2 | No banner landmark renders on a nested section such as `/admin/courts` | `src/components/site-header.test.tsx:renders no storefront chrome on a nested console section` | unit | PASS | same |
-| 3 | The customer cart control is not offered anywhere in the console | `src/components/site-header.test.tsx:hides the cart control along with the rest of the header` | unit | PASS | same |
-| 4 | A storefront path that merely starts with the same letters (`/administration-guide`) keeps its header | `src/components/site-header.test.tsx:keeps the header on a storefront route that merely starts with the same letters` | unit | PASS | same |
-| 5 | Every pre-existing storefront header behaviour (brand link, cart count, drawer open/close, focus return) is unchanged | `src/components/site-header.test.tsx` (13 existing cases) | unit | PASS | same |
+| #   | What is guaranteed                                                                                                    | Test file or command                                                                                                  | Test type | Result | Evidence                                             |
+| --- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------- | ------ | ---------------------------------------------------- |
+| 1   | No banner landmark renders on the console root `/admin`                                                               | `src/components/site-header.test.tsx:renders no storefront chrome on the console root`                                | unit      | PASS   | `npx vitest run src/components/site-header.test.tsx` |
+| 2   | No banner landmark renders on a nested section such as `/admin/courts`                                                | `src/components/site-header.test.tsx:renders no storefront chrome on a nested console section`                        | unit      | PASS   | same                                                 |
+| 3   | The customer cart control is not offered anywhere in the console                                                      | `src/components/site-header.test.tsx:hides the cart control along with the rest of the header`                        | unit      | PASS   | same                                                 |
+| 4   | A storefront path that merely starts with the same letters (`/administration-guide`) keeps its header                 | `src/components/site-header.test.tsx:keeps the header on a storefront route that merely starts with the same letters` | unit      | PASS   | same                                                 |
+| 5   | Every pre-existing storefront header behaviour (brand link, cart count, drawer open/close, focus return) is unchanged | `src/components/site-header.test.tsx` (13 existing cases)                                                             | unit      | PASS   | same                                                 |
 
 ## Coverage and known gaps
 

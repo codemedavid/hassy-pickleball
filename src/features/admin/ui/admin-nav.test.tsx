@@ -52,6 +52,21 @@ describe('AdminNav', () => {
     expect(screen.getByRole('link', { name: 'Schedule' })).not.toHaveAttribute('aria-current')
   })
 
+  it('links staff directly to payment-method management', () => {
+    pathname.current = '/admin/payment-methods'
+
+    render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+
+    expect(screen.getByRole('link', { name: 'Payment methods' })).toHaveAttribute(
+      'href',
+      '/admin/payment-methods',
+    )
+    expect(screen.getByRole('link', { name: 'Payment methods' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+  })
+
   it('offers a way back to the customer site', () => {
     // Arrange
     pathname.current = '/admin'

@@ -12,11 +12,11 @@ ImageKit was already the image store for this repo before this change, added in
 `8e5c049`, `d9c525b`, and `cb32c12`. `grep` over `src/` finds no Supabase
 Storage usage. The state on arrival:
 
-| Surface | ImageKit status on arrival |
-|---|---|
-| Payment proofs | Done — `proof-storage.ts`, private files, 5-minute signed URLs for staff |
-| Courts (hero image) | Done — `court-editor.tsx` → `ImageUploadField` → `uploadCatalogImageAction` |
-| Products | Server side complete, **no UI** — `products-screen.tsx` was a read-only table |
+| Surface             | ImageKit status on arrival                                                    |
+| ------------------- | ----------------------------------------------------------------------------- |
+| Payment proofs      | Done — `proof-storage.ts`, private files, 5-minute signed URLs for staff      |
+| Courts (hero image) | Done — `court-editor.tsx` → `ImageUploadField` → `uploadCatalogImageAction`   |
+| Products            | Server side complete, **no UI** — `products-screen.tsx` was a read-only table |
 
 So no ImageKit work was required. The gap was that products had no admin editor
 at all, and therefore nowhere to attach an image. `uploadCatalogImage` already
@@ -96,22 +96,22 @@ stayed green across the move.
 
 ## Test specification
 
-| # | What is guaranteed | Test file | Type | Result |
-|---|--------------------|-----------|------|--------|
-| 1 | A price entered in major units is stored as cents, keeping centavos | `view/product-form.test.ts:converts the price to cents` | unit | PASS |
-| 2 | An unparseable price stays NaN so the schema refuses it | `view/product-form.test.ts:leaves an unparseable price as NaN` | unit | PASS |
-| 3 | A blank description is sent as null, not an empty string | `view/product-form.test.ts:sends a blank description as null` | unit | PASS |
-| 4 | An id present means patch; absent means create | `view/product-form.test.ts:creates rather than patches` | unit | PASS |
-| 5 | A product survives a form round trip unchanged | `view/product-form.test.ts:round-trips a product` | unit | PASS |
-| 6 | Every edited field reaches the save payload | `ui/product-editor.test.tsx:sends every field` | unit | PASS |
-| 7 | The image upload targets subject=product and the row's own id | `ui/product-editor.test.tsx:uploads the image against the product` | unit | PASS |
-| 8 | The uploaded ImageKit URL is kept for the following save | `ui/product-editor.test.tsx:keeps the uploaded image URL` | unit | PASS |
-| 9 | A refused upload is shown, not silently swallowed | `ui/product-editor.test.tsx:surfaces a refused upload` | unit | PASS |
-| 10 | A refused save is shown and not reported as success | `ui/product-editor.test.tsx:does not report success` | unit | PASS |
-| 11 | The uploader is withheld until the product row exists | `ui/product-editor.test.tsx:says the image can be added after saving` | unit | PASS |
-| 12 | Hiding a product archives it rather than deleting it | `ui/products-screen.test.tsx:hides a product rather than deleting it` | unit | PASS |
-| 13 | A refused change does not refresh the list | `ui/products-screen.test.tsx:shows why a refused change did not take effect` | unit | PASS |
-| 14 | Cancelling closes the editor without saving | `ui/products-screen.test.tsx:closes a row's editor when cancelled` | unit | PASS |
+| #   | What is guaranteed                                                  | Test file                                                                    | Type | Result |
+| --- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---- | ------ |
+| 1   | A price entered in major units is stored as cents, keeping centavos | `view/product-form.test.ts:converts the price to cents`                      | unit | PASS   |
+| 2   | An unparseable price stays NaN so the schema refuses it             | `view/product-form.test.ts:leaves an unparseable price as NaN`               | unit | PASS   |
+| 3   | A blank description is sent as null, not an empty string            | `view/product-form.test.ts:sends a blank description as null`                | unit | PASS   |
+| 4   | An id present means patch; absent means create                      | `view/product-form.test.ts:creates rather than patches`                      | unit | PASS   |
+| 5   | A product survives a form round trip unchanged                      | `view/product-form.test.ts:round-trips a product`                            | unit | PASS   |
+| 6   | Every edited field reaches the save payload                         | `ui/product-editor.test.tsx:sends every field`                               | unit | PASS   |
+| 7   | The image upload targets subject=product and the row's own id       | `ui/product-editor.test.tsx:uploads the image against the product`           | unit | PASS   |
+| 8   | The uploaded ImageKit URL is kept for the following save            | `ui/product-editor.test.tsx:keeps the uploaded image URL`                    | unit | PASS   |
+| 9   | A refused upload is shown, not silently swallowed                   | `ui/product-editor.test.tsx:surfaces a refused upload`                       | unit | PASS   |
+| 10  | A refused save is shown and not reported as success                 | `ui/product-editor.test.tsx:does not report success`                         | unit | PASS   |
+| 11  | The uploader is withheld until the product row exists               | `ui/product-editor.test.tsx:says the image can be added after saving`        | unit | PASS   |
+| 12  | Hiding a product archives it rather than deleting it                | `ui/products-screen.test.tsx:hides a product rather than deleting it`        | unit | PASS   |
+| 13  | A refused change does not refresh the list                          | `ui/products-screen.test.tsx:shows why a refused change did not take effect` | unit | PASS   |
+| 14  | Cancelling closes the editor without saving                         | `ui/products-screen.test.tsx:closes a row's editor when cancelled`           | unit | PASS   |
 
 ## Coverage
 
@@ -125,17 +125,17 @@ Total statements 96.47%   branches 89.59%
 
 Per module touched or relied on by this change:
 
-| Module | Stmts | Branch | Funcs |
-|---|---|---|---|
-| `view/product-form.ts` | 100 | 100 | 100 |
-| `view/money-fields.ts` | 100 | 100 | 100 |
-| `ui/product-editor.tsx` | 100 | 100 | 100 |
-| `ui/products-screen.tsx` | 100 | 100 | 100 |
-| `admin/server/media.ts` | 100 | 100 | 100 |
-| `checkout/server/proof-storage.ts` | 100 | 100 | 100 |
-| `lib/imagekit/signature.ts` | 100 | 100 | 100 |
-| `lib/imagekit/client.ts` | 91.66 | 84.61 | 100 |
-| `ui/image-upload-field.tsx` | 95.83 | 91.66 | 100 |
+| Module                             | Stmts | Branch | Funcs |
+| ---------------------------------- | ----- | ------ | ----- |
+| `view/product-form.ts`             | 100   | 100    | 100   |
+| `view/money-fields.ts`             | 100   | 100    | 100   |
+| `ui/product-editor.tsx`            | 100   | 100    | 100   |
+| `ui/products-screen.tsx`           | 100   | 100    | 100   |
+| `admin/server/media.ts`            | 100   | 100    | 100   |
+| `checkout/server/proof-storage.ts` | 100   | 100    | 100   |
+| `lib/imagekit/signature.ts`        | 100   | 100    | 100   |
+| `lib/imagekit/client.ts`           | 91.66 | 84.61  | 100   |
+| `ui/image-upload-field.tsx`        | 95.83 | 91.66  | 100   |
 
 All well above the 80% floor.
 

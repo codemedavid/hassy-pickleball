@@ -89,28 +89,28 @@ arithmetic) are unit-tested in `format/time` and exercised by the screen tests.
 
 ## Test specification
 
-| #  | What is guaranteed | Test file | Type | Result |
-|----|--------------------|-----------|------|--------|
-| 1  | The next/previous calendar day is named correctly across month, year, and leap-day boundaries | `src/lib/domain/time.test.ts:shiftDayString` | unit | PASS |
-| 2  | An unparseable day throws instead of producing a malformed date string | `src/lib/domain/time.test.ts:rejects a day it cannot parse` | unit | PASS |
-| 3  | A court with nothing on it reports the club's whole opening window as open | `src/features/admin/view/schedule.test.ts:reports a court with nothing on it` | unit | PASS |
-| 4  | Booked and blocked minutes are both deducted from a court's open total | `src/features/admin/view/schedule.test.ts:takes booked and blocked time off` | unit | PASS |
-| 5  | A block overlapping a booking is counted once, so open time never goes negative | `src/features/admin/view/schedule.test.ts:counts overlapping holds once` | unit | PASS |
-| 6  | A fully held court reads "Fully booked" rather than "0 hrs open" | `src/features/admin/view/schedule.test.ts:says a fully held court is fully booked` | unit | PASS |
-| 7  | A cancelled booking does not consume availability | `src/features/admin/view/schedule.test.ts:ignores a cancelled booking` | unit | PASS |
-| 8  | Blocks carry their id for release; bookings do not | `src/features/admin/view/schedule.test.ts:releasable entries` | unit | PASS |
-| 9  | Typed wall-clock times are resolved through the club's timezone, not the browser's | `src/features/admin/view/block-form.test.ts:reads the typed times through the club’s timezone` | unit | PASS |
-| 10 | An inverted or zero-length block is rejected locally, with no round trip | `src/features/admin/view/block-form.test.ts:rejects a block that ends before it starts` | unit | PASS |
-| 11 | A blank reason is sent as null; a typed one is trimmed | `src/features/admin/view/block-form.test.ts:toBlockPayload` | unit | PASS |
-| 12 | Each court column states how much of the day is open | `src/features/admin/ui/schedule-screen.test.tsx:states how much of the day each court still has open` | unit | PASS |
-| 13 | Previous/next/today links reach any date via `?day=` | `src/features/admin/ui/schedule-screen.test.tsx:links to the day before and the day after` | unit | PASS |
-| 14 | Blocking sends the chosen court, kind, reason, and UTC window | `src/features/admin/ui/schedule-screen.test.tsx:holds the chosen window on the chosen court` | unit | PASS |
-| 15 | The block lands on the day being viewed, not on today | `src/features/admin/ui/schedule-screen.test.tsx:blocks the day being viewed, not today` | unit | PASS |
-| 16 | An inverted window is refused in the browser and never reaches the action | `src/features/admin/ui/schedule-screen.test.tsx:refuses an inverted window` | unit | PASS |
-| 17 | A database conflict is shown to the staff member rather than swallowed | `src/features/admin/ui/schedule-screen.test.tsx:shows the clash the database reported` | unit | PASS |
-| 18 | A saved block reloads the schedule so the grid shows it | `src/features/admin/ui/schedule-screen.test.tsx:reloads the schedule once the block is saved` | unit | PASS |
-| 19 | Release sends the block id and reloads; a failed release is reported | `src/features/admin/ui/schedule-screen.test.tsx:releasing time` | unit | PASS |
-| 20 | Bookings offer no Release — those are cancelled, not released | `src/features/admin/ui/schedule-screen.test.tsx:offers no release on a booking` | unit | PASS |
+| #   | What is guaranteed                                                                            | Test file                                                                                             | Type | Result |
+| --- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---- | ------ |
+| 1   | The next/previous calendar day is named correctly across month, year, and leap-day boundaries | `src/lib/domain/time.test.ts:shiftDayString`                                                          | unit | PASS   |
+| 2   | An unparseable day throws instead of producing a malformed date string                        | `src/lib/domain/time.test.ts:rejects a day it cannot parse`                                           | unit | PASS   |
+| 3   | A court with nothing on it reports the club's whole opening window as open                    | `src/features/admin/view/schedule.test.ts:reports a court with nothing on it`                         | unit | PASS   |
+| 4   | Booked and blocked minutes are both deducted from a court's open total                        | `src/features/admin/view/schedule.test.ts:takes booked and blocked time off`                          | unit | PASS   |
+| 5   | A block overlapping a booking is counted once, so open time never goes negative               | `src/features/admin/view/schedule.test.ts:counts overlapping holds once`                              | unit | PASS   |
+| 6   | A fully held court reads "Fully booked" rather than "0 hrs open"                              | `src/features/admin/view/schedule.test.ts:says a fully held court is fully booked`                    | unit | PASS   |
+| 7   | A cancelled booking does not consume availability                                             | `src/features/admin/view/schedule.test.ts:ignores a cancelled booking`                                | unit | PASS   |
+| 8   | Blocks carry their id for release; bookings do not                                            | `src/features/admin/view/schedule.test.ts:releasable entries`                                         | unit | PASS   |
+| 9   | Typed wall-clock times are resolved through the club's timezone, not the browser's            | `src/features/admin/view/block-form.test.ts:reads the typed times through the club’s timezone`        | unit | PASS   |
+| 10  | An inverted or zero-length block is rejected locally, with no round trip                      | `src/features/admin/view/block-form.test.ts:rejects a block that ends before it starts`               | unit | PASS   |
+| 11  | A blank reason is sent as null; a typed one is trimmed                                        | `src/features/admin/view/block-form.test.ts:toBlockPayload`                                           | unit | PASS   |
+| 12  | Each court column states how much of the day is open                                          | `src/features/admin/ui/schedule-screen.test.tsx:states how much of the day each court still has open` | unit | PASS   |
+| 13  | Previous/next/today links reach any date via `?day=`                                          | `src/features/admin/ui/schedule-screen.test.tsx:links to the day before and the day after`            | unit | PASS   |
+| 14  | Blocking sends the chosen court, kind, reason, and UTC window                                 | `src/features/admin/ui/schedule-screen.test.tsx:holds the chosen window on the chosen court`          | unit | PASS   |
+| 15  | The block lands on the day being viewed, not on today                                         | `src/features/admin/ui/schedule-screen.test.tsx:blocks the day being viewed, not today`               | unit | PASS   |
+| 16  | An inverted window is refused in the browser and never reaches the action                     | `src/features/admin/ui/schedule-screen.test.tsx:refuses an inverted window`                           | unit | PASS   |
+| 17  | A database conflict is shown to the staff member rather than swallowed                        | `src/features/admin/ui/schedule-screen.test.tsx:shows the clash the database reported`                | unit | PASS   |
+| 18  | A saved block reloads the schedule so the grid shows it                                       | `src/features/admin/ui/schedule-screen.test.tsx:reloads the schedule once the block is saved`         | unit | PASS   |
+| 19  | Release sends the block id and reloads; a failed release is reported                          | `src/features/admin/ui/schedule-screen.test.tsx:releasing time`                                       | unit | PASS   |
+| 20  | Bookings offer no Release — those are cancelled, not released                                 | `src/features/admin/ui/schedule-screen.test.tsx:offers no release on a booking`                       | unit | PASS   |
 
 ## Coverage
 

@@ -820,6 +820,18 @@ export type Database = {
       generate_booking_reference: { Args: never; Returns: string }
       is_club_admin: { Args: { p_club_id: string }; Returns: boolean }
       is_staff: { Args: { p_club_id: string }; Returns: boolean }
+      move_payment_method: {
+        Args: { p_direction: string; p_method_id: string }
+        Returns: undefined
+      }
+      set_payment_method_active: {
+        Args: {
+          p_acknowledge_checkout_pause?: boolean
+          p_is_active: boolean
+          p_method_id: string
+        }
+        Returns: Database['public']['Tables']['payment_methods']['Row']
+      }
     }
     Enums: {
       block_kind: 'maintenance' | 'league' | 'private' | 'closed'

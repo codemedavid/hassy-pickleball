@@ -11,6 +11,7 @@ export type BookingDetail = {
   readonly booking: Booking
   readonly segments: readonly BookingSegment[]
   readonly items: readonly BookingItemLine[]
+  readonly players: readonly string[]
   readonly payments: readonly Payment[]
 }
 
@@ -26,12 +27,14 @@ const DETAIL_COLUMNS = `
   *,
   booking_courts (id, court_id, status, starts_at, ends_at, price_cents, courts (name)),
   booking_items (id, product_id, name_snapshot, unit_price_cents, quantity, line_total_cents),
+  booking_players (id, name, position),
   payments (id, booking_id, method, status, amount_cents, external_reference, paid_at, refunded_at, proof_url)
 `
 
 type DetailRow = Parameters<typeof toBooking>[0] & {
   booking_courts: Parameters<typeof toBookingSegment>[0][] | null
   booking_items: Parameters<typeof toBookingItemLine>[0][] | null
+  booking_players: { id: string; name: string; position: number }[] | null
   payments: Parameters<typeof toPayment>[0][] | null
 }
 
@@ -40,6 +43,9 @@ function toDetail(row: DetailRow): BookingDetail {
     booking: toBooking(row),
     segments: (row.booking_courts ?? []).map(toBookingSegment),
     items: (row.booking_items ?? []).map(toBookingItemLine),
+    players: [...(row.booking_players ?? [])]
+      .sort((left, right) => left.position - right.position)
+      .map((player) => player.name),
     payments: (row.payments ?? []).map(toPayment),
   }
 }

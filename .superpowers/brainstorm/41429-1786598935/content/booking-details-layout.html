@@ -1,0 +1,67 @@
+<h2>How should booking details open from the schedule?</h2>
+<p class="subtitle">Click a card to select it. All three begin by clicking the booking block in the court grid.</p>
+
+<div class="cards">
+  <div class="card" data-choice="drawer" onclick="toggleSelect(this)">
+    <div class="card-image" style="min-height:310px;padding:18px;background:#f5f7fa">
+      <div style="display:grid;grid-template-columns:1fr 220px;gap:12px;height:274px">
+        <div style="border:1px solid #dfe5ec;border-radius:10px;background:white;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:#142b50;margin-bottom:14px">Court schedule</div>
+          <div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:6px;font-size:9px;color:#8090a4">
+            <div>7 AM</div><div style="height:46px;border:1px solid #edf0f4;border-radius:5px;background:#142b50;color:white;padding:7px">Maya H.<br><span style="opacity:.75">7–8 AM</span></div><div style="border-bottom:1px solid #edf0f4"></div>
+            <div>8 AM</div><div style="border-bottom:1px solid #edf0f4"></div><div style="border-bottom:1px solid #edf0f4"></div>
+            <div>9 AM</div><div style="border-bottom:1px solid #edf0f4"></div><div style="border-bottom:1px solid #edf0f4"></div>
+          </div>
+        </div>
+        <div style="border:1px solid #dfe5ec;border-radius:10px;background:white;padding:14px;box-shadow:-8px 0 20px rgba(20,43,80,.09)">
+          <div style="display:flex;justify-content:space-between"><strong style="font-size:12px">PB-4821</strong><span>×</span></div>
+          <div style="margin-top:12px;font-size:9px;line-height:1.9;color:#536276"><b>Maya Halvorsen</b><br>Court 1 — Center<br>7:00 AM – 8:00 AM<br>2 players</div>
+          <div style="border-top:1px solid #edf0f4;margin-top:10px;padding-top:10px;font-size:9px"><span style="color:#718096">Payment</span><b style="float:right">Paid · ₱720</b></div>
+          <button style="margin-top:13px;width:100%;padding:7px;border:0;border-radius:6px;background:#142b50;color:white;font-size:9px">Manage booking</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Side drawer (recommended)</h3>
+      <p>Keeps the schedule visible while showing customer, court, payment, total, and a link to full management.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="modal" onclick="toggleSelect(this)">
+    <div class="card-image" style="min-height:310px;padding:18px;background:#d9dee6">
+      <div style="height:274px;border-radius:10px;background:rgba(20,43,80,.28);display:flex;align-items:center;justify-content:center">
+        <div style="width:72%;border:1px solid #dfe5ec;border-radius:12px;background:white;padding:18px;box-shadow:0 16px 44px rgba(20,43,80,.2)">
+          <div style="display:flex;justify-content:space-between"><strong style="font-size:13px">PB-4821</strong><span>×</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;font-size:9px;line-height:1.8;color:#536276">
+            <div><span style="color:#8290a1">Customer</span><br><b>Maya Halvorsen</b><br>maya@example.com</div>
+            <div><span style="color:#8290a1">Session</span><br><b>Court 1 — Center</b><br>7:00 AM – 8:00 AM</div>
+          </div>
+          <div style="margin-top:14px;padding:9px;background:#f5f7fa;border-radius:7px;font-size:9px">Paid <b style="float:right">₱720</b></div>
+          <button style="margin-top:12px;float:right;padding:7px 13px;border:0;border-radius:6px;background:#142b50;color:white;font-size:9px">Manage booking</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Centered modal</h3>
+      <p>Strong focus and familiar interaction, but obscures more of the schedule while open.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="full-page" onclick="toggleSelect(this)">
+    <div class="card-image" style="min-height:310px;padding:18px;background:#f5f7fa">
+      <div style="height:274px;border:1px solid #dfe5ec;border-radius:10px;background:white;padding:18px">
+        <div style="font-size:9px;color:#77869a">← Back to schedule</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><strong style="font-size:14px">PB-4821</strong><span style="font-size:9px;background:#e9f2d1;padding:4px 7px;border-radius:10px">Confirmed</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+          <div style="border:1px solid #edf0f4;border-radius:8px;padding:12px;font-size:9px;line-height:1.9;color:#536276"><b>Booking details</b><br>Maya Halvorsen<br>Court 1 — Center<br>7:00 AM – 8:00 AM</div>
+          <div style="border:1px solid #edf0f4;border-radius:8px;padding:12px;font-size:9px;line-height:1.9;color:#536276"><b>Payment</b><br>GCash<br>Paid<br><strong style="font-size:13px;color:#142b50">₱720</strong></div>
+        </div>
+        <button style="margin-top:14px;padding:7px 12px;border:0;border-radius:6px;background:#142b50;color:white;font-size:9px">Update booking</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Full booking page</h3>
+      <p>Uses the existing bookings-management screen directly, with the least new UI, but leaves the schedule.</p>
+    </div>
+  </div>
+</div>

@@ -134,6 +134,22 @@ export function BookingDetailPanel({
         ))}
       </dl>
 
+      {detail.players.length > 0 ? (
+        <div className="border-b border-surface-sunken py-4">
+          <h3 className={`${LABEL} m-0 mb-2.5`}>Players</h3>
+          <ul aria-label="Players" className="m-0 flex list-none flex-wrap gap-2 p-0 text-[13.5px]">
+            {detail.players.map((player, index) => (
+              <li
+                key={`${index}-${player}`}
+                className="rounded-lg bg-surface-alt px-3 py-2 font-semibold"
+              >
+                {player}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       <dl className="m-0 flex flex-col gap-2.5 border-b border-surface-sunken py-4">
         {detail.lines.map((line) => (
           <div key={line.label} className={ROW}>

@@ -38,7 +38,7 @@ storefront scrolled sideways and rendered zoomed out.
 
 **Root cause.** `body` is a column flex container (`flex min-h-full flex-col`).
 Its children stretch in the cross axis, but Chrome floors that stretch at the
-child's *min-content* width. The booking day strip is a `flex` row of
+child's _min-content_ width. The booking day strip is a `flex` row of
 `flex-none` chips, giving it a 462px min-content width, which propagated up
 through `main` to the document. `overflow-x-auto` on the strip did not stop the
 propagation. Confirmed by direct measurement in the browser: setting
@@ -120,14 +120,14 @@ RED: `Expected: <= 321 / Received: 365`. GREEN after the fix.
 
 ## Test specification
 
-| # | What is guaranteed | Test file | Test type | Result | Evidence |
-|---|--------------------|-----------|-----------|--------|----------|
-| 1 | The court detail page does not scroll horizontally at a 393px viewport | `e2e/court-detail.mobile.spec.ts:the page fits the viewport instead of scrolling sideways` | e2e | PASS | `npx playwright test --project=mobile-chrome` |
-| 2 | No element outside the marked date strip is pushed past the right edge | `e2e/court-detail.mobile.spec.ts:no element is pushed past the right edge of the viewport` | e2e | PASS | same |
-| 3 | The page also fits at 320px, the narrowest viewport in common use | `e2e/court-detail.mobile.spec.ts:the page still fits on the narrowest phones` | e2e | PASS | same |
-| 4 | The court name gets more than 70% of the screen width on a phone | `e2e/court-detail.mobile.spec.ts:the court name is not squeezed into a narrow column by the price` | e2e | PASS | same |
-| 5 | Date and duration controls are at least 44px tall | `e2e/court-detail.mobile.spec.ts:the date and duration controls are comfortably tappable` | e2e | PASS | same |
-| 6 | The add-to-cart button is at least 44px tall | `e2e/court-detail.mobile.spec.ts:the add-to-cart button is comfortably tappable` | e2e | PASS | same |
+| #   | What is guaranteed                                                     | Test file                                                                                          | Test type | Result | Evidence                                      |
+| --- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------- | ------ | --------------------------------------------- |
+| 1   | The court detail page does not scroll horizontally at a 393px viewport | `e2e/court-detail.mobile.spec.ts:the page fits the viewport instead of scrolling sideways`         | e2e       | PASS   | `npx playwright test --project=mobile-chrome` |
+| 2   | No element outside the marked date strip is pushed past the right edge | `e2e/court-detail.mobile.spec.ts:no element is pushed past the right edge of the viewport`         | e2e       | PASS   | same                                          |
+| 3   | The page also fits at 320px, the narrowest viewport in common use      | `e2e/court-detail.mobile.spec.ts:the page still fits on the narrowest phones`                      | e2e       | PASS   | same                                          |
+| 4   | The court name gets more than 70% of the screen width on a phone       | `e2e/court-detail.mobile.spec.ts:the court name is not squeezed into a narrow column by the price` | e2e       | PASS   | same                                          |
+| 5   | Date and duration controls are at least 44px tall                      | `e2e/court-detail.mobile.spec.ts:the date and duration controls are comfortably tappable`          | e2e       | PASS   | same                                          |
+| 6   | The add-to-cart button is at least 44px tall                           | `e2e/court-detail.mobile.spec.ts:the add-to-cart button is comfortably tappable`                   | e2e       | PASS   | same                                          |
 
 The desktop suite guards against regression at the other end:
 
@@ -176,10 +176,10 @@ much as here. They were left untouched rather than folded into this change.
 
 Three checkpoint commits on `feat/admin-management`:
 
-| Commit | Stage |
-|--------|-------|
+| Commit    | Stage                                                              |
+| --------- | ------------------------------------------------------------------ |
 | `9a44bca` | RED — mobile reproducers added, 3 failing for the intended reasons |
-| `9dd9730` | GREEN — court detail page fits phone viewports |
-| `8949e8b` | GREEN — site header fits 320px |
+| `9dd9730` | GREEN — court detail page fits phone viewports                     |
+| `8949e8b` | GREEN — site header fits 320px                                     |
 
 If squashed, the RED/GREEN summary above should be copied into the PR body.

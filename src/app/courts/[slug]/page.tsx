@@ -116,6 +116,9 @@ export default async function CourtPage({ params, searchParams }: CourtPageProps
                 {court.blurb ? (
                   <p className="mt-1.5 text-[14px] text-muted">{court.blurb}</p>
                 ) : null}
+                <p className="mt-1.5 text-[13px] font-semibold text-slate">
+                  Up to {court.maxPlayers} players
+                </p>
               </div>
               <p className="flex-none sm:text-right">
                 <span className="font-[family-name:var(--font-display)] text-[24px] font-bold sm:block sm:text-[26px]">
@@ -238,6 +241,10 @@ export default async function CourtPage({ params, searchParams }: CourtPageProps
             timeZone={club.timeZone}
             currency={club.currency}
             cancellationWindowHours={club.cancellationWindowHours}
+            minPlayers={court.minPlayers}
+            maxPlayers={court.maxPlayers}
+            includedPlayers={court.includedPlayers}
+            extraPlayerFeeCents={court.extraPlayerFeeCents}
           />
         ) : (
           <p className="rounded-[12px] border border-danger-line bg-danger-bg px-4 py-3 text-[14px] text-danger">

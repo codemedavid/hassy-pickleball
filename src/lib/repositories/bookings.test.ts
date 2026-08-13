@@ -56,6 +56,28 @@ describe('findBookingByReference', () => {
 })
 
 describe('loadBookingDetail', () => {
+  it('loads the named players in their checkout order', async () => {
+    const bookings = fakeTable({
+      data: {
+        ...BOOKING_ROW,
+        booking_courts: [],
+        booking_items: [],
+        booking_players: [
+          { id: 'player-2', name: 'Ben Uy', position: 2 },
+          { id: 'player-1', name: 'Ana Cruz', position: 1 },
+        ],
+        payments: [],
+      },
+      error: null,
+    })
+
+    const detail = await loadBookingDetail(fakeClient({ bookings }), 'booking-1')
+    const [select] = callsFor(bookings, 'select')
+
+    expect(String(select?.args[0] ?? '')).toContain('booking_players')
+    expect(detail?.players).toEqual(['Ana Cruz', 'Ben Uy'])
+  })
+
   it('joins segments, items and payments in a single query rather than N+1', async () => {
     const bookings = fakeTable({
       data: {

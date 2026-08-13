@@ -11,10 +11,10 @@ documented two untracked WIP test files that broke `test:coverage` and
 
 Two test files existed in the working tree with no implementation behind them:
 
-| File | Imported module | Existed? |
-|---|---|---|
-| `src/components/ui/skeleton.test.tsx` | `./skeleton` | No |
-| `src/app/loading-states.test.tsx` | `./loading`, `./courts/[slug]/loading`, `./checkout/loading`, `./admin/loading` | No |
+| File                                  | Imported module                                                                 | Existed? |
+| ------------------------------------- | ------------------------------------------------------------------------------- | -------- |
+| `src/components/ui/skeleton.test.tsx` | `./skeleton`                                                                    | No       |
+| `src/app/loading-states.test.tsx`     | `./loading`, `./courts/[slug]/loading`, `./checkout/loading`, `./admin/loading` | No       |
 
 `find src/app -name "loading.tsx"` returned nothing, so no route segment had a
 Suspense boundary. Every page in this app awaits a database read in a Server
@@ -70,12 +70,12 @@ silent, and the one wrapper carries the message.
 One `loading.tsx` per segment that awaits a read, each naming its own wait
 rather than a generic "Loading":
 
-| Route | Label |
-|---|---|
-| `src/app/loading.tsx` | Loading courts |
-| `src/app/courts/[slug]/loading.tsx` | Loading court |
-| `src/app/checkout/loading.tsx` | Loading checkout |
-| `src/app/admin/loading.tsx` | Loading console |
+| Route                               | Label            |
+| ----------------------------------- | ---------------- |
+| `src/app/loading.tsx`               | Loading courts   |
+| `src/app/courts/[slug]/loading.tsx` | Loading court    |
+| `src/app/checkout/loading.tsx`      | Loading checkout |
+| `src/app/admin/loading.tsx`         | Loading console  |
 
 Verified GREEN on the two previously-failing files first:
 
@@ -114,16 +114,16 @@ Route (app)
 
 ## Test specification
 
-| # | What is guaranteed | Test file or command | Test type | Result | Evidence |
-|---|---|---|---|---|---|
-| 1 | A skeleton is hidden from assistive tech, so a screen reader hears one message rather than a wall of empty boxes | `src/components/ui/skeleton.test.tsx:is hidden from assistive tech` | unit | PASS | `npx vitest run skeleton.test.tsx` |
-| 2 | A skeleton takes its size from the caller, so one primitive covers headings, cards, and rows | `src/components/ui/skeleton.test.tsx:takes its size from the caller` | unit | PASS | same |
-| 3 | The loading region names what is loading, so the wait is announced rather than silent | `src/components/ui/skeleton.test.tsx:names what is loading` | unit | PASS | same |
-| 4 | The loading region is marked busy while placeholders stand in for real content | `src/components/ui/skeleton.test.tsx:marks the region busy` | unit | PASS | same |
-| 5 | The loading region renders the placeholders it was given | `src/components/ui/skeleton.test.tsx:renders the placeholders it was given` | unit | PASS | same |
-| 6–9 | Each of the four segments — catalog, court detail, checkout, admin — has a `loading.tsx` that announces its wait to assistive tech | `src/app/loading-states.test.tsx:announces the wait to assistive tech` (×4 via `describe.each`) | unit | PASS | `npx vitest run loading-states.test.tsx` |
-| 10–13 | Each of the four segments marks itself busy so placeholders are not mistaken for real content | `src/app/loading-states.test.tsx:marks itself busy` (×4 via `describe.each`) | unit | PASS | same |
-| 14 | All four route segments compile and register as routes | `npm run build` | build | PASS | build output above |
+| #     | What is guaranteed                                                                                                                 | Test file or command                                                                            | Test type | Result | Evidence                                 |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------- | ------ | ---------------------------------------- |
+| 1     | A skeleton is hidden from assistive tech, so a screen reader hears one message rather than a wall of empty boxes                   | `src/components/ui/skeleton.test.tsx:is hidden from assistive tech`                             | unit      | PASS   | `npx vitest run skeleton.test.tsx`       |
+| 2     | A skeleton takes its size from the caller, so one primitive covers headings, cards, and rows                                       | `src/components/ui/skeleton.test.tsx:takes its size from the caller`                            | unit      | PASS   | same                                     |
+| 3     | The loading region names what is loading, so the wait is announced rather than silent                                              | `src/components/ui/skeleton.test.tsx:names what is loading`                                     | unit      | PASS   | same                                     |
+| 4     | The loading region is marked busy while placeholders stand in for real content                                                     | `src/components/ui/skeleton.test.tsx:marks the region busy`                                     | unit      | PASS   | same                                     |
+| 5     | The loading region renders the placeholders it was given                                                                           | `src/components/ui/skeleton.test.tsx:renders the placeholders it was given`                     | unit      | PASS   | same                                     |
+| 6–9   | Each of the four segments — catalog, court detail, checkout, admin — has a `loading.tsx` that announces its wait to assistive tech | `src/app/loading-states.test.tsx:announces the wait to assistive tech` (×4 via `describe.each`) | unit      | PASS   | `npx vitest run loading-states.test.tsx` |
+| 10–13 | Each of the four segments marks itself busy so placeholders are not mistaken for real content                                      | `src/app/loading-states.test.tsx:marks itself busy` (×4 via `describe.each`)                    | unit      | PASS   | same                                     |
+| 14    | All four route segments compile and register as routes                                                                             | `npm run build`                                                                                 | build     | PASS   | build output above                       |
 
 ## Coverage
 
@@ -161,9 +161,9 @@ uncovered lines — it is at 100% on all four.
 
 Two checkpoint commits on `feat/admin-management`:
 
-| Commit | Stage | Evidence captured |
-|---|---|---|
-| `test: add reproducers for the shared skeleton and route loading states` | RED | 2 suites fail to resolve `./skeleton` and four `loading` modules; 5 matching `TS2307` errors; 940 other tests pass |
+| Commit                                                                      | Stage | Evidence captured                                                                                                      |
+| --------------------------------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------- |
+| `test: add reproducers for the shared skeleton and route loading states`    | RED   | 2 suites fail to resolve `./skeleton` and four `loading` modules; 5 matching `TS2307` errors; 940 other tests pass     |
 | `feat: announce and stream the wait on every route that reads the database` | GREEN | 13 previously-failing tests pass; 953/953 suite; typecheck and lint clean; `npm run build` registers all four segments |
 
 No refactor commit: the implementation was small enough that the GREEN shape was

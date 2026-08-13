@@ -89,33 +89,33 @@ surfaced in an `alert` region rather than swallowed.
 
 ## Test specification
 
-| # | What is guaranteed | Test file or command | Test type | Result | Evidence |
-|---|--------------------|----------------------|-----------|--------|----------|
-| 1 | Schedule entries are positioned as a percentage of the club's opening window | `src/features/admin/view/schedule.test.ts:positions a booking as a percentage of the opening window` | unit | PASS | `npx vitest run src/features/admin` |
-| 2 | An entry starting before opening or ending after close is clipped to the grid | `schedule.test.ts:clips an entry that starts before opening…` / `…runs past closing` | unit | PASS | same |
-| 3 | Work entirely outside opening hours is dropped, not drawn as a sliver | `schedule.test.ts:drops anything that falls entirely outside the opening window` | unit | PASS | same |
-| 4 | A cancelled booking leaves its court reading as free | `schedule.test.ts:leaves a cancelled booking off the grid…` | unit | PASS | same |
-| 5 | Utilization is 0% for a club with no courts rather than `NaN` | `schedule-stats.test.ts:reports zero utilization rather than dividing by no courts` | unit | PASS | same |
-| 6 | Cancelled bookings earn no revenue in the day's totals | `schedule-stats.test.ts:totals the day’s revenue…` | unit | PASS | same |
-| 7 | A booking row shows a phone number when there is one, else the email | `bookings.test.ts:falls back to the email when no phone number was given` | unit | PASS | same |
-| 8 | A multi-court booking lists each court once | `bookings.test.ts:lists every court a multi-court booking holds…` | unit | PASS | same |
-| 9 | An order reads as refunded even when an earlier charge succeeded | `orders.test.ts:reports a refund even when an earlier payment…succeeded` | unit | PASS | same |
-| 10 | An order with no recorded payment reads as awaiting, not paid | `orders.test.ts:reads as unpaid when no payment has been recorded at all` | unit | PASS | same |
-| 11 | Pricing rules are numbered in evaluation order, highest priority first | `pricing.test.ts:numbers rules by the order they are evaluated in…` | unit | PASS | same |
-| 12 | A discount renders with a minus sign, so it cannot read as a surcharge | `pricing.test.ts:renders an amount adjustment with its sign…` | unit | PASS | same |
-| 13 | A rule whose court was removed still renders a row | `pricing.test.ts:still renders a rule whose court has since been removed` | unit | PASS | same |
-| 14 | Hourly utilization counts only the minutes inside each hour | `reports.test.ts:counts only the minutes that fall inside the hour being measured` | unit | PASS | same |
-| 15 | Cancelled bookings are excluded from every reported figure | `reports.test.ts:excludes cancelled bookings from every figure on the page` | unit | PASS | same |
-| 16 | The current nav section is announced with `aria-current`, not colour alone | `admin-nav.test.tsx:marks the section being viewed as current…` | component | PASS | same |
-| 17 | Schedule only lights up at the console root, not on every admin page | `nav-items.test.ts:only marks Schedule active at the console root…` | unit | PASS | same |
-| 18 | The schedule legend names every tone used on the grid | `schedule-screen.test.tsx:explains what each colour on the grid means` | component | PASS | same |
-| 19 | Each screen states its empty case in words | `schedule-screen.test.tsx`, `bookings-screen.test.tsx`, `orders-screen.test.tsx`, `catalog-screens.test.tsx` | component | PASS | same |
-| 20 | Each order row links to its own order, so the panel is shareable | `orders-screen.test.tsx:links each row to its own order…` | component | PASS | same |
-| 21 | A hidden product is labelled, not silently shown like a live one | `catalog-screens.test.tsx:marks a product that is not on sale…` | component | PASS | same |
-| 22 | A customer who has never visited shows "Never", not an empty cell | `catalog-screens.test.tsx:says a customer has not visited…` | component | PASS | same |
-| 23 | Each hour's utilization is available as text, not only as bar height | `reports-screen.test.tsx:states each hour’s utilization as text…` | component | PASS | same |
-| 24 | Sign-in confirms identically for staff and non-staff addresses | `staff-sign-in-form.test.tsx:confirms the link was sent without saying whether the address is staff` | component | PASS | same |
-| 25 | A sign-in failure is surfaced rather than silently doing nothing | `staff-sign-in-form.test.tsx:surfaces the failure instead of silently doing nothing` | component | PASS | same |
+| #   | What is guaranteed                                                            | Test file or command                                                                                         | Test type | Result | Evidence                            |
+| --- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | --------- | ------ | ----------------------------------- |
+| 1   | Schedule entries are positioned as a percentage of the club's opening window  | `src/features/admin/view/schedule.test.ts:positions a booking as a percentage of the opening window`         | unit      | PASS   | `npx vitest run src/features/admin` |
+| 2   | An entry starting before opening or ending after close is clipped to the grid | `schedule.test.ts:clips an entry that starts before opening…` / `…runs past closing`                         | unit      | PASS   | same                                |
+| 3   | Work entirely outside opening hours is dropped, not drawn as a sliver         | `schedule.test.ts:drops anything that falls entirely outside the opening window`                             | unit      | PASS   | same                                |
+| 4   | A cancelled booking leaves its court reading as free                          | `schedule.test.ts:leaves a cancelled booking off the grid…`                                                  | unit      | PASS   | same                                |
+| 5   | Utilization is 0% for a club with no courts rather than `NaN`                 | `schedule-stats.test.ts:reports zero utilization rather than dividing by no courts`                          | unit      | PASS   | same                                |
+| 6   | Cancelled bookings earn no revenue in the day's totals                        | `schedule-stats.test.ts:totals the day’s revenue…`                                                           | unit      | PASS   | same                                |
+| 7   | A booking row shows a phone number when there is one, else the email          | `bookings.test.ts:falls back to the email when no phone number was given`                                    | unit      | PASS   | same                                |
+| 8   | A multi-court booking lists each court once                                   | `bookings.test.ts:lists every court a multi-court booking holds…`                                            | unit      | PASS   | same                                |
+| 9   | An order reads as refunded even when an earlier charge succeeded              | `orders.test.ts:reports a refund even when an earlier payment…succeeded`                                     | unit      | PASS   | same                                |
+| 10  | An order with no recorded payment reads as awaiting, not paid                 | `orders.test.ts:reads as unpaid when no payment has been recorded at all`                                    | unit      | PASS   | same                                |
+| 11  | Pricing rules are numbered in evaluation order, highest priority first        | `pricing.test.ts:numbers rules by the order they are evaluated in…`                                          | unit      | PASS   | same                                |
+| 12  | A discount renders with a minus sign, so it cannot read as a surcharge        | `pricing.test.ts:renders an amount adjustment with its sign…`                                                | unit      | PASS   | same                                |
+| 13  | A rule whose court was removed still renders a row                            | `pricing.test.ts:still renders a rule whose court has since been removed`                                    | unit      | PASS   | same                                |
+| 14  | Hourly utilization counts only the minutes inside each hour                   | `reports.test.ts:counts only the minutes that fall inside the hour being measured`                           | unit      | PASS   | same                                |
+| 15  | Cancelled bookings are excluded from every reported figure                    | `reports.test.ts:excludes cancelled bookings from every figure on the page`                                  | unit      | PASS   | same                                |
+| 16  | The current nav section is announced with `aria-current`, not colour alone    | `admin-nav.test.tsx:marks the section being viewed as current…`                                              | component | PASS   | same                                |
+| 17  | Schedule only lights up at the console root, not on every admin page          | `nav-items.test.ts:only marks Schedule active at the console root…`                                          | unit      | PASS   | same                                |
+| 18  | The schedule legend names every tone used on the grid                         | `schedule-screen.test.tsx:explains what each colour on the grid means`                                       | component | PASS   | same                                |
+| 19  | Each screen states its empty case in words                                    | `schedule-screen.test.tsx`, `bookings-screen.test.tsx`, `orders-screen.test.tsx`, `catalog-screens.test.tsx` | component | PASS   | same                                |
+| 20  | Each order row links to its own order, so the panel is shareable              | `orders-screen.test.tsx:links each row to its own order…`                                                    | component | PASS   | same                                |
+| 21  | A hidden product is labelled, not silently shown like a live one              | `catalog-screens.test.tsx:marks a product that is not on sale…`                                              | component | PASS   | same                                |
+| 22  | A customer who has never visited shows "Never", not an empty cell             | `catalog-screens.test.tsx:says a customer has not visited…`                                                  | component | PASS   | same                                |
+| 23  | Each hour's utilization is available as text, not only as bar height          | `reports-screen.test.tsx:states each hour’s utilization as text…`                                            | component | PASS   | same                                |
+| 24  | Sign-in confirms identically for staff and non-staff addresses                | `staff-sign-in-form.test.tsx:confirms the link was sent without saying whether the address is staff`         | component | PASS   | same                                |
+| 25  | A sign-in failure is surfaced rather than silently doing nothing              | `staff-sign-in-form.test.tsx:surfaces the failure instead of silently doing nothing`                         | component | PASS   | same                                |
 
 ## Coverage
 

@@ -52,12 +52,12 @@ describe('markBookingPaid', () => {
     expect(recordPayment).not.toHaveBeenCalled()
   })
 
-  it('attributes the payment to the signed-in staff member', async () => {
+  it('attributes the payment to the staff member’s auth user id', async () => {
     await markBookingPaid(VALID)
 
     expect(recordPayment).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ recordedBy: 'staff-1', status: 'paid' }),
+      expect.objectContaining({ recordedBy: 'user-1', status: 'paid' }),
     )
   })
 
@@ -66,7 +66,7 @@ describe('markBookingPaid', () => {
 
     expect(recordPayment).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ recordedBy: 'staff-1' }),
+      expect.objectContaining({ recordedBy: 'user-1' }),
     )
   })
 

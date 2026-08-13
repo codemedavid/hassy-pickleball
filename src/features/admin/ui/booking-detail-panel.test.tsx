@@ -46,6 +46,19 @@ function view(spec: Parameters<typeof makeBooking>[0] | null = null, signed = {}
 }
 
 describe('BookingDetailPanel', () => {
+  it('shows the players named during checkout', () => {
+    const detail = view({
+      players: ['Ana Cruz', 'Ben Uy'],
+      segments: [{ courtId: 'court-1', from: '17:00', to: '18:00' }],
+    })
+
+    render(<BookingDetailPanel {...panelProps(detail)} />)
+
+    const players = screen.getByRole('list', { name: 'Players' })
+    expect(within(players).getByText('Ana Cruz')).toBeInTheDocument()
+    expect(within(players).getByText('Ben Uy')).toBeInTheDocument()
+  })
+
   it('names the booking it is showing and breaks the total down', () => {
     // Act
     render(<BookingDetailPanel {...panelProps()} />)

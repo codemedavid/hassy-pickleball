@@ -7,8 +7,9 @@ import { buildScheduleStats } from '../view/schedule-stats'
 import { at, club, DAY, makeBlock, makeBooking, makeCourt } from '../../../../test/admin-fixtures'
 
 const refresh = vi.fn()
+const push = vi.fn()
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }))
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }))
 
 const harbor = makeCourt({ id: 'court-1', name: 'Harbor Court' })
 const maple = makeCourt({ id: 'court-2', name: 'Maple Court', environment: 'outdoor' })
@@ -170,6 +171,14 @@ describe('ScheduleScreen availability', () => {
 })
 
 describe('ScheduleScreen blocking time', () => {
+  it('shows the unavailable date and defaults it to the schedule day', () => {
+    // Act
+    renderScreen()
+
+    // Assert
+    expect(screen.getByLabelText('Date')).toHaveValue(DAY)
+  })
+
   it('holds the chosen window on the chosen court, in the club’s timezone', async () => {
     // Arrange
     const { onBlock } = renderScreen()
@@ -186,6 +195,25 @@ describe('ScheduleScreen blocking time', () => {
       reason: null,
       startsAt: at('13:00'),
       endsAt: at('15:00'),
+    })
+  })
+
+  it('holds the date selected in the form, not only the schedule day', async () => {
+    // Arrange
+    const { onBlock } = renderScreen()
+    const user = userEvent.setup()
+
+    // Act
+    await user.clear(screen.getByLabelText('Date'))
+    await user.type(screen.getByLabelText('Date'), '2026-08-09')
+    await fillBlockForm({ from: '13:00', to: '15:00' })
+    await user.click(screen.getByRole('button', { name: 'Block time' }))
+
+    // Assert
+    await waitFor(() => expect(onBlock).toHaveBeenCalledTimes(1))
+    expect(onBlock.mock.calls[0][0]).toMatchObject({
+      startsAt: at('13:00', '2026-08-09'),
+      endsAt: at('15:00', '2026-08-09'),
     })
   })
 
@@ -243,6 +271,8 @@ describe('ScheduleScreen blocking time', () => {
 
     // Assert
     expect(await screen.findByRole('alert')).toHaveTextContent('That clashes with a booking')
+    expect(push).not.toHaveBeenCalled()
+    expect(refresh).not.toHaveBeenCalled()
   })
 
   it('reloads the schedule once the block is saved, so the grid shows it', async () => {
@@ -255,6 +285,21 @@ describe('ScheduleScreen blocking time', () => {
 
     // Assert
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1))
+  })
+
+  it('opens the selected schedule date after saving a block for another day', async () => {
+    // Arrange
+    renderScreen()
+    const user = userEvent.setup()
+
+    // Act
+    await user.clear(screen.getByLabelText('Date'))
+    await user.type(screen.getByLabelText('Date'), '2026-08-09')
+    await fillBlockForm({ from: '13:00', to: '15:00' })
+    await user.click(screen.getByRole('button', { name: 'Block time' }))
+
+    // Assert
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/admin?day=2026-08-09'))
   })
 })
 

@@ -13,6 +13,7 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
   { label: 'Bookings', href: '/admin/bookings' },
   { label: 'Courts', href: '/admin/courts' },
   { label: 'Products', href: '/admin/products' },
+  { label: 'Payment methods', href: '/admin/payment-methods' },
   { label: 'Customers', href: '/admin/customers' },
   { label: 'Reports', href: '/admin/reports' },
 ]

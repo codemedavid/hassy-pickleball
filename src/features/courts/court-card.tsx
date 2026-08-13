@@ -104,6 +104,9 @@ function GalleryCourtCard({ court, currency, openSlotCount }: CourtViewProps) {
               {court.name}
             </h2>
             <p className="mt-[3px] text-[13px] text-muted">{court.surface}</p>
+            <p className="mt-1 text-[12.5px] font-semibold text-slate">
+              Up to {court.maxPlayers} players
+            </p>
           </div>
           <div className="flex-none text-right">
             <p className="font-[family-name:var(--font-display)] text-[22px] font-bold leading-none">
@@ -146,7 +149,7 @@ function GalleryCourtCard({ court, currency, openSlotCount }: CourtViewProps) {
 }
 
 function CompactCourtRow({ court, currency, openSlotCount }: CourtViewProps) {
-  const details = [court.surface, ...court.tags].join(' · ')
+  const details = [court.surface, `Up to ${court.maxPlayers} players`, ...court.tags].join(' · ')
 
   return (
     <article className="flex flex-col gap-4 rounded-[14px] border border-line bg-surface p-3.5 transition hover:border-line-heavy sm:flex-row sm:items-center sm:gap-[18px]">

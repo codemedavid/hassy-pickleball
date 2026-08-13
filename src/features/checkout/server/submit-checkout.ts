@@ -96,6 +96,7 @@ export async function submitCheckout(form: FormData): Promise<Result<CheckoutRes
     notes: order.notes,
     courts: order.courts,
     items: order.items,
+    players: order.players,
     // The published method resolves to the enum the payment row is filed under,
     // so a client cannot name a channel the club does not accept.
     paymentMethod: method.method,

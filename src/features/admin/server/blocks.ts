@@ -31,7 +31,7 @@ export async function blockCourtTime(input: unknown): Promise<Result<Availabilit
       reason: reason ?? null,
       startsAt,
       endsAt,
-      createdBy: staff.id,
+      createdByUserId: staff.userId,
     }),
   )
 }

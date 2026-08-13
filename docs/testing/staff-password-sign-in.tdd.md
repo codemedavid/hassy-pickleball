@@ -22,11 +22,11 @@ Two separate gaps, only one of which was a code problem:
 
 ## Task report
 
-| Step | Summary |
-|---|---|
-| RED | Added `src/app/actions/auth.test.ts` (5 cases) for a `signInWithEmailAndPassword` action, and rewrote `staff-sign-in-form.test.tsx` (4 cases) for a password field. Ran both: 9 failed — the action did not exist, and the form had no `Password` label. |
-| GREEN | Replaced `signInWithMagicLink` with `signInWithEmailAndPassword` (Zod-validated, `signInWithPassword`, `redirect('/admin')` on success), added the masked password field, and pointed the page at the new action. Same targets: 9 passed. |
-| Refactor | Extracted the repeated field/label class strings in the form. Suite stayed green. |
+| Step     | Summary                                                                                                                                                                                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RED      | Added `src/app/actions/auth.test.ts` (5 cases) for a `signInWithEmailAndPassword` action, and rewrote `staff-sign-in-form.test.tsx` (4 cases) for a password field. Ran both: 9 failed — the action did not exist, and the form had no `Password` label. |
+| GREEN    | Replaced `signInWithMagicLink` with `signInWithEmailAndPassword` (Zod-validated, `signInWithPassword`, `redirect('/admin')` on success), added the masked password field, and pointed the page at the new action. Same targets: 9 passed.                |
+| Refactor | Extracted the repeated field/label class strings in the form. Suite stayed green.                                                                                                                                                                        |
 
 ### RED
 
@@ -53,17 +53,17 @@ npx vitest run src/app/actions/auth.test.ts src/features/admin/ui/staff-sign-in-
 
 ## Test specification
 
-| # | What is guaranteed | Test file or command | Test type | Result | Evidence |
-|---|---|---|---|---|---|
-| 1 | A malformed email is rejected before Supabase is called | `src/app/actions/auth.test.ts:rejects a malformed email without calling Supabase` | unit | PASS | `npx vitest run src/app/actions/auth.test.ts` |
-| 2 | An empty password is rejected before Supabase is called | `src/app/actions/auth.test.ts:rejects an empty password without calling Supabase` | unit | PASS | same |
-| 3 | The typed credentials are the ones handed to Supabase | `src/app/actions/auth.test.ts:signs the staff member in with the credentials they typed` | unit | PASS | same |
-| 4 | A successful sign-in lands on `/admin` | `src/app/actions/auth.test.ts:sends a signed-in staff member to the admin console` | unit | PASS | same |
-| 5 | Bad credentials give one generic message, so staff emails cannot be enumerated | `src/app/actions/auth.test.ts:gives one generic message for bad credentials` | unit | PASS | same |
-| 6 | The form asks for both an email and a password | `staff-sign-in-form.test.tsx:asks for an email and a password with real labels` | unit | PASS | `npx vitest run src/features/admin/ui/staff-sign-in-form.test.tsx` |
-| 7 | The password is masked as it is typed | `staff-sign-in-form.test.tsx:masks the password as it is typed` | unit | PASS | same |
-| 8 | Both credentials reach the action on submit | `staff-sign-in-form.test.tsx:sends both credentials to the action when submitted` | unit | PASS | same |
-| 9 | A failure is surfaced rather than silently swallowed | `staff-sign-in-form.test.tsx:surfaces the failure instead of silently doing nothing` | unit | PASS | same |
+| #   | What is guaranteed                                                             | Test file or command                                                                     | Test type | Result | Evidence                                                           |
+| --- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- | --------- | ------ | ------------------------------------------------------------------ |
+| 1   | A malformed email is rejected before Supabase is called                        | `src/app/actions/auth.test.ts:rejects a malformed email without calling Supabase`        | unit      | PASS   | `npx vitest run src/app/actions/auth.test.ts`                      |
+| 2   | An empty password is rejected before Supabase is called                        | `src/app/actions/auth.test.ts:rejects an empty password without calling Supabase`        | unit      | PASS   | same                                                               |
+| 3   | The typed credentials are the ones handed to Supabase                          | `src/app/actions/auth.test.ts:signs the staff member in with the credentials they typed` | unit      | PASS   | same                                                               |
+| 4   | A successful sign-in lands on `/admin`                                         | `src/app/actions/auth.test.ts:sends a signed-in staff member to the admin console`       | unit      | PASS   | same                                                               |
+| 5   | Bad credentials give one generic message, so staff emails cannot be enumerated | `src/app/actions/auth.test.ts:gives one generic message for bad credentials`             | unit      | PASS   | same                                                               |
+| 6   | The form asks for both an email and a password                                 | `staff-sign-in-form.test.tsx:asks for an email and a password with real labels`          | unit      | PASS   | `npx vitest run src/features/admin/ui/staff-sign-in-form.test.tsx` |
+| 7   | The password is masked as it is typed                                          | `staff-sign-in-form.test.tsx:masks the password as it is typed`                          | unit      | PASS   | same                                                               |
+| 8   | Both credentials reach the action on submit                                    | `staff-sign-in-form.test.tsx:sends both credentials to the action when submitted`        | unit      | PASS   | same                                                               |
+| 9   | A failure is surfaced rather than silently swallowed                           | `staff-sign-in-form.test.tsx:surfaces the failure instead of silently doing nothing`     | unit      | PASS   | same                                                               |
 
 ## Manual verification against the hosted project
 

@@ -38,13 +38,13 @@ the editor gets a field error instead of a 23514.
 
 ### Mapper, repository, validation, save entry point
 
-| Validation command | Result |
-|---|---|
-| `pnpm test` (RED, before implementation) | 9 failed, 756 passed |
-| `pnpm test` (GREEN) | **782 passed**, 0 failed among tested files |
-| `pnpm lint` | clean, no output |
-| `pnpm typecheck` | no errors in any file in this change |
-| `pnpm test:coverage` | **BLOCKED** — see Known gaps |
+| Validation command                       | Result                                      |
+| ---------------------------------------- | ------------------------------------------- |
+| `pnpm test` (RED, before implementation) | 9 failed, 756 passed                        |
+| `pnpm test` (GREEN)                      | **782 passed**, 0 failed among tested files |
+| `pnpm lint`                              | clean, no output                            |
+| `pnpm typecheck`                         | no errors in any file in this change        |
+| `pnpm test:coverage`                     | **BLOCKED** — see Known gaps                |
 
 RED excerpt:
 
@@ -68,23 +68,23 @@ Test Files  79 passed (79)
 
 ## Test specification
 
-| # | What is guaranteed | Test | Type | Result |
-|---|---|---|---|---|
-| 1 | A court row's `min_players`/`max_players` reach the domain object as `minPlayers`/`maxPlayers` | `src/lib/repositories/mappers.test.ts:toCourt carries the player capacity through` | unit | PASS |
-| 2 | The admin list includes deactivated courts; the storefront list does not | `src/lib/repositories/courts.test.ts:listAllCourts includes deactivated courts` | unit | PASS |
-| 3 | Creating a court writes snake_case columns scoped to the club, capacity included | `src/lib/repositories/courts.test.ts:createCourt writes the court against the club` | unit | PASS |
-| 4 | A patch sends only the fields that changed | `src/lib/repositories/courts.test.ts:updateCourt sends only the fields that changed` | unit | PASS |
-| 5 | Courts deactivate rather than delete, so historical bookings still resolve | `src/lib/repositories/courts.test.ts:updateCourt deactivates rather than deletes` | unit | PASS |
-| 6 | An empty patch is refused rather than issuing a no-op update | `src/lib/repositories/courts.test.ts:updateCourt refuses an empty patch` | unit | PASS |
-| 7 | Every failing query throws with context rather than returning null | `courts.test.ts` — four `throws with context` cases | unit | PASS |
-| 8 | A caller with no staff session cannot save a court | `src/features/admin/server/courts.test.ts:saveCourt refuses a caller with no staff session` | unit | PASS |
-| 9 | `clubId` comes from the session, so staff cannot write into another club | `courts.test.ts:saveCourt ignores a clubId in the request` | unit | PASS |
-| 10 | Supplying an id patches the existing court instead of creating a duplicate | `courts.test.ts:saveCourt patches an existing court when an id is supplied` | unit | PASS |
-| 11 | A capacity band whose maximum is below its minimum is rejected, on create and on patch | `courts.test.ts:saveCourt rejects a capacity whose maximum is below its minimum` + `rejects a patch that would invert the capacity band` | unit | PASS |
-| 12 | A capacity of zero players is rejected, since it would make the court unbookable | `courts.test.ts:saveCourt rejects a capacity of zero players` | unit | PASS |
-| 13 | A negative base price is rejected | `courts.test.ts:saveCourt rejects a negative base price` | unit | PASS |
-| 14 | An environment outside the database enum is rejected | `courts.test.ts:saveCourt rejects an environment the database does not define` | unit | PASS |
-| 15 | A slug that would not survive a URL is rejected | `courts.test.ts:saveCourt rejects a slug with characters that would not survive a URL` | unit | PASS |
+| #   | What is guaranteed                                                                             | Test                                                                                                                                     | Type | Result |
+| --- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------ |
+| 1   | A court row's `min_players`/`max_players` reach the domain object as `minPlayers`/`maxPlayers` | `src/lib/repositories/mappers.test.ts:toCourt carries the player capacity through`                                                       | unit | PASS   |
+| 2   | The admin list includes deactivated courts; the storefront list does not                       | `src/lib/repositories/courts.test.ts:listAllCourts includes deactivated courts`                                                          | unit | PASS   |
+| 3   | Creating a court writes snake_case columns scoped to the club, capacity included               | `src/lib/repositories/courts.test.ts:createCourt writes the court against the club`                                                      | unit | PASS   |
+| 4   | A patch sends only the fields that changed                                                     | `src/lib/repositories/courts.test.ts:updateCourt sends only the fields that changed`                                                     | unit | PASS   |
+| 5   | Courts deactivate rather than delete, so historical bookings still resolve                     | `src/lib/repositories/courts.test.ts:updateCourt deactivates rather than deletes`                                                        | unit | PASS   |
+| 6   | An empty patch is refused rather than issuing a no-op update                                   | `src/lib/repositories/courts.test.ts:updateCourt refuses an empty patch`                                                                 | unit | PASS   |
+| 7   | Every failing query throws with context rather than returning null                             | `courts.test.ts` — four `throws with context` cases                                                                                      | unit | PASS   |
+| 8   | A caller with no staff session cannot save a court                                             | `src/features/admin/server/courts.test.ts:saveCourt refuses a caller with no staff session`                                              | unit | PASS   |
+| 9   | `clubId` comes from the session, so staff cannot write into another club                       | `courts.test.ts:saveCourt ignores a clubId in the request`                                                                               | unit | PASS   |
+| 10  | Supplying an id patches the existing court instead of creating a duplicate                     | `courts.test.ts:saveCourt patches an existing court when an id is supplied`                                                              | unit | PASS   |
+| 11  | A capacity band whose maximum is below its minimum is rejected, on create and on patch         | `courts.test.ts:saveCourt rejects a capacity whose maximum is below its minimum` + `rejects a patch that would invert the capacity band` | unit | PASS   |
+| 12  | A capacity of zero players is rejected, since it would make the court unbookable               | `courts.test.ts:saveCourt rejects a capacity of zero players`                                                                            | unit | PASS   |
+| 13  | A negative base price is rejected                                                              | `courts.test.ts:saveCourt rejects a negative base price`                                                                                 | unit | PASS   |
+| 14  | An environment outside the database enum is rejected                                           | `courts.test.ts:saveCourt rejects an environment the database does not define`                                                           | unit | PASS   |
+| 15  | A slug that would not survive a URL is rejected                                                | `courts.test.ts:saveCourt rejects a slug with characters that would not survive a URL`                                                   | unit | PASS   |
 
 ## Coverage and known gaps
 

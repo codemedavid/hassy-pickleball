@@ -23,7 +23,8 @@ export type CreateBlockInput = {
   readonly reason: string | null
   readonly startsAt: Date
   readonly endsAt: Date
-  readonly createdBy: string | null
+  /** auth.users id, matching availability_blocks.created_by. */
+  readonly createdByUserId: string | null
 }
 
 export async function listBlocksInWindow(
@@ -60,7 +61,7 @@ export async function createAvailabilityBlock(
       reason: input.reason,
       starts_at: input.startsAt.toISOString(),
       ends_at: input.endsAt.toISOString(),
-      created_by: input.createdBy,
+      created_by: input.createdByUserId,
     })
     .select('*')
     .single()

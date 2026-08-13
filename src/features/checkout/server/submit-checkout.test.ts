@@ -62,6 +62,7 @@ function order() {
       },
     ],
     items: [],
+    players: ['Ana Cruz', 'Ben Uy'],
   }
 }
 
@@ -122,6 +123,14 @@ describe('submitCheckout', () => {
     await submitCheckout(formDataFor(order(), proofFile()))
 
     expect(createBooking).toHaveBeenCalledWith(expect.objectContaining({ paymentMethod: 'gcash' }))
+  })
+
+  it('passes the named players through to booking creation', async () => {
+    await submitCheckout(formDataFor(order(), proofFile()))
+
+    expect(createBooking).toHaveBeenCalledWith(
+      expect.objectContaining({ players: ['Ana Cruz', 'Ben Uy'] }),
+    )
   })
 
   it('rejects a payment method that is not an active method of this club', async () => {

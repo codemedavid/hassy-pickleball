@@ -13,6 +13,7 @@ export type RecordPaymentInput = {
   readonly amountCents: number
   /** Gateway/reference id. Null for cash and pay-at-venue. */
   readonly externalReference: string | null
+  /** Auth user id: payments.recorded_by references auth.users, not staff.id. */
   readonly recordedBy: string | null
 }
 

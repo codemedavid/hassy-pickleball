@@ -25,13 +25,13 @@ The plan named the private-file behaviour as the single riskiest assumption, gat
 manual probe. Run with `curl` against the real account (endpoint
 `https://ik.imagekit.io/9e1zkyidg`), then cleaned up.
 
-| Assumption | Command | Result |
-|---|---|---|
-| Credentials are valid | `GET /v1/files?limit=2` | `HTTP 200` |
-| A private file refuses unsigned reads | `GET /_tdd-probe/tdd-probe.png` | `HTTP 403` |
-| A signed URL is accepted | same path with `ik-t`/`ik-s` | `HTTP 200` |
+| Assumption                                 | Command                                                        | Result                       |
+| ------------------------------------------ | -------------------------------------------------------------- | ---------------------------- |
+| Credentials are valid                      | `GET /v1/files?limit=2`                                        | `HTTP 200`                   |
+| A private file refuses unsigned reads      | `GET /_tdd-probe/tdd-probe.png`                                | `HTTP 403`                   |
+| A signed URL is accepted                   | same path with `ik-t`/`ik-s`                                   | `HTTP 200`                   |
 | Re-upload replaces rather than accumulates | second upload, `useUniqueFileName=false`, `overwriteFile=true` | same `fileId` and `filePath` |
-| Probe removed | `DELETE /v1/files/<id>` | `HTTP 204` |
+| Probe removed                              | `DELETE /v1/files/<id>`                                        | `HTTP 204`                   |
 
 Consequence: proofs could move to ImageKit without weakening the posture the Supabase
 private bucket had, and the signing scheme was proven before it was coded — which is why
@@ -82,6 +82,7 @@ Implements `ik-s = HMAC-SHA1(privateKey, <path relative to endpoint> + <ik-t>)`.
 
   Run as a throwaway file with `--environment node`, then deleted; `GET /v1/files?path=/payment-proofs`
   afterwards returns `[]`.
+
 - Guaranteed: a proof is filed under its booking reference, stored privately, and readable
   only through an expiring link. `buildPaymentProofPath` still fails closed on a reference we
   did not issue.
@@ -137,29 +138,29 @@ Two implementation notes worth recording, both found by a failing test:
 
 ## Test specification
 
-| # | What is guaranteed | Test file | Type | Result |
-|---|---|---|---|---|
-| 1 | A signed URL reproduces the signature the live CDN accepted | `src/lib/imagekit/signature.test.ts` | unit | PASS |
-| 2 | Signing refuses a path that escapes the endpoint or carries its own query string | `src/lib/imagekit/signature.test.ts` | unit | PASS |
-| 3 | Uploads authenticate with the private key as basic-auth username | `src/lib/imagekit/client.test.ts` | unit | PASS |
-| 4 | Proofs upload private, catalog images public | `src/lib/imagekit/client.test.ts` | unit | PASS |
-| 5 | Re-uploading the same name replaces rather than accumulates | `src/lib/imagekit/client.test.ts` | unit | PASS |
-| 6 | Store failures and network failures return STORAGE_ERROR, never throw | `src/lib/imagekit/client.test.ts` | unit | PASS |
-| 7 | The private key never reaches an error message | `src/lib/imagekit/client.test.ts` | unit | PASS |
-| 8 | Missing ImageKit config throws at startup, naming the variable | `src/lib/env.test.ts` | unit | PASS |
-| 9 | The private key is absent from the public env | `src/lib/env.test.ts` | unit | PASS |
-| 10 | A proof is filed under its booking reference, privately | `src/features/checkout/server/proof-storage.test.ts` | unit | PASS |
-| 11 | A reference we did not issue fails closed rather than being sanitised | `src/features/checkout/server/proof-storage.test.ts` | unit | PASS |
-| 12 | A failed proof upload keeps the reservation and reports it did not attach | `src/features/checkout/server/submit-checkout.test.ts` | integration | PASS |
-| 13 | SVG is refused wherever an image is accepted | `src/lib/domain/image-upload.test.ts` | unit | PASS |
-| 14 | The extension comes from the content type, not the file name | `src/lib/domain/image-upload.test.ts` | unit | PASS |
-| 15 | Size limit enforced at the boundary and one byte over | `src/lib/domain/image-upload.test.ts` | unit | PASS |
-| 16 | A catalog image is filed under the club from the session, not the request | `src/features/admin/server/media.test.ts` | integration | PASS |
-| 17 | An unauthenticated caller cannot upload | `src/features/admin/server/media.test.ts` | integration | PASS |
-| 18 | Invalid files are rejected before the store is touched | `src/features/admin/server/media.test.ts` | integration | PASS |
-| 19 | The upload field refuses a non-image in the browser | `src/features/admin/ui/image-upload-field.test.tsx` | unit | PASS |
-| 20 | A server-side rejection is shown to the staff member | `src/features/admin/ui/image-upload-field.test.tsx` | unit | PASS |
-| 21 | A private file 403s unsigned and 200s signed, against the real account | manual, `--environment node` | e2e | PASS |
+| #   | What is guaranteed                                                               | Test file                                              | Type        | Result |
+| --- | -------------------------------------------------------------------------------- | ------------------------------------------------------ | ----------- | ------ |
+| 1   | A signed URL reproduces the signature the live CDN accepted                      | `src/lib/imagekit/signature.test.ts`                   | unit        | PASS   |
+| 2   | Signing refuses a path that escapes the endpoint or carries its own query string | `src/lib/imagekit/signature.test.ts`                   | unit        | PASS   |
+| 3   | Uploads authenticate with the private key as basic-auth username                 | `src/lib/imagekit/client.test.ts`                      | unit        | PASS   |
+| 4   | Proofs upload private, catalog images public                                     | `src/lib/imagekit/client.test.ts`                      | unit        | PASS   |
+| 5   | Re-uploading the same name replaces rather than accumulates                      | `src/lib/imagekit/client.test.ts`                      | unit        | PASS   |
+| 6   | Store failures and network failures return STORAGE_ERROR, never throw            | `src/lib/imagekit/client.test.ts`                      | unit        | PASS   |
+| 7   | The private key never reaches an error message                                   | `src/lib/imagekit/client.test.ts`                      | unit        | PASS   |
+| 8   | Missing ImageKit config throws at startup, naming the variable                   | `src/lib/env.test.ts`                                  | unit        | PASS   |
+| 9   | The private key is absent from the public env                                    | `src/lib/env.test.ts`                                  | unit        | PASS   |
+| 10  | A proof is filed under its booking reference, privately                          | `src/features/checkout/server/proof-storage.test.ts`   | unit        | PASS   |
+| 11  | A reference we did not issue fails closed rather than being sanitised            | `src/features/checkout/server/proof-storage.test.ts`   | unit        | PASS   |
+| 12  | A failed proof upload keeps the reservation and reports it did not attach        | `src/features/checkout/server/submit-checkout.test.ts` | integration | PASS   |
+| 13  | SVG is refused wherever an image is accepted                                     | `src/lib/domain/image-upload.test.ts`                  | unit        | PASS   |
+| 14  | The extension comes from the content type, not the file name                     | `src/lib/domain/image-upload.test.ts`                  | unit        | PASS   |
+| 15  | Size limit enforced at the boundary and one byte over                            | `src/lib/domain/image-upload.test.ts`                  | unit        | PASS   |
+| 16  | A catalog image is filed under the club from the session, not the request        | `src/features/admin/server/media.test.ts`              | integration | PASS   |
+| 17  | An unauthenticated caller cannot upload                                          | `src/features/admin/server/media.test.ts`              | integration | PASS   |
+| 18  | Invalid files are rejected before the store is touched                           | `src/features/admin/server/media.test.ts`              | integration | PASS   |
+| 19  | The upload field refuses a non-image in the browser                              | `src/features/admin/ui/image-upload-field.test.tsx`    | unit        | PASS   |
+| 20  | A server-side rejection is shown to the staff member                             | `src/features/admin/ui/image-upload-field.test.tsx`    | unit        | PASS   |
+| 21  | A private file 403s unsigned and 200s signed, against the real account           | manual, `--environment node`                           | e2e         | PASS   |
 
 ## Coverage
 

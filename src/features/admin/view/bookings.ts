@@ -55,6 +55,7 @@ export type BookingDetailView = {
   readonly status: BookingStatus
   readonly paymentStatus: PaymentStatus
   readonly meta: readonly DetailLine[]
+  readonly players: readonly string[]
   readonly lines: readonly DetailLine[]
   readonly total: string
   readonly note: string
@@ -217,6 +218,7 @@ export function toBookingDetailView(
       { label: 'Court', value: courtLabel(detail) },
       { label: 'When', value: whenLabel(detail, club) },
     ],
+    players: detail.players,
     lines: [
       { label: 'Court time', value: formatMoney(booking.courtsSubtotalCents, club.currency) },
       ...detail.items.map((item) => ({

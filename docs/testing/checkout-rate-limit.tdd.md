@@ -95,14 +95,14 @@ remote database, which was therefore a migration behind.
 
 ## Test specification
 
-| # | What is guaranteed | Test file or command | Test type | Result | Evidence |
-|---|--------------------|----------------------|-----------|--------|----------|
-| 1 | `callPendingRpc` calls `rpc` with the client still bound as its receiver | `src/lib/supabase/rpc.test.ts:calls rpc with the client still bound as its receiver` | unit | PASS | `pnpm vitest run src/lib/supabase/rpc.test.ts` |
-| 2 | `callPendingRpc` does not throw when the client method depends on instance state | `src/lib/supabase/rpc.test.ts:does not throw when the client method depends on instance state` | unit | PASS | same |
-| 3 | An errored counter is refused *and* the reason is logged | `src/lib/security/rate-limit.test.ts:reports the reason when the counter errors` | unit | PASS | `pnpm vitest run src/lib/security/rate-limit.test.ts` |
-| 4 | A thrown counter is refused *and* the reason is logged | `src/lib/security/rate-limit.test.ts:reports the reason when the counter throws` | unit | PASS | same |
-| 5 | The limiter still fails closed on error, empty result, and throw | `src/lib/security/rate-limit.test.ts:fails closed when the counter …` (3 cases) | unit | PASS | same |
-| 6 | The rate limiter records an attempt end-to-end against the live database | `curl localhost:3000/api/diag-rate-limit` (temporary route, since removed) | manual integration | PASS | `{"ok":true,...,"data":true,"status":200}` and a new `booking_lookup_attempts` row |
+| #   | What is guaranteed                                                               | Test file or command                                                                           | Test type          | Result | Evidence                                                                           |
+| --- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------ | ------ | ---------------------------------------------------------------------------------- |
+| 1   | `callPendingRpc` calls `rpc` with the client still bound as its receiver         | `src/lib/supabase/rpc.test.ts:calls rpc with the client still bound as its receiver`           | unit               | PASS   | `pnpm vitest run src/lib/supabase/rpc.test.ts`                                     |
+| 2   | `callPendingRpc` does not throw when the client method depends on instance state | `src/lib/supabase/rpc.test.ts:does not throw when the client method depends on instance state` | unit               | PASS   | same                                                                               |
+| 3   | An errored counter is refused _and_ the reason is logged                         | `src/lib/security/rate-limit.test.ts:reports the reason when the counter errors`               | unit               | PASS   | `pnpm vitest run src/lib/security/rate-limit.test.ts`                              |
+| 4   | A thrown counter is refused _and_ the reason is logged                           | `src/lib/security/rate-limit.test.ts:reports the reason when the counter throws`               | unit               | PASS   | same                                                                               |
+| 5   | The limiter still fails closed on error, empty result, and throw                 | `src/lib/security/rate-limit.test.ts:fails closed when the counter …` (3 cases)                | unit               | PASS   | same                                                                               |
+| 6   | The rate limiter records an attempt end-to-end against the live database         | `curl localhost:3000/api/diag-rate-limit` (temporary route, since removed)                     | manual integration | PASS   | `{"ok":true,...,"data":true,"status":200}` and a new `booking_lookup_attempts` row |
 
 ## Coverage and known gaps
 

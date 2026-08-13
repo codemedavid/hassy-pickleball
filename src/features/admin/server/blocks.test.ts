@@ -49,12 +49,12 @@ describe('blockCourtTime', () => {
     expect(createAvailabilityBlock).not.toHaveBeenCalled()
   })
 
-  it('records who created the block from the session, not from the request body', async () => {
+  it('records the authenticated user who created the block, not the staff row or request body', async () => {
     await blockCourtTime({ ...VALID, createdBy: 'staff-999' })
 
     expect(createAvailabilityBlock).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ createdBy: 'staff-1' }),
+      expect.objectContaining({ createdByUserId: 'user-1' }),
     )
   })
 

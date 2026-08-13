@@ -75,7 +75,7 @@ describe('createAvailabilityBlock', () => {
       reason: 'Resurfacing',
       startsAt: new Date('2026-03-01T01:00:00.000Z'),
       endsAt: new Date('2026-03-01T05:00:00.000Z'),
-      createdBy: 'user-1',
+      createdByUserId: 'user-1',
     })
 
     expect(callsFor(blocks, 'insert')[0]?.args[0]).toMatchObject({
@@ -103,7 +103,7 @@ describe('createAvailabilityBlock', () => {
         reason: null,
         startsAt: new Date('2026-03-01T01:00:00.000Z'),
         endsAt: new Date('2026-03-01T05:00:00.000Z'),
-        createdBy: 'user-1',
+        createdByUserId: 'user-1',
       }),
     ).rejects.toMatchObject({ code: '23P01' })
   })

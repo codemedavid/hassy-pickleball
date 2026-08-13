@@ -83,22 +83,22 @@ visible everywhere.
 
 ## Test specification
 
-| # | What is guaranteed | Test file or command | Test type | Result | Evidence |
-|---|--------------------|----------------------|-----------|--------|----------|
-| 1 | An unknown `layout` param falls back to gallery instead of an empty grid | `src/features/courts/court-layout.test.ts:falls back to the gallery layout for an unrecognised value` | unit | PASS | `npx vitest run src/features/courts` |
-| 2 | The default filter and layout produce a bare `/`, so the catalog has one canonical URL | `court-layout.test.ts:is the bare storefront root at the default filter and layout` | unit | PASS | `npx vitest run src/features/courts` |
-| 3 | Changing layout preserves the active filter and vice versa | `courts-browse.test.tsx:keeps the active filter when switching layout`, `:keeps the active layout when switching filter` | unit | PASS | `npx vitest run src/features/courts` |
-| 4 | The layout toggle marks the active view with `aria-current="page"` | `courts-browse.test.tsx:marks the active layout as the current page for assistive tech` | unit | PASS | `npx vitest run src/features/courts` |
-| 5 | Compact renders rows ("Book"), not gallery cards ("View & book") | `courts-browse.test.tsx:renders the compact row rather than the gallery card in the compact layout` | unit | PASS | `npx vitest run src/features/courts` |
-| 6 | A fully booked court says so rather than showing "0 slots open" | `court-card.test.tsx:says a fully booked court is fully booked instead of showing "0 slots"` | unit | PASS | `npx vitest run src/features/courts` |
-| 7 | "1 slot" is singular | `court-card.test.tsx:says "1 slot" rather than "1 slots" for the last opening` | unit | PASS | `npx vitest run src/features/courts` |
-| 8 | With no availability data the card claims nothing about openings | `court-card.test.tsx:claims nothing about availability when the count could not be loaded` | unit | PASS | `npx vitest run src/features/courts` |
-| 9 | Tournament grade stays visible in the denser compact row | `court-card.test.tsx:marks a tournament-grade court here too — density must not hide the grade` | unit | PASS | `npx vitest run src/features/courts` |
-| 10 | Both layouts give the court photo alt text naming the court | `court-card.test.tsx:gives the thumbnail alt text naming the court` | unit | PASS | `npx vitest run src/features/courts` |
-| 11 | The rate is qualified "per hour", not read as a session total | `court-card.test.tsx:qualifies the rate as per hour…` | unit | PASS | `npx vitest run src/features/courts` |
-| 12 | Navy call-to-action labels compute to white in a real browser | `e2e/storefront.spec.ts:the "View & book" call to action is legible on its navy button` | e2e | PASS | `npx playwright test` |
-| 13 | The active filter chip and brand wordmark are legible on navy | `e2e/storefront.spec.ts:the active filter chip is legible on navy`, `:the brand wordmark is legible on the navy header` | e2e | PASS | `npx playwright test` |
-| 14 | Clicking Compact keeps `?filter=indoor` and renders compact rows | `e2e/storefront.spec.ts:switching to the compact layout keeps the active filter` | e2e | PASS | `npx playwright test` |
+| #   | What is guaranteed                                                                     | Test file or command                                                                                                     | Test type | Result | Evidence                             |
+| --- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------- | ------ | ------------------------------------ |
+| 1   | An unknown `layout` param falls back to gallery instead of an empty grid               | `src/features/courts/court-layout.test.ts:falls back to the gallery layout for an unrecognised value`                    | unit      | PASS   | `npx vitest run src/features/courts` |
+| 2   | The default filter and layout produce a bare `/`, so the catalog has one canonical URL | `court-layout.test.ts:is the bare storefront root at the default filter and layout`                                      | unit      | PASS   | `npx vitest run src/features/courts` |
+| 3   | Changing layout preserves the active filter and vice versa                             | `courts-browse.test.tsx:keeps the active filter when switching layout`, `:keeps the active layout when switching filter` | unit      | PASS   | `npx vitest run src/features/courts` |
+| 4   | The layout toggle marks the active view with `aria-current="page"`                     | `courts-browse.test.tsx:marks the active layout as the current page for assistive tech`                                  | unit      | PASS   | `npx vitest run src/features/courts` |
+| 5   | Compact renders rows ("Book"), not gallery cards ("View & book")                       | `courts-browse.test.tsx:renders the compact row rather than the gallery card in the compact layout`                      | unit      | PASS   | `npx vitest run src/features/courts` |
+| 6   | A fully booked court says so rather than showing "0 slots open"                        | `court-card.test.tsx:says a fully booked court is fully booked instead of showing "0 slots"`                             | unit      | PASS   | `npx vitest run src/features/courts` |
+| 7   | "1 slot" is singular                                                                   | `court-card.test.tsx:says "1 slot" rather than "1 slots" for the last opening`                                           | unit      | PASS   | `npx vitest run src/features/courts` |
+| 8   | With no availability data the card claims nothing about openings                       | `court-card.test.tsx:claims nothing about availability when the count could not be loaded`                               | unit      | PASS   | `npx vitest run src/features/courts` |
+| 9   | Tournament grade stays visible in the denser compact row                               | `court-card.test.tsx:marks a tournament-grade court here too — density must not hide the grade`                          | unit      | PASS   | `npx vitest run src/features/courts` |
+| 10  | Both layouts give the court photo alt text naming the court                            | `court-card.test.tsx:gives the thumbnail alt text naming the court`                                                      | unit      | PASS   | `npx vitest run src/features/courts` |
+| 11  | The rate is qualified "per hour", not read as a session total                          | `court-card.test.tsx:qualifies the rate as per hour…`                                                                    | unit      | PASS   | `npx vitest run src/features/courts` |
+| 12  | Navy call-to-action labels compute to white in a real browser                          | `e2e/storefront.spec.ts:the "View & book" call to action is legible on its navy button`                                  | e2e       | PASS   | `npx playwright test`                |
+| 13  | The active filter chip and brand wordmark are legible on navy                          | `e2e/storefront.spec.ts:the active filter chip is legible on navy`, `:the brand wordmark is legible on the navy header`  | e2e       | PASS   | `npx playwright test`                |
+| 14  | Clicking Compact keeps `?filter=indoor` and renders compact rows                       | `e2e/storefront.spec.ts:switching to the compact layout keeps the active filter`                                         | e2e       | PASS   | `npx playwright test`                |
 
 ## Coverage
 

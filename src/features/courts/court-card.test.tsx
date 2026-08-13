@@ -107,6 +107,12 @@ describe('CourtCard', () => {
     expect(screen.getByText('per hour')).toBeInTheDocument()
   })
 
+  it('shows the maximum number of players the court seats', () => {
+    render(<CourtCard court={court({ maxPlayers: 6 })} />)
+
+    expect(screen.getByText('Up to 6 players')).toBeInTheDocument()
+  })
+
   it('reports how many slots are still open today', () => {
     render(<CourtCard court={court()} openSlotCount={7} />)
 

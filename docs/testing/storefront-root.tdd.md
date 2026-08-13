@@ -94,21 +94,21 @@ cart/checkout route yet, and linking to a 404 is worse than a summary.
 
 ## Test specification
 
-| # | What is guaranteed | Test file or command | Test type | Result | Evidence |
-|---|--------------------|----------------------|-----------|--------|----------|
-| 1 | The catalog headline reports the court count and club opening hours | `src/features/courts/courts-browse.test.tsx:headlines the catalog…` | unit | PASS | `pnpm vitest run src/features/courts/courts-browse.test.tsx` |
-| 2 | Filter chips link at `/` and `/?filter=<id>`, so the root is the canonical catalog | `courts-browse.test.tsx:links filter chips at the storefront root` | unit | PASS | same |
-| 3 | The active filter is exposed as `aria-current="page"` | `courts-browse.test.tsx:marks the active filter…` | unit | PASS | same |
-| 4 | Only courts matching the active filter render | `courts-browse.test.tsx:renders only the courts matching…` | unit | PASS | same |
-| 5 | An empty filter result is explained instead of a blank grid | `courts-browse.test.tsx:explains an empty result…` | unit | PASS | same |
-| 6 | Court prices use the club's currency | `courts-browse.test.tsx:prices courts in the club currency` | unit | PASS | same |
-| 7 | `/courts` permanently redirects to the storefront root | `src/app/courts/page.test.ts:permanently redirects…` | integration | PASS | `pnpm vitest run src/app/courts/page.test.ts`; `curl -o /dev/null -w '%{http_code} %{redirect_url}' localhost:3000/courts` → `308 http://localhost:3000/` |
-| 8 | An active filter survives the redirect | `page.test.ts:carries an active filter across the redirect` | integration | PASS | same; `/courts?filter=indoor` → `308 …/?filter=indoor` |
-| 9 | The header is a `banner` landmark | `src/components/site-header.test.tsx:exposes the header as a banner landmark` | unit | PASS | `pnpm vitest run src/components/site-header.test.tsx` |
-| 10 | The brand mark and Courts link point at the storefront root | `site-header.test.tsx:points the brand mark…` / `links the catalog…` | unit | PASS | same |
-| 11 | An empty cart reads as empty rather than a zero badge | `site-header.test.tsx:describes an empty cart in words` | unit | PASS | same |
-| 12 | Booked courts and add-on quantities are counted together | `site-header.test.tsx:counts booked courts and add-on quantities` | unit | PASS | same |
-| 13 | A single selection reads "1 item", not "1 items" | `site-header.test.tsx:says "1 item"…` | unit | PASS | same |
+| #   | What is guaranteed                                                                 | Test file or command                                                          | Test type   | Result | Evidence                                                                                                                                                  |
+| --- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | The catalog headline reports the court count and club opening hours                | `src/features/courts/courts-browse.test.tsx:headlines the catalog…`           | unit        | PASS   | `pnpm vitest run src/features/courts/courts-browse.test.tsx`                                                                                              |
+| 2   | Filter chips link at `/` and `/?filter=<id>`, so the root is the canonical catalog | `courts-browse.test.tsx:links filter chips at the storefront root`            | unit        | PASS   | same                                                                                                                                                      |
+| 3   | The active filter is exposed as `aria-current="page"`                              | `courts-browse.test.tsx:marks the active filter…`                             | unit        | PASS   | same                                                                                                                                                      |
+| 4   | Only courts matching the active filter render                                      | `courts-browse.test.tsx:renders only the courts matching…`                    | unit        | PASS   | same                                                                                                                                                      |
+| 5   | An empty filter result is explained instead of a blank grid                        | `courts-browse.test.tsx:explains an empty result…`                            | unit        | PASS   | same                                                                                                                                                      |
+| 6   | Court prices use the club's currency                                               | `courts-browse.test.tsx:prices courts in the club currency`                   | unit        | PASS   | same                                                                                                                                                      |
+| 7   | `/courts` permanently redirects to the storefront root                             | `src/app/courts/page.test.ts:permanently redirects…`                          | integration | PASS   | `pnpm vitest run src/app/courts/page.test.ts`; `curl -o /dev/null -w '%{http_code} %{redirect_url}' localhost:3000/courts` → `308 http://localhost:3000/` |
+| 8   | An active filter survives the redirect                                             | `page.test.ts:carries an active filter across the redirect`                   | integration | PASS   | same; `/courts?filter=indoor` → `308 …/?filter=indoor`                                                                                                    |
+| 9   | The header is a `banner` landmark                                                  | `src/components/site-header.test.tsx:exposes the header as a banner landmark` | unit        | PASS   | `pnpm vitest run src/components/site-header.test.tsx`                                                                                                     |
+| 10  | The brand mark and Courts link point at the storefront root                        | `site-header.test.tsx:points the brand mark…` / `links the catalog…`          | unit        | PASS   | same                                                                                                                                                      |
+| 11  | An empty cart reads as empty rather than a zero badge                              | `site-header.test.tsx:describes an empty cart in words`                       | unit        | PASS   | same                                                                                                                                                      |
+| 12  | Booked courts and add-on quantities are counted together                           | `site-header.test.tsx:counts booked courts and add-on quantities`             | unit        | PASS   | same                                                                                                                                                      |
+| 13  | A single selection reads "1 item", not "1 items"                                   | `site-header.test.tsx:says "1 item"…`                                         | unit        | PASS   | same                                                                                                                                                      |
 
 Full suite after the change: `pnpm test` → **42 files, 396 tests passed**.
 `pnpm typecheck` and `pnpm lint` both clean.
@@ -129,7 +129,7 @@ Full suite after the change: `pnpm test` → **42 files, 396 tests passed**.
 - **Blocker — the storefront cannot render against the current database.** The
   linked Supabase project has no schema: `GET /` returns 500 with
   `RepositoryError: Failed to load club: Could not find the table 'public.clubs'
-  in the schema cache`. This predates this change and is not caused by it — the
+in the schema cache`. This predates this change and is not caused by it — the
   migrations in `supabase/migrations/` have never been applied to that project.
   Running `pnpm db:push` (and `pnpm db:seed:remote`) against the remote database
   is left to the operator.
@@ -139,8 +139,8 @@ Full suite after the change: `pnpm test` → **42 files, 396 tests passed**.
 ## Merge evidence
 
 - RED checkpoint: `2c08ff8` — `test: add failing specs for the storefront root,
-  site header, and legacy courts redirect`
+site header, and legacy courts redirect`
 - GREEN checkpoint: `aa9a39b` — `feat: serve the storefront at the root with a
-  site header`
+site header`
 - Refactor checkpoint: coverage `include` widened to `src/components`, suite
   still green.

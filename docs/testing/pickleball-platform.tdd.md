@@ -439,12 +439,12 @@ CLI holds no usable access token, so `db push` cannot run unattended.
   cache it would have passed off the cache even if the localStorage write were
   broken. It now drops the cache first, as a real reload does.
 
-| # | What is guaranteed | Test file | Type | Result |
-|---|---|---|---|---|
-| 56 | A cart survives a reload | `cart-provider.test.tsx:persists across a remount` | unit | PASS |
-| 57 | An overlapping segment on the same court is refused | `cart-provider.test.tsx:refuses a second segment that overlaps` | unit | PASS |
-| 58 | The same window on a different court is allowed (group booking) | `cart-provider.test.tsx:allows the same window on a different court` | unit | PASS |
-| 59 | useCart outside a provider throws a named error, not undefined | `cart-provider.test.tsx` | unit | PASS |
+| #   | What is guaranteed                                              | Test file                                                            | Type | Result |
+| --- | --------------------------------------------------------------- | -------------------------------------------------------------------- | ---- | ------ |
+| 56  | A cart survives a reload                                        | `cart-provider.test.tsx:persists across a remount`                   | unit | PASS   |
+| 57  | An overlapping segment on the same court is refused             | `cart-provider.test.tsx:refuses a second segment that overlaps`      | unit | PASS   |
+| 58  | The same window on a different court is allowed (group booking) | `cart-provider.test.tsx:allows the same window on a different court` | unit | PASS   |
+| 59  | useCart outside a provider throws a named error, not undefined  | `cart-provider.test.tsx`                                             | unit | PASS   |
 
 ---
 
@@ -500,28 +500,28 @@ Checkpoint `50a2f37`.
 
 ## Test specification (additions)
 
-| # | What is guaranteed | Test | Type | Result |
-|---|--------------------|------|------|--------|
-| 60 | An unauthenticated caller cannot record a payment, block a court, or edit the catalog | `src/features/admin/server/{payments,blocks,catalog}.test.ts:refuses a caller with no staff session` | unit | PASS |
-| 61 | A refused call never reaches a repository, so authorization is not merely cosmetic | same specs, `expect(repo).not.toHaveBeenCalled()` | unit | PASS |
-| 62 | A payment is attributed to the signed-in staff member | `payments.test.ts:attributes the payment to the signed-in staff member` | unit | PASS |
-| 63 | A `recordedBy` in the request body is ignored, so a payment cannot be pinned on a colleague | `payments.test.ts:ignores a recordedBy supplied by the client` | unit | PASS |
-| 64 | Recording a payment confirms the booking | `payments.test.ts:confirms the booking once the payment is recorded` | unit | PASS |
-| 65 | A failed payment insert leaves the booking status untouched | `payments.test.ts:leaves the booking alone when recording the payment fails` | unit | PASS |
-| 66 | A refund does not cancel the booking — separate decisions | `payments.test.ts:does not cancel the booking` | unit | PASS |
-| 67 | Payment amounts of zero or less are rejected before the database | `payments.test.ts:rejects an amount of zero or less` | unit | PASS |
-| 68 | A block's creator comes from the session, not the request | `blocks.test.ts:records who created the block from the session` | unit | PASS |
-| 69 | A block that ends before or when it starts is rejected | `blocks.test.ts:rejects a window that ends before it starts`, `:rejects a zero-length window` | unit | PASS |
-| 70 | A clashing block reports CONFLICT, not a database failure | `blocks.test.ts:reports a clash as a conflict` | unit | PASS |
-| 71 | Catalog rows are created under the staff member's own club | `catalog.test.ts:creates the product under the club the staff member belongs to` | unit | PASS |
-| 72 | A `clubId` in the request is ignored, so staff cannot write into another club | `catalog.test.ts:ignores a clubId in the request` | unit | PASS |
-| 73 | Supplying an id patches rather than duplicating, and sends only changed fields | `catalog.test.ts:patches an existing product`, `:sends only the fields the editor changed` | unit | PASS |
-| 74 | A percentage rule without a percentage, or a cash rule without an amount, is rejected | `catalog.test.ts:rejects a percentage rule that carries no percentage`, `:rejects a cash rule that carries no amount` | unit | PASS |
-| 75 | Enum values the database does not define are rejected at the boundary | `payments/blocks/catalog.test.ts:rejects a … the database does not define` | unit | PASS |
-| 76 | Raw database messages never reach the caller | `session.test.ts:never returns the raw database message` | unit | PASS |
-| 77 | The staff lookup is scoped to the signed-in user and to an active row | `staff.test.ts:scopes the lookup to the signed-in user`, `:only matches an active staff row` | unit | PASS |
-| 78 | The staff gate fails closed when the query errors | `staff.test.ts:fails closed when the staff query errors` | unit | PASS |
-| 79 | The session is revalidated via `getUser()`, not trusted from the cookie | `staff.test.ts:revalidates the user against the auth server` | unit | PASS |
+| #   | What is guaranteed                                                                          | Test                                                                                                                  | Type | Result |
+| --- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---- | ------ |
+| 60  | An unauthenticated caller cannot record a payment, block a court, or edit the catalog       | `src/features/admin/server/{payments,blocks,catalog}.test.ts:refuses a caller with no staff session`                  | unit | PASS   |
+| 61  | A refused call never reaches a repository, so authorization is not merely cosmetic          | same specs, `expect(repo).not.toHaveBeenCalled()`                                                                     | unit | PASS   |
+| 62  | A payment is attributed to the signed-in staff member                                       | `payments.test.ts:attributes the payment to the signed-in staff member`                                               | unit | PASS   |
+| 63  | A `recordedBy` in the request body is ignored, so a payment cannot be pinned on a colleague | `payments.test.ts:ignores a recordedBy supplied by the client`                                                        | unit | PASS   |
+| 64  | Recording a payment confirms the booking                                                    | `payments.test.ts:confirms the booking once the payment is recorded`                                                  | unit | PASS   |
+| 65  | A failed payment insert leaves the booking status untouched                                 | `payments.test.ts:leaves the booking alone when recording the payment fails`                                          | unit | PASS   |
+| 66  | A refund does not cancel the booking — separate decisions                                   | `payments.test.ts:does not cancel the booking`                                                                        | unit | PASS   |
+| 67  | Payment amounts of zero or less are rejected before the database                            | `payments.test.ts:rejects an amount of zero or less`                                                                  | unit | PASS   |
+| 68  | A block's creator comes from the session, not the request                                   | `blocks.test.ts:records who created the block from the session`                                                       | unit | PASS   |
+| 69  | A block that ends before or when it starts is rejected                                      | `blocks.test.ts:rejects a window that ends before it starts`, `:rejects a zero-length window`                         | unit | PASS   |
+| 70  | A clashing block reports CONFLICT, not a database failure                                   | `blocks.test.ts:reports a clash as a conflict`                                                                        | unit | PASS   |
+| 71  | Catalog rows are created under the staff member's own club                                  | `catalog.test.ts:creates the product under the club the staff member belongs to`                                      | unit | PASS   |
+| 72  | A `clubId` in the request is ignored, so staff cannot write into another club               | `catalog.test.ts:ignores a clubId in the request`                                                                     | unit | PASS   |
+| 73  | Supplying an id patches rather than duplicating, and sends only changed fields              | `catalog.test.ts:patches an existing product`, `:sends only the fields the editor changed`                            | unit | PASS   |
+| 74  | A percentage rule without a percentage, or a cash rule without an amount, is rejected       | `catalog.test.ts:rejects a percentage rule that carries no percentage`, `:rejects a cash rule that carries no amount` | unit | PASS   |
+| 75  | Enum values the database does not define are rejected at the boundary                       | `payments/blocks/catalog.test.ts:rejects a … the database does not define`                                            | unit | PASS   |
+| 76  | Raw database messages never reach the caller                                                | `session.test.ts:never returns the raw database message`                                                              | unit | PASS   |
+| 77  | The staff lookup is scoped to the signed-in user and to an active row                       | `staff.test.ts:scopes the lookup to the signed-in user`, `:only matches an active staff row`                          | unit | PASS   |
+| 78  | The staff gate fails closed when the query errors                                           | `staff.test.ts:fails closed when the staff query errors`                                                              | unit | PASS   |
+| 79  | The session is revalidated via `getUser()`, not trusted from the cookie                     | `staff.test.ts:revalidates the user against the auth server`                                                          | unit | PASS   |
 
 ## Coverage
 
@@ -587,26 +587,26 @@ the RPC receives the quoted figure when the request supplies its own.
 
 **A defect this task surfaced in the previous one:** `pnpm typecheck` failed
 on `src/lib/auth/staff.test.ts` with TS2345. Task 21's typecheck had been run
-*before* that file was written, so the error was committed in `50a2f37`
+_before_ that file was written, so the error was committed in `50a2f37`
 unnoticed. Fixed in `d73774c` by importing the exported `FakeResult` type
 instead of restating it. The lesson is the same one from run 2's pipe-exit-
 status mistake: a gate run at the wrong moment is not a gate.
 
 ## Test specification (additions)
 
-| # | What is guaranteed | Test | Type | Result |
-|---|--------------------|------|------|--------|
-| 80 | A malformed reference is rejected before any lookup runs | `reschedule.test.ts:rejects a malformed reference` | unit | PASS |
-| 81 | A reschedule with no segments, or one ending before it starts, is rejected | `reschedule.test.ts:rejects a request with no court segments`, `:rejects a segment that ends before it starts` | unit | PASS |
-| 82 | Reschedule is rate limited on the same counter as lookup | `reschedule.test.ts:is rate limited like the lookup` | unit | PASS |
-| 83 | A rate-limited caller never reaches the reschedule RPC | same spec, `expect(rescheduleCall()).toBeUndefined()` | unit | PASS |
-| 84 | An unknown reference and a wrong email give byte-identical answers | `reschedule.test.ts:gives the same answer for an unknown reference as for a wrong email` | unit | PASS |
-| 85 | The new slot is priced server-side; a price in the request is ignored | `reschedule.test.ts:prices the new slot on the server` | unit | PASS |
-| 86 | Quoting uses the club's timezone and the customer's tier | `reschedule.test.ts:quotes at the club timezone and the customer tier` | unit | PASS |
-| 87 | A guest with no customer record is quoted at the standard tier | `reschedule.test.ts:quotes a guest with no customer record at the standard tier` | unit | PASS |
-| 88 | A cancelled or completed booking reports NOT_RESCHEDULABLE | `reschedule.test.ts:reports a booking that can no longer be moved` | unit | PASS |
-| 89 | A clash reports SLOT_TAKEN rather than a database failure | `reschedule.test.ts:reports a clash … as a taken slot` | unit | PASS |
-| 90 | Constraint names never reach the customer | `reschedule.test.ts:never returns the raw database message` | unit | PASS |
+| #   | What is guaranteed                                                         | Test                                                                                                           | Type | Result |
+| --- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---- | ------ |
+| 80  | A malformed reference is rejected before any lookup runs                   | `reschedule.test.ts:rejects a malformed reference`                                                             | unit | PASS   |
+| 81  | A reschedule with no segments, or one ending before it starts, is rejected | `reschedule.test.ts:rejects a request with no court segments`, `:rejects a segment that ends before it starts` | unit | PASS   |
+| 82  | Reschedule is rate limited on the same counter as lookup                   | `reschedule.test.ts:is rate limited like the lookup`                                                           | unit | PASS   |
+| 83  | A rate-limited caller never reaches the reschedule RPC                     | same spec, `expect(rescheduleCall()).toBeUndefined()`                                                          | unit | PASS   |
+| 84  | An unknown reference and a wrong email give byte-identical answers         | `reschedule.test.ts:gives the same answer for an unknown reference as for a wrong email`                       | unit | PASS   |
+| 85  | The new slot is priced server-side; a price in the request is ignored      | `reschedule.test.ts:prices the new slot on the server`                                                         | unit | PASS   |
+| 86  | Quoting uses the club's timezone and the customer's tier                   | `reschedule.test.ts:quotes at the club timezone and the customer tier`                                         | unit | PASS   |
+| 87  | A guest with no customer record is quoted at the standard tier             | `reschedule.test.ts:quotes a guest with no customer record at the standard tier`                               | unit | PASS   |
+| 88  | A cancelled or completed booking reports NOT_RESCHEDULABLE                 | `reschedule.test.ts:reports a booking that can no longer be moved`                                             | unit | PASS   |
+| 89  | A clash reports SLOT_TAKEN rather than a database failure                  | `reschedule.test.ts:reports a clash … as a taken slot`                                                         | unit | PASS   |
+| 90  | Constraint names never reach the customer                                  | `reschedule.test.ts:never returns the raw database message`                                                    | unit | PASS   |
 
 ## Coverage
 
@@ -660,18 +660,18 @@ Two decisions worth recording:
 
 ## Test specification (additions)
 
-| #  | What is guaranteed | Test | Type | Result |
-|----|--------------------|------|------|--------|
-| 91 | The default view shows every court | `court-filters.test.ts:returns every court for the "all" filter` | unit | PASS |
-| 92 | Indoor/outdoor/tournament chips each narrow correctly | `court-filters.test.ts` | unit | PASS |
-| 93 | An unrecognised filter falls back to the full list, not an empty page | `court-filters.test.ts:falls back to showing everything` | unit | PASS |
-| 94 | Filtering never mutates the source list | `court-filters.test.ts:does not mutate the input list` | unit | PASS |
-| 95 | Rates render as currency; raw centavos never reach the page | `court-card.test.tsx:shows the hourly rate formatted as currency` | unit | PASS |
-| 96 | A court with no photo renders a placeholder, not a broken image | `court-card.test.tsx:renders a placeholder instead of a broken image` | unit | PASS |
-| 97 | Hero image alt text names the court rather than a generic label | `court-card.test.tsx:gives the hero image alt text naming the court` | unit | PASS |
-| 98 | A null blurb renders as nothing, never the string "null" | `court-card.test.tsx:renders without a blurb rather than printing null` | unit | PASS |
-| 99 | Each court is a heading, so the grid is navigable by landmark | `court-card.test.tsx:names the court as a heading` | unit | PASS |
-| 100 | The tournament badge appears only on tournament-grade courts | `court-card.test.tsx:marks a tournament-grade court`, `:omits the tournament badge` | unit | PASS |
+| #   | What is guaranteed                                                    | Test                                                                                | Type | Result |
+| --- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ---- | ------ |
+| 91  | The default view shows every court                                    | `court-filters.test.ts:returns every court for the "all" filter`                    | unit | PASS   |
+| 92  | Indoor/outdoor/tournament chips each narrow correctly                 | `court-filters.test.ts`                                                             | unit | PASS   |
+| 93  | An unrecognised filter falls back to the full list, not an empty page | `court-filters.test.ts:falls back to showing everything`                            | unit | PASS   |
+| 94  | Filtering never mutates the source list                               | `court-filters.test.ts:does not mutate the input list`                              | unit | PASS   |
+| 95  | Rates render as currency; raw centavos never reach the page           | `court-card.test.tsx:shows the hourly rate formatted as currency`                   | unit | PASS   |
+| 96  | A court with no photo renders a placeholder, not a broken image       | `court-card.test.tsx:renders a placeholder instead of a broken image`               | unit | PASS   |
+| 97  | Hero image alt text names the court rather than a generic label       | `court-card.test.tsx:gives the hero image alt text naming the court`                | unit | PASS   |
+| 98  | A null blurb renders as nothing, never the string "null"              | `court-card.test.tsx:renders without a blurb rather than printing null`             | unit | PASS   |
+| 99  | Each court is a heading, so the grid is navigable by landmark         | `court-card.test.tsx:names the court as a heading`                                  | unit | PASS   |
+| 100 | The tournament badge appears only on tournament-grade courts          | `court-card.test.tsx:marks a tournament-grade court`, `:omits the tournament badge` | unit | PASS   |
 
 ## Known gaps carried into the next run
 
@@ -680,9 +680,9 @@ Two decisions worth recording:
 - **No migration has ever been applied.** Every file under
   `supabase/migrations/` is unexecuted SQL, including `20260101000600`, which
   revokes `create_booking` from `anon`. Both routes are shut:
-  - *Local*: the Docker daemon is unresponsive again — `docker info` hung past
+  - _Local_: the Docker daemon is unresponsive again — `docker info` hung past
     120s. It needs a manual Docker Desktop restart, then `pnpm db:reset`.
-  - *Hosted*: `SUPABASE_SECRET_KEY` is still empty in `.env.local`, and the
+  - _Hosted_: `SUPABASE_SECRET_KEY` is still empty in `.env.local`, and the
     Supabase CLI has no usable access token (`projects list` →
     `User is banned`). Needs a secret key and `pnpm db:push`.
 - **RLS remains unproven.** Every guarantee in this document is proven against
@@ -733,18 +733,18 @@ Decisions worth recording:
 
 ## Test specification (additions)
 
-| #   | What is guaranteed | Test | Type | Result |
-|-----|--------------------|------|------|--------|
-| 101 | Times render in the club's zone, not the viewer's | `time.test.ts:renders the club-local clock time`, `:reflects the zone it is given` | unit | PASS |
-| 102 | Midnight and noon render as 12:00 AM/PM, not 0:00 | `time.test.ts` | unit | PASS |
-| 103 | The club-local day can differ from the UTC day and the club day wins | `time.test.ts:uses the club day` | unit | PASS |
-| 104 | `toDayStringInZone` emits the format the availability query expects | `time.test.ts:matches the format enumerateStartTimes expects` | unit | PASS |
-| 105 | Taken slots are shown rather than hidden | `slot-grid.test.tsx:shows taken slots rather than hiding them` | unit | PASS |
-| 106 | A taken slot is disabled and cannot be selected | `slot-grid.test.tsx:disables a taken slot`, `:does not call onSelect for a taken slot` | unit | PASS |
-| 107 | "Booked" is in the accessible name, not signalled by colour alone | `slot-grid.test.tsx:marks a taken slot for assistive tech` | unit | PASS |
-| 108 | A fully booked day says so instead of rendering an empty grid | `slot-grid.test.tsx:tells the customer when the day is fully booked` | unit | PASS |
-| 109 | The chosen slot is `aria-pressed`, others are not | `slot-grid.test.tsx:marks the selected slot as pressed`, `:leaves other slots unpressed` | unit | PASS |
-| 110 | Slot prices render through the formatter, never raw centavos | `slot-grid.test.tsx:renders prices through the formatter` | unit | PASS |
+| #   | What is guaranteed                                                   | Test                                                                                     | Type | Result |
+| --- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ---- | ------ |
+| 101 | Times render in the club's zone, not the viewer's                    | `time.test.ts:renders the club-local clock time`, `:reflects the zone it is given`       | unit | PASS   |
+| 102 | Midnight and noon render as 12:00 AM/PM, not 0:00                    | `time.test.ts`                                                                           | unit | PASS   |
+| 103 | The club-local day can differ from the UTC day and the club day wins | `time.test.ts:uses the club day`                                                         | unit | PASS   |
+| 104 | `toDayStringInZone` emits the format the availability query expects  | `time.test.ts:matches the format enumerateStartTimes expects`                            | unit | PASS   |
+| 105 | Taken slots are shown rather than hidden                             | `slot-grid.test.tsx:shows taken slots rather than hiding them`                           | unit | PASS   |
+| 106 | A taken slot is disabled and cannot be selected                      | `slot-grid.test.tsx:disables a taken slot`, `:does not call onSelect for a taken slot`   | unit | PASS   |
+| 107 | "Booked" is in the accessible name, not signalled by colour alone    | `slot-grid.test.tsx:marks a taken slot for assistive tech`                               | unit | PASS   |
+| 108 | A fully booked day says so instead of rendering an empty grid        | `slot-grid.test.tsx:tells the customer when the day is fully booked`                     | unit | PASS   |
+| 109 | The chosen slot is `aria-pressed`, others are not                    | `slot-grid.test.tsx:marks the selected slot as pressed`, `:leaves other slots unpressed` | unit | PASS   |
+| 110 | Slot prices render through the formatter, never raw centavos         | `slot-grid.test.tsx:renders prices through the formatter`                                | unit | PASS   |
 
 ## Coverage
 

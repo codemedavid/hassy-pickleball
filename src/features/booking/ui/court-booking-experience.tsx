@@ -33,6 +33,10 @@ type CourtBookingExperienceProps = {
   readonly timeZone: string
   readonly currency: string
   readonly cancellationWindowHours: number
+  readonly minPlayers: number
+  readonly maxPlayers: number
+  readonly includedPlayers: number
+  readonly extraPlayerFeeCents: number
 }
 
 export function CourtBookingExperience({
@@ -44,6 +48,10 @@ export function CourtBookingExperience({
   timeZone,
   currency,
   cancellationWindowHours,
+  minPlayers,
+  maxPlayers,
+  includedPlayers,
+  extraPlayerFeeCents,
 }: CourtBookingExperienceProps) {
   const { addCourt, setItemQuantity } = useCart()
   const [slotStyle, setSlotStyle] = useState<SlotStyle>('timeline')
@@ -106,6 +114,10 @@ export function CourtBookingExperience({
       priceCents: selected.priceCents,
       timeZone,
       currency,
+      minPlayers,
+      maxPlayers,
+      includedPlayers,
+      extraPlayerFeeCents,
     })
 
     // Extras ride along as their own cart lines so the café and the desk see

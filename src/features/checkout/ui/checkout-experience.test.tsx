@@ -22,7 +22,11 @@ const COURT: CartCourtLine = {
   priceCents: 60000,
   timeZone: 'Asia/Manila',
   currency: 'PHP',
-}
+  minPlayers: 2,
+  maxPlayers: 4,
+  includedPlayers: 4,
+  extraPlayerFeeCents: 0,
+} as CartCourtLine
 
 const ITEM: CartItemLine = {
   productId: 'gatorade',
@@ -116,6 +120,36 @@ describe('CheckoutExperience', () => {
     expect(screen.getByLabelText(/full name/i)).toBeRequired()
     expect(screen.getByLabelText(/email/i)).toBeRequired()
     expect(screen.getByLabelText(/phone/i)).toBeRequired()
+  })
+
+  it('lets the guest add players up to the court maximum and sends their names', async () => {
+    const user = userEvent.setup()
+    renderCheckout()
+
+    expect(screen.getByText(/maximum 4 players/i)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /add player/i }))
+    await user.type(screen.getByLabelText(/player 1 name/i), 'Ana Cruz')
+    await user.click(screen.getByRole('button', { name: /add player/i }))
+    await user.type(screen.getByLabelText(/player 2 name/i), 'Ben Uy')
+    await user.click(screen.getByRole('button', { name: /add player/i }))
+    await user.type(screen.getByLabelText(/player 3 name/i), 'Cara Lim')
+    await user.click(screen.getByRole('button', { name: /add player/i }))
+    await user.type(screen.getByLabelText(/player 4 name/i), 'Dee Ng')
+
+    expect(screen.queryByRole('button', { name: /add player/i })).not.toBeInTheDocument()
+
+    await fillContactDetails(user)
+    await user.click(screen.getByRole('radio', { name: /pay at the desk/i }))
+    await user.click(screen.getByRole('button', { name: /confirm|place|pay/i }))
+
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(1))
+    const form = submit.mock.calls[0]?.[0] as FormData
+    expect(JSON.parse(String(form.get('order'))).players).toEqual([
+      'Ana Cruz',
+      'Ben Uy',
+      'Cara Lim',
+      'Dee Ng',
+    ])
   })
 
   it('shows the account details for the payment method the guest picks', async () => {

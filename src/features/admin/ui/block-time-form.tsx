@@ -19,9 +19,9 @@ import type { Result } from '@/lib/api/result'
  *
  * The form sits under the grid staff are already reading, because the decision
  * to block is made by looking at the day, not by navigating somewhere else. It
- * always blocks the day currently on screen — a form that silently held today
- * while the grid showed next Saturday would be a booking taken off sale by
- * mistake.
+ * starts on the day currently on screen, while keeping the date visible and
+ * editable so staff can schedule a future closure without stepping through the
+ * day navigation first.
  *
  * Only the cheap checks happen here. Whether the window is free is settled by
  * the database's exclusion constraint, and its message is what gets shown.
@@ -49,7 +49,8 @@ const LABEL = 'text-[13px] font-semibold text-ink'
 
 export function BlockTimeForm({ day, club, courts, onBlock }: BlockTimeFormProps) {
   const router = useRouter()
-  const blank = () => blankBlockForm({ courtId: courts[0]?.id ?? '', opensAt: club.opensAt })
+  const blank = () =>
+    blankBlockForm({ courtId: courts[0]?.id ?? '', opensAt: club.opensAt, day })
 
   const [form, setForm] = useState<BlockFormState>(blank)
   const [error, setError] = useState<string | null>(null)
@@ -74,7 +75,8 @@ export function BlockTimeForm({ day, club, courts, onBlock }: BlockTimeFormProps
     setError(null)
 
     startTransition(async () => {
-      const result = await onBlock(toBlockPayload(form, { day, timeZone: club.timeZone }))
+      const blockedDay = form.day
+      const result = await onBlock(toBlockPayload(form, { timeZone: club.timeZone }))
 
       if (!result.success) {
         setError(result.error)
@@ -82,7 +84,12 @@ export function BlockTimeForm({ day, club, courts, onBlock }: BlockTimeFormProps
       }
 
       setForm(blank())
-      router.refresh()
+
+      if (blockedDay === day) {
+        router.refresh()
+      } else {
+        router.push(`/admin?day=${blockedDay}`)
+      }
     })
   }
 
@@ -90,7 +97,7 @@ export function BlockTimeForm({ day, club, courts, onBlock }: BlockTimeFormProps
     <form
       onSubmit={handleSubmit}
       aria-label="Block court time"
-      className="mt-4 grid gap-3 rounded-[14px] border border-line bg-surface p-4 sm:grid-cols-[1.4fr_1fr_0.8fr_0.8fr_1.6fr_auto]"
+      className="mt-4 grid gap-3 rounded-[14px] border border-line bg-surface p-4 sm:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1.1fr_0.8fr_0.8fr_1.6fr_auto]"
     >
       <Field id={ids.court} label="Court">
         <select
@@ -120,6 +127,16 @@ export function BlockTimeForm({ day, club, courts, onBlock }: BlockTimeFormProps
             </option>
           ))}
         </select>
+      </Field>
+
+      <Field id={ids.day} label="Date">
+        <input
+          id={ids.day}
+          type="date"
+          value={form.day}
+          onChange={(event) => update('day', event.target.value)}
+          className={FIELD}
+        />
       </Field>
 
       <Field id={ids.from} label="From">
@@ -159,7 +176,10 @@ export function BlockTimeForm({ day, club, courts, onBlock }: BlockTimeFormProps
       </div>
 
       {error ? (
-        <p role="alert" className="m-0 text-[13px] font-semibold text-danger sm:col-span-6">
+        <p
+          role="alert"
+          className="m-0 text-[13px] font-semibold text-danger sm:col-span-2 xl:col-span-7"
+        >
           {error}
         </p>
       ) : null}
@@ -173,6 +193,7 @@ function useFieldIds() {
   return {
     court: `${prefix}-court`,
     kind: `${prefix}-kind`,
+    day: `${prefix}-day`,
     from: `${prefix}-from`,
     to: `${prefix}-to`,
     reason: `${prefix}-reason`,

@@ -206,7 +206,7 @@ export function ScheduleScreen({
       </div>
 
       {courts.length > 0 ? (
-        <BlockTimeForm day={day} club={club} courts={courts} onBlock={onBlock} />
+        <BlockTimeForm key={day} day={day} club={club} courts={courts} onBlock={onBlock} />
       ) : null}
 
       <ul

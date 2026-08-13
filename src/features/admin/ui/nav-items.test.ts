@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ADMIN_NAV_ITEMS, isNavItemActive } from './nav-items'
 
 describe('ADMIN_NAV_ITEMS', () => {
-  it('lists the six console sections in the order the design shows them', () => {
+  it('lists the console sections in the order the design shows them', () => {
     // Courts sits with Products: those two configure what is for sale, while
     // Schedule and Bookings run the day.
     expect(ADMIN_NAV_ITEMS.map((item) => item.label)).toEqual([
@@ -10,9 +10,14 @@ describe('ADMIN_NAV_ITEMS', () => {
       'Bookings',
       'Courts',
       'Products',
+      'Payment methods',
       'Customers',
       'Reports',
     ])
+  })
+
+  it('keeps Payment methods active on nested admin routes', () => {
+    expect(isNavItemActive('/admin/payment-methods/new', '/admin/payment-methods')).toBe(true)
   })
 
   it('offers no Orders tab: a booking and its payments are one section', () => {
