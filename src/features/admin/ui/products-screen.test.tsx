@@ -3,6 +3,11 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ProductsScreen } from './products-screen'
 import { makeProduct } from '../../../../test/admin-fixtures'
+import {
+  expectCellsLabelledByColumn,
+  expectExplicitTableRoles,
+  expectNoPhoneMinimumWidth,
+} from '../../../../test/responsive-table'
 
 const refresh = vi.fn()
 
@@ -202,5 +207,19 @@ describe('ProductsScreen — editing a product', () => {
     // Assert
     expect(await screen.findByRole('alert')).toHaveTextContent(/product details/i)
     expect(refresh).not.toHaveBeenCalled()
+  })
+})
+
+describe('ProductsScreen on a phone', () => {
+  it('stacks each row into a labelled card instead of scrolling sideways', () => {
+    // Arrange & Act
+    renderScreen()
+
+    // Assert — the header row is off-screen in the stacked layout, so every
+    // cell names its own column and the table keeps its roles.
+    const table = screen.getByRole('table', { name: 'Products' })
+    expectCellsLabelledByColumn(table)
+    expectExplicitTableRoles(table)
+    expectNoPhoneMinimumWidth(table)
   })
 })

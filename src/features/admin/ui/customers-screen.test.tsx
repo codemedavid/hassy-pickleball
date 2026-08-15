@@ -2,6 +2,11 @@ import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { CustomersScreen } from './customers-screen'
 import { club, at } from '../../../../test/admin-fixtures'
+import {
+  expectCellsLabelledByColumn,
+  expectExplicitTableRoles,
+  expectNoPhoneMinimumWidth,
+} from '../../../../test/responsive-table'
 import type { Customer } from '@/lib/repositories/booking-mappers'
 
 const customers: Customer[] = [
@@ -56,5 +61,19 @@ describe('CustomersScreen', () => {
 
     // Assert
     expect(screen.getByText('No customers yet.')).toBeInTheDocument()
+  })
+})
+
+describe('CustomersScreen on a phone', () => {
+  it('stacks each row into a labelled card instead of scrolling sideways', () => {
+    // Arrange & Act
+    render(<CustomersScreen customers={customers} club={club} />)
+
+    // Assert — the header row is off-screen in the stacked layout, so every
+    // cell names its own column and the table keeps its roles.
+    const table = screen.getByRole('table', { name: 'Customers' })
+    expectCellsLabelledByColumn(table)
+    expectExplicitTableRoles(table)
+    expectNoPhoneMinimumWidth(table)
   })
 })

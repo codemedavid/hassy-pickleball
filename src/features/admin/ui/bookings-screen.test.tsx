@@ -3,6 +3,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { BookingsScreen } from './bookings-screen'
 import { toBookingDetailView, toBookingRows } from '../view/bookings'
 import { club, makeBooking } from '../../../../test/admin-fixtures'
+import {
+  expectCellsLabelledByColumn,
+  expectExplicitTableRoles,
+  expectNoPhoneMinimumWidth,
+} from '../../../../test/responsive-table'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 
@@ -126,5 +131,19 @@ describe('BookingsScreen', () => {
 
     // Assert
     expect(screen.getByText(/1 awaiting payment/)).toBeInTheDocument()
+  })
+})
+
+describe('BookingsScreen on a phone', () => {
+  it('stacks each row into a labelled card instead of scrolling sideways', () => {
+    // Arrange & Act
+    render(<BookingsScreen {...screenProps()} />)
+
+    // Assert — the header row is off-screen in the stacked layout, so every
+    // cell names its own column and the table keeps its roles.
+    const table = screen.getByRole('table', { name: 'Bookings' })
+    expectCellsLabelledByColumn(table)
+    expectExplicitTableRoles(table)
+    expectNoPhoneMinimumWidth(table)
   })
 })

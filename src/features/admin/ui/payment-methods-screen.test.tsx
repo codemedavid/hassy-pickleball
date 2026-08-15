@@ -3,6 +3,11 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { PaymentMethodsScreen } from './payment-methods-screen'
 import type { PaymentMethod } from '@/lib/repositories/mappers'
+import {
+  expectCellsLabelledByColumn,
+  expectExplicitTableRoles,
+  expectNoPhoneMinimumWidth,
+} from '../../../../test/responsive-table'
 
 const refresh = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }))
@@ -157,5 +162,19 @@ describe('PaymentMethodsScreen', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not reorder/i)
     expect(refresh).not.toHaveBeenCalled()
+  })
+})
+
+describe('PaymentMethodsScreen on a phone', () => {
+  it('stacks each row into a labelled card instead of scrolling sideways', () => {
+    // Arrange & Act
+    renderScreen()
+
+    // Assert — the header row is off-screen in the stacked layout, so every
+    // cell names its own column and the table keeps its roles.
+    const table = screen.getByRole('table', { name: 'Payment methods' })
+    expectCellsLabelledByColumn(table)
+    expectExplicitTableRoles(table)
+    expectNoPhoneMinimumWidth(table)
   })
 })

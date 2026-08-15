@@ -3,6 +3,11 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CourtsScreen } from './courts-screen'
 import { makeCourt } from '../../../../test/admin-fixtures'
+import {
+  expectCellsLabelledByColumn,
+  expectExplicitTableRoles,
+  expectNoPhoneMinimumWidth,
+} from '../../../../test/responsive-table'
 
 const refresh = vi.fn()
 
@@ -258,5 +263,19 @@ describe('CourtsScreen pax pricing', () => {
     const row = screen.getByRole('row', { name: /riverside court/i })
 
     expect(row).not.toHaveTextContent(/covered/i)
+  })
+})
+
+describe('CourtsScreen on a phone', () => {
+  it('stacks each row into a labelled card instead of scrolling sideways', () => {
+    // Arrange & Act
+    renderScreen()
+
+    // Assert — the header row is off-screen in the stacked layout, so every
+    // cell names its own column and the table keeps its roles.
+    const table = screen.getByRole('table', { name: 'Courts' })
+    expectCellsLabelledByColumn(table)
+    expectExplicitTableRoles(table)
+    expectNoPhoneMinimumWidth(table)
   })
 })
