@@ -7,9 +7,10 @@ import type { StatCard } from '../view/schedule-stats'
  */
 
 export const CARD = 'rounded-[14px] border border-line bg-surface'
-export const TABLE_HEAD =
-  'bg-surface-alt text-[11.5px] font-bold tracking-[0.08em] text-subtle uppercase'
-export const CELL = 'px-4 py-3.5 text-left align-middle'
+
+/** Table internals: the screens compose DataTable/Row/Cell, never these. */
+const TABLE_HEAD = 'bg-surface-alt text-[11.5px] font-bold tracking-[0.08em] text-subtle uppercase'
+const CELL = 'px-4 py-3.5 text-left align-middle'
 
 /**
  * The console's tables, which become a stack of cards below `sm`.
