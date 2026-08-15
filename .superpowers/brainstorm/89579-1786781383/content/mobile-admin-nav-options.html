@@ -1,0 +1,84 @@
+<h2>How should the mobile admin subheader feel?</h2>
+<p class="subtitle">All three keep the existing desktop navigation. On phones and tablets, the top bar stays compact and the management links scroll horizontally.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#eef3f8">
+      <div style="width:min(100%,360px);margin:auto;border-radius:18px;overflow:hidden;background:white;box-shadow:0 10px 24px rgba(17,36,64,.13)">
+        <div style="height:54px;background:#10243f;color:white;display:flex;align-items:center;padding:0 14px;gap:10px">
+          <div style="width:30px;height:30px;border-radius:9px;background:#c7f455;color:#10243f;display:grid;place-items:center;font-weight:900">P</div>
+          <strong style="font-size:15px">Riverbend</strong><span style="margin-left:auto;font-size:12px;opacity:.7">Priya</span>
+        </div>
+        <div style="padding:9px 12px 10px;border-bottom:1px solid #dce3eb">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:#6b7b8e;font-weight:800;margin-bottom:7px">Management</div>
+          <div style="display:flex;gap:7px;overflow:hidden;white-space:nowrap">
+            <span style="padding:8px 12px;border-radius:999px;background:#10243f;color:white;font-size:11px;font-weight:700">Schedule</span>
+            <span style="padding:8px 12px;border-radius:999px;background:#edf1f5;color:#263b54;font-size:11px;font-weight:700">Bookings</span>
+            <span style="padding:8px 12px;border-radius:999px;background:#edf1f5;color:#263b54;font-size:11px;font-weight:700">Courts</span>
+            <span style="padding:8px 12px;border-radius:999px;background:#edf1f5;color:#263b54;font-size:11px;font-weight:700">Products</span>
+          </div>
+        </div>
+        <div style="height:126px;padding:16px"><strong style="color:#10243f">Schedule</strong><div style="height:56px;border-radius:10px;background:#f1f4f7;margin-top:12px"></div></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · Native swipe pills</h3>
+      <p>Large rounded tabs. Swipe the strip left or right; a faded edge hints that more links are available.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#eef3f8">
+      <div style="width:min(100%,360px);margin:auto;border-radius:18px;overflow:hidden;background:white;box-shadow:0 10px 24px rgba(17,36,64,.13)">
+        <div style="height:54px;background:#10243f;color:white;display:flex;align-items:center;padding:0 14px;gap:10px">
+          <div style="width:30px;height:30px;border-radius:9px;background:#c7f455;color:#10243f;display:grid;place-items:center;font-weight:900">P</div>
+          <strong style="font-size:15px">Riverbend</strong><span style="margin-left:auto;font-size:12px;opacity:.7">Priya</span>
+        </div>
+        <div style="display:grid;grid-template-columns:36px 1fr 36px;align-items:end;border-bottom:1px solid #dce3eb;padding:0 7px">
+          <button style="border:0;background:white;height:44px;color:#10243f;font-size:20px">‹</button>
+          <div style="display:flex;gap:18px;overflow:hidden;white-space:nowrap;height:53px;align-items:end">
+            <span style="padding:0 1px 11px;border-bottom:3px solid #10243f;color:#10243f;font-size:11px;font-weight:800">Schedule</span>
+            <span style="padding-bottom:13px;color:#607085;font-size:11px;font-weight:700">Bookings</span>
+            <span style="padding-bottom:13px;color:#607085;font-size:11px;font-weight:700">Courts</span>
+            <span style="padding-bottom:13px;color:#607085;font-size:11px;font-weight:700">Products</span>
+          </div>
+          <button style="border:0;background:white;height:44px;color:#10243f;font-size:20px">›</button>
+        </div>
+        <div style="height:126px;padding:16px"><strong style="color:#10243f">Schedule</strong><div style="height:56px;border-radius:10px;background:#f1f4f7;margin-top:12px"></div></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · Tabs with scroll buttons</h3>
+      <p>A clean underline tab strip with 44px left/right buttons. It also supports touch swiping and keeps the active tab in view.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#eef3f8">
+      <div style="width:min(100%,360px);margin:auto;border-radius:18px;overflow:hidden;background:white;box-shadow:0 10px 24px rgba(17,36,64,.13)">
+        <div style="height:54px;background:#10243f;color:white;display:flex;align-items:center;padding:0 14px;gap:10px">
+          <div style="width:30px;height:30px;border-radius:9px;background:#c7f455;color:#10243f;display:grid;place-items:center;font-weight:900">P</div>
+          <strong style="font-size:15px">Riverbend</strong><span style="margin-left:auto;font-size:12px;opacity:.7">Priya</span>
+        </div>
+        <div style="background:#10243f;padding:0 12px 10px">
+          <div style="display:flex;gap:6px;overflow:hidden;white-space:nowrap">
+            <span style="padding:9px 12px;border-radius:9px;background:#c7f455;color:#10243f;font-size:11px;font-weight:800">Schedule</span>
+            <span style="padding:9px 12px;border-radius:9px;background:rgba(255,255,255,.1);color:white;font-size:11px;font-weight:700">Bookings</span>
+            <span style="padding:9px 12px;border-radius:9px;background:rgba(255,255,255,.1);color:white;font-size:11px;font-weight:700">Courts</span>
+            <span style="padding:9px 12px;border-radius:9px;background:rgba(255,255,255,.1);color:white;font-size:11px;font-weight:700">Products</span>
+          </div>
+        </div>
+        <div style="height:126px;padding:16px"><strong style="color:#10243f">Schedule</strong><div style="height:56px;border-radius:10px;background:#f1f4f7;margin-top:12px"></div></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · Integrated dark rail</h3>
+      <p>The subheader visually joins the top bar. Compact and branded, but it makes the header feel heavier and offers no explicit arrow controls.</p>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros"><h4>Recommendation: B</h4><ul><li>Left/right navigation is immediately obvious</li><li>Works with both touch and pointer input</li><li>Active location remains visually clear</li></ul></div>
+  <div class="cons"><h4>Trade-off</h4><ul><li>The arrows use some horizontal space</li><li>Implementation needs scroll-state handling</li></ul></div>
+</div>
