@@ -131,21 +131,92 @@ describe('AdminNav', () => {
     })
   })
 
-  it('scrolls the rail by a useful distance when an arrow is pressed', async () => {
+  it('remeasures overflow when the viewport width changes', async () => {
+    pathname.current = '/admin'
+    render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+    const nav = screen.getByRole('navigation', { name: 'Admin sections' })
+    installScrollMetrics(nav, { clientWidth: 600, scrollWidth: 600, scrollLeft: 0 })
+
+    fireEvent.resize(window)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Scroll admin sections left' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Scroll admin sections right' })).toBeDisabled()
+    })
+
+    installScrollMetrics(nav, { clientWidth: 300, scrollWidth: 900, scrollLeft: 0 })
+    fireEvent.resize(window)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Scroll admin sections left' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Scroll admin sections right' })).toBeEnabled()
+    })
+  })
+
+  it('scrolls the rail in both directions by a useful distance', async () => {
     pathname.current = '/admin'
     const user = userEvent.setup()
     render(<AdminNav clubName="Riverbend" staffName="Priya" />)
     const nav = screen.getByRole('navigation', { name: 'Admin sections' })
     const scrollBy = vi.fn()
-    installScrollMetrics(nav, { clientWidth: 300, scrollWidth: 900, scrollLeft: 0 })
+    installScrollMetrics(nav, { clientWidth: 300, scrollWidth: 900, scrollLeft: 300 })
     Object.defineProperty(nav, 'scrollBy', { configurable: true, value: scrollBy })
 
     fireEvent.scroll(nav)
+    const left = screen.getByRole('button', { name: 'Scroll admin sections left' })
     const right = screen.getByRole('button', { name: 'Scroll admin sections right' })
-    await waitFor(() => expect(right).toBeEnabled())
-    await user.click(right)
+    await waitFor(() => {
+      expect(left).toBeEnabled()
+      expect(right).toBeEnabled()
+    })
 
+    await user.click(left)
+    expect(scrollBy).toHaveBeenCalledWith({ left: -240, behavior: 'smooth' })
+
+    scrollBy.mockClear()
+    await user.click(right)
     expect(scrollBy).toHaveBeenCalledWith({ left: 240, behavior: 'smooth' })
+  })
+
+  it('uses instant rail movement when reduced motion is requested', async () => {
+    const originalMatchMedia = Object.getOwnPropertyDescriptor(window, 'matchMedia')
+    const matchMedia = vi.fn((query: string) =>
+      ({
+        matches: query === '(prefers-reduced-motion: reduce)',
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }) as MediaQueryList,
+    )
+    Object.defineProperty(window, 'matchMedia', { configurable: true, value: matchMedia })
+    pathname.current = '/admin'
+
+    try {
+      const user = userEvent.setup()
+      render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+      const nav = screen.getByRole('navigation', { name: 'Admin sections' })
+      const scrollBy = vi.fn()
+      installScrollMetrics(nav, { clientWidth: 300, scrollWidth: 900, scrollLeft: 300 })
+      Object.defineProperty(nav, 'scrollBy', { configurable: true, value: scrollBy })
+
+      fireEvent.scroll(nav)
+      const right = screen.getByRole('button', { name: 'Scroll admin sections right' })
+      await waitFor(() => expect(right).toBeEnabled())
+      await user.click(right)
+
+      expect(matchMedia).toHaveBeenCalledWith('(prefers-reduced-motion: reduce)')
+      expect(scrollBy).toHaveBeenCalledWith({ left: 240, behavior: 'auto' })
+    } finally {
+      if (originalMatchMedia) {
+        Object.defineProperty(window, 'matchMedia', originalMatchMedia)
+      } else {
+        Reflect.deleteProperty(window, 'matchMedia')
+      }
+    }
   })
 
   it('positions the active tab within the visible rail', () => {
@@ -153,7 +224,13 @@ describe('AdminNav', () => {
       HTMLElement.prototype,
       'scrollIntoView',
     )
-    const scrollIntoView = vi.fn()
+    const scrollIntoView = vi.fn(function (
+      this: HTMLElement,
+      options?: ScrollIntoViewOptions,
+    ): void {
+      void this
+      void options
+    })
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
       value: scrollIntoView,
@@ -162,7 +239,10 @@ describe('AdminNav', () => {
 
     try {
       render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+      const activeLink = screen.getByRole('link', { name: 'Payment methods' })
 
+      expect(activeLink).toHaveAttribute('aria-current', 'page')
+      expect(scrollIntoView.mock.instances[0]).toBe(activeLink)
       expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', inline: 'center' })
     } finally {
       if (originalScrollIntoView) {
