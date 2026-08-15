@@ -16,14 +16,16 @@ collapsed-menu implementation. At that checkpoint,
 `pnpm vitest run src/features/admin/ui/admin-nav.test.tsx` exited 1 with 11 tests
 total and 5 expected failures. The same command at the strengthened checkpoint,
 `2d6da34` (`test: strengthen admin subheader contract`), exited 1 with 13 tests
-total and 7 expected failures. `c939bc8` corrected the test's active-tab
-receiver assertion without weakening the intended RED state.
+total and 7 expected failures. This was the strengthened intermediate
+checkpoint. `c939bc8` corrected the test's active-tab receiver assertion
+without weakening the intended RED state; the same focused command at that
+corrected final RED checkpoint exited 1 with 7 failed and 6 passed (13 total).
 
 Those seven failures covered the missing compact signed-in identity label; the
 missing persistent arrow controls, boundary state, and resize remeasurement;
 missing bidirectional 80% scrolling and reduced-motion behavior; and failure to
-invoke `scrollIntoView` with the active link as its receiver. The 13/7
-strengthened checkpoint is the definitive RED contract.
+invoke `scrollIntoView` with the active link as its receiver. The corrected
+`c939bc8` checkpoint is the definitive RED contract.
 
 ## GREEN
 
