@@ -6,6 +6,14 @@ import { readPublicEnv } from '@/lib/env'
 import type { Database } from './database.types'
 
 /**
+ * Next.js has no error code for this, only the message it throws when a Server
+ * Component writes a cookie. Matched on the stable half of that sentence.
+ */
+function isReadOnlyCookieStore(cause: unknown): boolean {
+  return cause instanceof Error && cause.message.includes('can only be modified in a Server Action')
+}
+
+/**
  * Anon-key client bound to the request's cookies. Runs as the signed-in user
  * (or anon), so RLS still applies. Use this for anything user-facing.
  */
@@ -26,9 +34,16 @@ export async function createSupabaseServerClient() {
             for (const { name, value, options } of cookiesToSet) {
               cookieStore.set(name, value, options)
             }
-          } catch {
-            // Called from a Server Component, where cookies are read-only.
-            // Middleware refreshes the session, so this is safe to ignore.
+          } catch (cause) {
+            // A Server Component's cookie store is read-only. That write was
+            // never going to land and does not need to: the proxy refreshes
+            // the session before the render. Anything else means a session was
+            // dropped, which surfaces as an unexplained bounce to sign-in, so
+            // it is reported rather than swallowed. Never rethrown either way —
+            // a failed write must not take the page down with it.
+            if (!isReadOnlyCookieStore(cause)) {
+              console.error('Could not persist the Supabase session cookie', { cause })
+            }
           }
         },
       },
