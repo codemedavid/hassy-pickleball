@@ -1,3 +1,6 @@
+import { act } from 'react'
+import { hydrateRoot, type Root } from 'react-dom/client'
+import { renderToString } from 'react-dom/server'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
@@ -131,6 +134,18 @@ describe('AdminNav', () => {
     expect(screen.getByRole('link', { name: 'Customer site' })).toHaveAttribute('href', '/')
     expect(screen.getByLabelText('Signed in as Priya Desk')).toHaveTextContent('PD')
     expect(screen.queryByRole('button', { name: /Schedule/ })).not.toBeInTheDocument()
+  })
+
+  it('includes one responsive Admin badge in the server chrome', () => {
+    pathname.current = '/admin'
+    const container = document.createElement('div')
+    container.innerHTML = renderToString(<AdminNav clubName="Riverbend" staffName="Priya" />)
+    const badges = Array.from(container.querySelectorAll('span')).filter(
+      (element) => element.textContent === 'Admin',
+    )
+
+    expect(badges).toHaveLength(1)
+    expect(badges[0]).toHaveClass('hidden', 'lg:inline')
   })
 
   it('keeps the club home link large enough to tap on mobile', () => {
@@ -369,6 +384,45 @@ describe('AdminNav', () => {
       )
       expect(scrollIntoView).not.toHaveBeenCalled()
     } finally {
+      if (originalScrollIntoView) {
+        Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', originalScrollIntoView)
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView')
+      }
+      restore()
+    }
+  })
+
+  it('does not reposition the active tab while desktop server markup hydrates', async () => {
+    const { restore } = installDesktopMatchMedia()
+    const originalScrollIntoView = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      'scrollIntoView',
+    )
+    const scrollIntoView = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    })
+    pathname.current = '/admin/payment-methods'
+    const container = document.createElement('div')
+    document.body.append(container)
+    let root: Root | undefined
+
+    try {
+      container.innerHTML = renderToString(<AdminNav clubName="Riverbend" staffName="Priya" />)
+
+      await act(async () => {
+        root = hydrateRoot(container, <AdminNav clubName="Riverbend" staffName="Priya" />)
+      })
+
+      expect(scrollIntoView).not.toHaveBeenCalled()
+      expect(container.querySelectorAll('nav[aria-label="Admin sections"]')).toHaveLength(1)
+    } finally {
+      if (root) {
+        await act(async () => root?.unmount())
+      }
+      container.remove()
       if (originalScrollIntoView) {
         Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', originalScrollIntoView)
       } else {

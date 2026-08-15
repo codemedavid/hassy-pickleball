@@ -14,12 +14,16 @@ const MOBILE_NAV_LINK =
   'focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-navy ' +
   'lg:h-auto lg:rounded-lg lg:border-b-0 lg:px-3.5 lg:py-[7px] lg:text-[13.5px] lg:focus-visible:outline-white'
 
-function prefersReducedMotion(): boolean {
+function matchesMediaQuery(query: string): boolean {
   return (
     typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.matchMedia(query).matches
   )
+}
+
+function prefersReducedMotion(): boolean {
+  return matchesMediaQuery('(prefers-reduced-motion: reduce)')
 }
 
 function subscribeToDesktopViewport(onStoreChange: () => void): () => void {
@@ -36,11 +40,7 @@ function subscribeToDesktopViewport(onStoreChange: () => void): () => void {
 }
 
 function getDesktopSnapshot(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia(DESKTOP_MEDIA_QUERY).matches
-  )
+  return matchesMediaQuery(DESKTOP_MEDIA_QUERY)
 }
 
 function getDesktopServerSnapshot(): boolean {
@@ -78,7 +78,7 @@ function MobileAdminNavRail({ isDesktop, pathname }: MobileAdminNavRailProps) {
     const viewport = viewportRef.current
     if (!viewport) return
 
-    if (!isDesktop) {
+    if (!matchesMediaQuery(DESKTOP_MEDIA_QUERY)) {
       const activeLink = viewport.querySelector<HTMLElement>('[aria-current="page"]')
       activeLink?.scrollIntoView?.({ block: 'nearest', inline: 'center' })
     }
@@ -248,6 +248,7 @@ export function AdminNav({ clubName, staffName }: AdminNavProps) {
           <>
             <div className="flex h-14 items-center gap-2 px-4 sm:gap-3 sm:px-7 lg:contents">
               <ClubHomeLink clubName={clubName} />
+              <AdminBadge />
               <AccountBlock staffName={staffName} />
             </div>
             <MobileAdminNavRail isDesktop={false} pathname={pathname} />
