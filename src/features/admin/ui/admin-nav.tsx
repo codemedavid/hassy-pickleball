@@ -1,41 +1,123 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ADMIN_NAV_ITEMS, currentNavLabel, isNavItemActive } from './nav-items'
+import { ADMIN_NAV_ITEMS, isNavItemActive } from './nav-items'
 
-/**
- * Console chrome. A Client Component because the current section comes from the
- * pathname and, below `lg`, the section list collapses behind a toggle.
- *
- * The current tab is marked with aria-current as well as a lighter background,
- * so where you are is not communicated by colour alone.
- *
- * There is one list of sections, revealed rather than duplicated: a second copy
- * for phones would double every link in the accessibility tree and drift from
- * the first the day a section was added. The menu wraps that one list plus the
- * account block, and `data-open` reveals it. The mobile and desktop layouts are
- * written in disjoint `max-lg:` / `lg:` rules, so which one applies never
- * depends on the order Tailwind emits them in.
- */
+const SCROLL_EDGE_TOLERANCE = 1
+const SCROLL_PAGE_RATIO = 0.8
 
-const MENU_ID = 'admin-menu'
+const MOBILE_NAV_LINK =
+  'flex h-11 flex-none snap-center items-center border-b-2 px-3.5 text-[14px] font-semibold whitespace-nowrap ' +
+  'focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-navy ' +
+  'lg:h-auto lg:rounded-lg lg:border-b-0 lg:px-3.5 lg:py-[7px] lg:text-[13.5px] lg:focus-visible:outline-white'
 
-/** Panel geometry below `lg`: dropped under the bar, which is h-14 there. */
-const MENU_PHONE =
-  'max-lg:absolute max-lg:inset-x-0 max-lg:top-14 max-lg:hidden max-lg:flex-col max-lg:gap-1 ' +
-  'max-lg:border-t max-lg:border-white/10 max-lg:bg-navy max-lg:p-3 max-lg:shadow-lg ' +
-  'max-lg:data-[open=true]:flex'
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+}
 
-/** On `lg` the wrapper generates no box, so its children join the bar's flex row. */
-const MENU_DESKTOP = 'lg:contents'
+interface MobileAdminNavRailProps {
+  readonly pathname: string
+}
 
-/** Tall enough to tap: 44px rows on a phone, the compact strip on a desktop. */
-const MENU_LINK =
-  'flex items-center rounded-lg font-semibold whitespace-nowrap hover:text-white ' +
-  'max-lg:h-11 max-lg:px-3.5 max-lg:text-[15px] ' +
-  'lg:px-3.5 lg:py-[7px] lg:text-[13.5px]'
+function MobileAdminNavRail({ pathname }: MobileAdminNavRailProps) {
+  const viewportRef = useRef<HTMLElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const updateBoundaries = useCallback((): void => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+
+    const maximum = Math.max(0, viewport.scrollWidth - viewport.clientWidth)
+    setCanScrollLeft(viewport.scrollLeft > SCROLL_EDGE_TOLERANCE)
+    setCanScrollRight(viewport.scrollLeft < maximum - SCROLL_EDGE_TOLERANCE)
+  }, [])
+
+  useEffect(() => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+
+    const activeLink = viewport.querySelector<HTMLElement>('[aria-current="page"]')
+    activeLink?.scrollIntoView?.({ block: 'nearest', inline: 'center' })
+    updateBoundaries()
+
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(updateBoundaries)
+    resizeObserver?.observe(viewport)
+    window.addEventListener('resize', updateBoundaries)
+
+    return () => {
+      resizeObserver?.disconnect()
+      window.removeEventListener('resize', updateBoundaries)
+    }
+  }, [pathname, updateBoundaries])
+
+  function scroll(direction: -1 | 1): void {
+    const viewport = viewportRef.current
+    if (!viewport) return
+
+    viewport.scrollBy({
+      left: direction * viewport.clientWidth * SCROLL_PAGE_RATIO,
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+    })
+  }
+
+  return (
+    <div className="grid grid-cols-[44px_minmax(0,1fr)_44px] bg-white text-navy lg:contents">
+      <button
+        type="button"
+        aria-label="Scroll admin sections left"
+        disabled={!canScrollLeft}
+        onClick={() => scroll(-1)}
+        className="grid size-11 place-items-center border-r border-navy/10 text-xl disabled:text-navy/25 lg:hidden"
+      >
+        <span aria-hidden>‹</span>
+      </button>
+
+      <nav
+        ref={viewportRef}
+        aria-label="Admin sections"
+        onScroll={updateBoundaries}
+        className="flex min-w-0 snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:order-3 lg:flex-1 lg:gap-1 lg:snap-none"
+      >
+        {ADMIN_NAV_ITEMS.map((item) => {
+          const isCurrent = isNavItemActive(pathname, item.href)
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isCurrent ? 'page' : undefined}
+              className={`${MOBILE_NAV_LINK} ${
+                isCurrent
+                  ? 'border-navy text-navy lg:bg-white/15 lg:text-white'
+                  : 'border-transparent text-navy/60 hover:text-navy lg:text-white/65 lg:hover:text-white'
+              }`}
+            >
+              {item.label}
+            </Link>
+          )
+        })}
+      </nav>
+
+      <button
+        type="button"
+        aria-label="Scroll admin sections right"
+        disabled={!canScrollRight}
+        onClick={() => scroll(1)}
+        className="grid size-11 place-items-center border-l border-navy/10 text-xl disabled:text-navy/25 lg:hidden"
+      >
+        <span aria-hidden>›</span>
+      </button>
+    </div>
+  )
+}
 
 export interface AdminNavProps {
   readonly clubName: string
@@ -52,98 +134,56 @@ function initialsOf(name: string): string {
 
 export function AdminNav({ clubName, staffName }: AdminNavProps) {
   const pathname = usePathname()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-
-  function closeMenu(): void {
-    setIsMenuOpen(false)
-  }
 
   return (
     <header className="sticky top-0 z-40 bg-navy text-white">
-      <div className="mx-auto flex h-14 w-full max-w-[1440px] items-center gap-3 px-4 sm:px-7 lg:h-16 lg:gap-4">
-        <Link
-          href="/admin"
-          className="flex min-w-0 items-center gap-2.5 text-white hover:text-white lg:mr-1 lg:flex-none"
-        >
-          <span
-            aria-hidden
-            className="grid size-[30px] flex-none place-items-center rounded-[9px] bg-lime font-[family-name:var(--font-display)] text-[16px] font-extrabold text-navy"
+      <div className="mx-auto w-full max-w-[1440px] lg:flex lg:h-16 lg:items-center lg:gap-4 lg:px-7">
+        <div className="flex h-14 items-center gap-2 px-4 sm:gap-3 sm:px-7 lg:contents">
+          <Link
+            href="/admin"
+            className="order-1 flex min-w-0 flex-1 items-center gap-2.5 text-white hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:mr-1 lg:flex-none"
           >
-            P
+            <span
+              aria-hidden
+              className="grid size-[30px] flex-none place-items-center rounded-[9px] bg-lime font-[family-name:var(--font-display)] text-[16px] font-extrabold text-navy"
+            >
+              P
+            </span>
+            <span className="truncate font-[family-name:var(--font-display)] text-[17px] font-bold tracking-[-0.02em] lg:text-[18px]">
+              {clubName}
+            </span>
+          </Link>
+
+          <span className="order-2 hidden flex-none rounded-md bg-white/12 px-2.5 py-[5px] text-[11px] font-bold tracking-[0.1em] text-lime uppercase lg:inline">
+            Admin
           </span>
-          <span className="truncate font-[family-name:var(--font-display)] text-[17px] font-bold tracking-[-0.02em] lg:text-[18px]">
-            {clubName}
-          </span>
-        </Link>
 
-        {/* Below `lg` the club name and the toggle need the room more. */}
-        <span className="hidden flex-none rounded-md bg-white/12 px-2.5 py-[5px] text-[11px] font-bold tracking-[0.1em] text-lime uppercase lg:inline">
-          Admin
-        </span>
-
-        <button
-          type="button"
-          aria-expanded={isMenuOpen}
-          aria-controls={MENU_ID}
-          onClick={() => setIsMenuOpen((open) => !open)}
-          className="ml-auto flex h-10 flex-none items-center gap-2 rounded-xl bg-white/12 px-3 text-[13.5px] font-semibold text-white lg:hidden"
-        >
-          <span aria-hidden className="text-[15px] leading-none">
-            {isMenuOpen ? '✕' : '☰'}
-          </span>
-          {/* Closed, the button still says which section you are in. */}
-          {currentNavLabel(pathname)}
-        </button>
-
-        <div id={MENU_ID} data-open={isMenuOpen} className={`${MENU_PHONE} ${MENU_DESKTOP}`}>
-          <nav
-            aria-label="Admin sections"
-            className={
-              'flex max-lg:flex-col max-lg:gap-1 ' +
-              'lg:min-w-0 lg:flex-1 lg:gap-1 lg:overflow-x-auto lg:[scrollbar-width:none]'
-            }
-          >
-            {ADMIN_NAV_ITEMS.map((item) => {
-              const isCurrent = isNavItemActive(pathname, item.href)
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={isCurrent ? 'page' : undefined}
-                  onClick={closeMenu}
-                  className={`${MENU_LINK} ${isCurrent ? 'bg-white/15 text-white' : 'text-white/65'}`}
-                >
-                  {item.label}
-                </Link>
-              )
-            })}
-          </nav>
-
-          <div
-            className={
-              'flex text-[13px] max-lg:mt-1 max-lg:flex-col max-lg:gap-1 max-lg:border-t ' +
-              'max-lg:border-white/10 max-lg:pt-2 lg:flex-none lg:items-center lg:gap-4'
-            }
-          >
+          <div className="order-4 ml-auto flex flex-none items-center gap-1 sm:gap-3 lg:gap-4">
             <Link
               href="/"
-              onClick={closeMenu}
-              className={`${MENU_LINK} text-white/65 hover:text-lime lg:px-0 lg:py-0 lg:text-[13px]`}
+              aria-label="Customer site"
+              className="flex min-h-11 items-center px-1 text-[13px] font-semibold text-white/70 hover:text-lime focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-2 lg:min-h-0 lg:px-0"
             >
-              Customer site
+              <span className="sm:hidden">Site</span>
+              <span className="hidden sm:inline">Customer site</span>
             </Link>
-            <span className="flex items-center gap-2 max-lg:px-3.5 max-lg:pb-1">
+
+            <span
+              aria-label={`Signed in as ${staffName}`}
+              className="flex min-h-11 items-center gap-2"
+            >
               <span
                 aria-hidden
-                className="grid size-7 flex-none place-items-center rounded-full bg-navy-mid text-[12px] font-bold text-lime"
+                className="grid size-8 flex-none place-items-center rounded-full bg-navy-mid text-[12px] font-bold text-lime lg:size-7"
               >
                 {initialsOf(staffName)}
               </span>
-              <span className="text-white/80">{staffName}</span>
+              <span className="hidden text-[13px] text-white/80 sm:inline">{staffName}</span>
             </span>
           </div>
         </div>
+
+        <MobileAdminNavRail pathname={pathname} />
       </div>
     </header>
   )
