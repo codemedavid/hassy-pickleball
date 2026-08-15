@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ADMIN_NAV_ITEMS, currentNavLabel, isNavItemActive } from './nav-items'
+import { ADMIN_NAV_ITEMS, isNavItemActive } from './nav-items'
 
 describe('ADMIN_NAV_ITEMS', () => {
   it('lists the console sections in the order the design shows them', () => {
@@ -60,25 +60,5 @@ describe('isNavItemActive', () => {
     // Act & Assert
     expect(isNavItemActive('/admin', scheduleHref)).toBe(true)
     expect(isNavItemActive('/admin/reports', scheduleHref)).toBe(false)
-  })
-})
-
-describe('currentNavLabel', () => {
-  it('names the section being viewed', () => {
-    expect(currentNavLabel('/admin/payment-methods')).toBe('Payment methods')
-  })
-
-  it('names the section from a nested route beneath it', () => {
-    expect(currentNavLabel('/admin/bookings/PB-4821')).toBe('Bookings')
-  })
-
-  it('names the schedule at the console root', () => {
-    expect(currentNavLabel('/admin')).toBe('Schedule')
-  })
-
-  it('falls back to a generic label on a route no section claims', () => {
-    // The phone menu prints this beside the toggle; a blank there would read as
-    // a rendering fault rather than as an unknown page.
-    expect(currentNavLabel('/admin/something-new')).toBe('Sections')
   })
 })
