@@ -242,7 +242,7 @@ describe('AdminNav', () => {
       const activeLink = screen.getByRole('link', { name: 'Payment methods' })
 
       expect(activeLink).toHaveAttribute('aria-current', 'page')
-      expect(scrollIntoView.mock.instances[0]).toBe(activeLink)
+      expect(scrollIntoView.mock.contexts[0]).toBe(activeLink)
       expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', inline: 'center' })
     } finally {
       if (originalScrollIntoView) {
