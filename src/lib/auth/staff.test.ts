@@ -6,7 +6,7 @@ const createSupabaseServerClient = vi.fn()
 
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseServerClient }))
 
-const { getCurrentStaff } = await import('./staff')
+const { getCurrentStaff, getStaffAccess } = await import('./staff')
 
 const STAFF_ROW = {
   id: 'staff-1',
@@ -102,5 +102,54 @@ describe('getCurrentStaff', () => {
     createSupabaseServerClient.mockResolvedValue(client)
 
     expect(await getCurrentStaff()).toBeNull()
+  })
+})
+
+/**
+ * The two ways to have no staff record are not the same problem. Nobody signed
+ * in should be asked to sign in; someone already signed in should not be, or
+ * they are sent back to a form they have just completed and the console looks
+ * broken rather than closed.
+ */
+describe('getStaffAccess', () => {
+  it('reports anonymous when nobody is signed in', async () => {
+    getUser.mockResolvedValue({ data: { user: null } })
+    const { client } = clientReturning({ data: STAFF_ROW, error: null })
+    createSupabaseServerClient.mockResolvedValue(client)
+
+    expect(await getStaffAccess()).toEqual({ status: 'anonymous' })
+  })
+
+  it('separates a signed-in non-staff user from an anonymous one', async () => {
+    getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    const { client } = clientReturning({ data: null, error: null })
+    createSupabaseServerClient.mockResolvedValue(client)
+
+    expect(await getStaffAccess()).toEqual({ status: 'not-staff' })
+  })
+
+  it('carries the staff record when the signed-in user is staff', async () => {
+    getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    const { client } = clientReturning({ data: STAFF_ROW, error: null })
+    createSupabaseServerClient.mockResolvedValue(client)
+
+    expect(await getStaffAccess()).toEqual({
+      status: 'staff',
+      staff: {
+        id: 'staff-1',
+        userId: 'user-1',
+        clubId: 'club-1',
+        role: 'admin',
+        fullName: 'Mika Reyes',
+      },
+    })
+  })
+
+  it('fails closed to not-staff when the lookup errors', async () => {
+    getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    const { client } = clientReturning({ data: STAFF_ROW, error: { message: 'rls denied' } })
+    createSupabaseServerClient.mockResolvedValue(client)
+
+    expect(await getStaffAccess()).toEqual({ status: 'not-staff' })
   })
 })
