@@ -3,7 +3,16 @@
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { AdminPageHeader, AdminScreen, CARD, CELL, EmptyState, TABLE_HEAD } from './primitives'
+import {
+  AdminPageHeader,
+  AdminScreen,
+  CARD,
+  Cell,
+  DataTable,
+  EmptyState,
+  FullWidthRow,
+  Row,
+} from './primitives'
 import { PaymentMethodEditor } from './payment-method-editor'
 import type { UploadedImage } from './image-upload-field'
 import type { Result } from '@/lib/api/result'
@@ -84,9 +93,7 @@ export function PaymentMethodsScreen({
 
       if (!confirmed) return
 
-      mutate(() =>
-        onSave({ id: method.id, isActive: false, acknowledgeCheckoutPause: true }),
-      )
+      mutate(() => onSave({ id: method.id, isActive: false, acknowledgeCheckoutPause: true }))
       return
     }
 
@@ -126,41 +133,25 @@ export function PaymentMethodsScreen({
         {displayedMethods.length === 0 ? (
           <EmptyState>No payment methods yet. Add one to reopen online checkout.</EmptyState>
         ) : (
-          <table
-            aria-label="Payment methods"
-            className="w-full min-w-[880px] border-collapse text-[14px]"
-          >
-            <thead className={TABLE_HEAD}>
-              <tr>
-                {COLUMNS.map((column, index) => (
-                  <th key={column || index} scope="col" className={CELL}>
-                    {column}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {displayedMethods.map((method, index) => (
-                <PaymentMethodRow
-                  key={method.id}
-                  method={method}
-                  isEditing={editing === method.id}
-                  isPending={isPending}
-                  isFirst={index === 0}
-                  isLast={index === displayedMethods.length - 1}
-                  onEdit={() => setEditing(method.id)}
-                  onToggle={() => toggle(method)}
-                  onMove={(direction) =>
-                    mutate(() => onMove({ id: method.id, direction }))
-                  }
-                  onSave={onSave}
-                  onUpload={onUpload}
-                  onSaved={(saved) => handleSaved(saved, false)}
-                  onCancel={() => setEditing(null)}
-                />
-              ))}
-            </tbody>
-          </table>
+          <DataTable label="Payment methods" columns={COLUMNS} wideClassName="sm:min-w-[880px]">
+            {displayedMethods.map((method, index) => (
+              <PaymentMethodRow
+                key={method.id}
+                method={method}
+                isEditing={editing === method.id}
+                isPending={isPending}
+                isFirst={index === 0}
+                isLast={index === displayedMethods.length - 1}
+                onEdit={() => setEditing(method.id)}
+                onToggle={() => toggle(method)}
+                onMove={(direction) => mutate(() => onMove({ id: method.id, direction }))}
+                onSave={onSave}
+                onUpload={onUpload}
+                onSaved={(saved) => handleSaved(saved, false)}
+                onCancel={() => setEditing(null)}
+              />
+            ))}
+          </DataTable>
         )}
       </div>
     </AdminScreen>
@@ -196,14 +187,14 @@ function PaymentMethodRow({
 }) {
   return (
     <>
-      <tr className="border-t border-[#f2f5f8]">
-        <td className={CELL}>
+      <Row>
+        <Cell label="Method">
           <span className="block font-semibold">{method.label}</span>
           <span className="mt-px block text-[12.5px] text-subtle">
             {CHANNEL_LABELS[method.method]}
           </span>
-        </td>
-        <td className={`${CELL} text-slate`}>
+        </Cell>
+        <Cell label="Account" className="text-slate">
           {method.accountName || method.accountNumber ? (
             <>
               {method.accountName ? <span className="block">{method.accountName}</span> : null}
@@ -214,11 +205,11 @@ function PaymentMethodRow({
           ) : (
             '—'
           )}
-        </td>
-        <td className={`${CELL} text-slate`}>
+        </Cell>
+        <Cell label="Payment proof" className="text-slate">
           {method.requiresProof ? 'Required' : 'Not required'}
-        </td>
-        <td className={CELL}>
+        </Cell>
+        <Cell label="Status">
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase ${
               method.isActive ? 'bg-success-bg text-success' : 'bg-surface-sunken text-muted'
@@ -226,9 +217,9 @@ function PaymentMethodRow({
           >
             {method.isActive ? 'Active' : 'Hidden'}
           </span>
-        </td>
-        <td className={CELL}>
-          <div className="flex justify-end gap-1.5">
+        </Cell>
+        <Cell label="">
+          <div className="flex justify-end gap-1.5 max-sm:justify-start">
             <Button
               variant="ghost"
               size="sm"
@@ -254,21 +245,19 @@ function PaymentMethodRow({
               {method.isActive ? 'Hide' : 'Restore'}
             </Button>
           </div>
-        </td>
-      </tr>
+        </Cell>
+      </Row>
 
       {isEditing ? (
-        <tr className="border-t border-[#f2f5f8]">
-          <td colSpan={COLUMNS.length} className="bg-surface-alt p-0">
-            <PaymentMethodEditor
-              paymentMethod={method}
-              onSave={onSave}
-              onUpload={onUpload}
-              onSaved={onSaved}
-              onCancel={onCancel}
-            />
-          </td>
-        </tr>
+        <FullWidthRow columnCount={COLUMNS.length}>
+          <PaymentMethodEditor
+            paymentMethod={method}
+            onSave={onSave}
+            onUpload={onUpload}
+            onSaved={onSaved}
+            onCancel={onCancel}
+          />
+        </FullWidthRow>
       ) : null}
     </>
   )

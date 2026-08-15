@@ -49,8 +49,7 @@ const LABEL = 'text-[13px] font-semibold text-ink'
 
 export function BlockTimeForm({ day, club, courts, onBlock }: BlockTimeFormProps) {
   const router = useRouter()
-  const blank = () =>
-    blankBlockForm({ courtId: courts[0]?.id ?? '', opensAt: club.opensAt, day })
+  const blank = () => blankBlockForm({ courtId: courts[0]?.id ?? '', opensAt: club.opensAt, day })
 
   const [form, setForm] = useState<BlockFormState>(blank)
   const [error, setError] = useState<string | null>(null)

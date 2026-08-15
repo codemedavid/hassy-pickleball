@@ -44,15 +44,12 @@ function renderScreen(methods: readonly PaymentMethod[] = [first, second]) {
     success: true,
     data: payload.id ? first : { ...first, id: '77777777-7777-4777-8777-777777777777' },
   }))
-  const onMove = vi.fn().mockResolvedValue({ success: true, data: { id: first.id, direction: 'down' } })
+  const onMove = vi
+    .fn()
+    .mockResolvedValue({ success: true, data: { id: first.id, direction: 'down' } })
 
   render(
-    <PaymentMethodsScreen
-      methods={methods}
-      onSave={onSave}
-      onMove={onMove}
-      onUpload={vi.fn()}
-    />,
+    <PaymentMethodsScreen methods={methods} onSave={onSave} onMove={onMove} onUpload={vi.fn()} />,
   )
 
   return { onSave, onMove }
@@ -155,7 +152,12 @@ describe('PaymentMethodsScreen', () => {
     const user = userEvent.setup()
     const onMove = vi.fn().mockResolvedValue({ success: false, error: 'Could not reorder' })
     render(
-      <PaymentMethodsScreen methods={[first, second]} onSave={vi.fn()} onMove={onMove} onUpload={vi.fn()} />,
+      <PaymentMethodsScreen
+        methods={[first, second]}
+        onSave={vi.fn()}
+        onMove={onMove}
+        onUpload={vi.fn()}
+      />,
     )
 
     await user.click(within(rowFor('GCash')).getByRole('button', { name: /move gcash down/i }))

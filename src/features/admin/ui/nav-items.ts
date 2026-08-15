@@ -34,3 +34,18 @@ export function isNavItemActive(pathname: string, href: string): boolean {
 
   return pathname === href || pathname.startsWith(`${href}/`)
 }
+
+/** Shown when no section claims the route: never blank, which reads as a fault. */
+const FALLBACK_NAV_LABEL = 'Sections'
+
+/**
+ * The name of the section being viewed.
+ *
+ * The phone menu prints this on its closed toggle, so where you are survives
+ * the tab strip being collapsed.
+ */
+export function currentNavLabel(pathname: string): string {
+  const current = ADMIN_NAV_ITEMS.find((item) => isNavItemActive(pathname, item.href))
+
+  return current?.label ?? FALLBACK_NAV_LABEL
+}

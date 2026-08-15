@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { AdminPageHeader, AdminScreen, CARD, CELL, EmptyState, TABLE_HEAD } from './primitives'
+import { AdminPageHeader, AdminScreen, CARD, Cell, DataTable, EmptyState, Row } from './primitives'
 import { BookingDetailPanel } from './booking-detail-panel'
 import { PaymentBadge } from './payment-badge'
 import { StatusBadge } from '@/components/ui/status-badge'
@@ -66,49 +66,42 @@ export function BookingsScreen({
           {rows.length === 0 ? (
             <EmptyState>No bookings in this window yet.</EmptyState>
           ) : (
-            <table
-              aria-label="Bookings"
-              className="w-full min-w-[1040px] border-collapse text-[14px]"
-            >
-              <thead className={TABLE_HEAD}>
-                <tr>
-                  {COLUMNS.map((column) => (
-                    <th key={column} scope="col" className={CELL}>
-                      {column}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className={`border-t border-[#f2f5f8] ${row.id === detail?.id ? 'bg-surface-alt' : ''}`}
-                  >
-                    <td className={`${CELL} font-bold tabular-nums`}>
-                      <Link href={`/admin/bookings?booking=${row.id}`} className="hover:text-olive">
-                        {row.reference}
-                      </Link>
-                    </td>
-                    <td className={CELL}>
-                      <span className="block font-semibold">{row.name}</span>
-                      <span className="mt-px block text-[12.5px] text-subtle">{row.contact}</span>
-                    </td>
-                    <td className={`${CELL} text-slate`}>{row.court}</td>
-                    <td className={`${CELL} text-slate`}>{row.when}</td>
-                    <td className={`${CELL} text-slate`}>{row.extras}</td>
-                    <td className={CELL}>
-                      <StatusBadge status={row.status} />
-                    </td>
-                    <td className={`${CELL} text-slate`}>{row.method}</td>
-                    <td className={CELL}>
-                      <PaymentBadge status={row.paymentStatus} />
-                    </td>
-                    <td className={`${CELL} text-right font-bold`}>{row.total}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DataTable label="Bookings" columns={COLUMNS} wideClassName="sm:min-w-[1040px]">
+              {rows.map((row) => (
+                <Row key={row.id} className={row.id === detail?.id ? 'bg-surface-alt' : ''}>
+                  <Cell label="Reference" className="font-bold tabular-nums">
+                    <Link href={`/admin/bookings?booking=${row.id}`} className="hover:text-olive">
+                      {row.reference}
+                    </Link>
+                  </Cell>
+                  <Cell label="Customer">
+                    <span className="block font-semibold">{row.name}</span>
+                    <span className="mt-px block text-[12.5px] text-subtle">{row.contact}</span>
+                  </Cell>
+                  <Cell label="Court" className="text-slate">
+                    {row.court}
+                  </Cell>
+                  <Cell label="When" className="text-slate">
+                    {row.when}
+                  </Cell>
+                  <Cell label="Extras" className="text-slate">
+                    {row.extras}
+                  </Cell>
+                  <Cell label="Status">
+                    <StatusBadge status={row.status} />
+                  </Cell>
+                  <Cell label="Method" className="text-slate">
+                    {row.method}
+                  </Cell>
+                  <Cell label="Payment">
+                    <PaymentBadge status={row.paymentStatus} />
+                  </Cell>
+                  <Cell label="Total" className="text-right font-bold">
+                    {row.total}
+                  </Cell>
+                </Row>
+              ))}
+            </DataTable>
           )}
         </div>
 

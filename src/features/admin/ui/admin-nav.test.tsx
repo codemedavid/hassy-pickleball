@@ -10,6 +10,14 @@ vi.mock('next/navigation', () => ({
   usePathname: () => pathname.current,
 }))
 
+/** The panel the toggle says it controls, whatever element that turns out to be. */
+function panelFor(toggle: HTMLElement): HTMLElement {
+  const panel = document.getElementById(toggle.getAttribute('aria-controls') ?? '')
+  expect(panel).not.toBeNull()
+
+  return panel as HTMLElement
+}
+
 describe('AdminNav', () => {
   it('names the club and the signed-in staff member', () => {
     // Arrange
@@ -88,14 +96,9 @@ describe('AdminNav', () => {
     render(<AdminNav clubName="Riverbend" staffName="Priya" />)
 
     // Assert
-    expect(screen.getByRole('button', { name: /Schedule/ })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    )
-    expect(screen.getByRole('navigation', { name: 'Admin sections' })).toHaveAttribute(
-      'data-open',
-      'false',
-    )
+    const toggle = screen.getByRole('button', { name: /Schedule/ })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(panelFor(toggle)).toHaveAttribute('data-open', 'false')
   })
 
   it('opens the section list when the phone menu button is pressed', async () => {
@@ -108,14 +111,9 @@ describe('AdminNav', () => {
     await user.click(screen.getByRole('button', { name: /Schedule/ }))
 
     // Assert
-    expect(screen.getByRole('button', { name: /Schedule/ })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    )
-    expect(screen.getByRole('navigation', { name: 'Admin sections' })).toHaveAttribute(
-      'data-open',
-      'true',
-    )
+    const toggle = screen.getByRole('button', { name: /Schedule/ })
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(panelFor(toggle)).toHaveAttribute('data-open', 'true')
   })
 
   it('closes the menu once a section is chosen', async () => {
@@ -130,13 +128,13 @@ describe('AdminNav', () => {
     await user.click(screen.getByRole('link', { name: 'Bookings' }))
 
     // Assert
-    expect(screen.getByRole('navigation', { name: 'Admin sections' })).toHaveAttribute(
+    expect(panelFor(screen.getByRole('button', { name: /Schedule/ }))).toHaveAttribute(
       'data-open',
       'false',
     )
   })
 
-  it('points the phone menu button at the one list of sections', async () => {
+  it('points the phone menu button at the one list of sections', () => {
     // Arrange
     pathname.current = '/admin'
 
@@ -145,13 +143,22 @@ describe('AdminNav', () => {
 
     // Assert — one list, revealed rather than duplicated: a second copy for
     // phones would drift from the first and double every link on the page.
-    const nav = screen.getByRole('navigation', { name: 'Admin sections' })
-    expect(screen.getByRole('button', { name: /Schedule/ })).toHaveAttribute(
-      'aria-controls',
-      nav.id,
-    )
-    expect(nav.id).not.toBe('')
+    const panel = panelFor(screen.getByRole('button', { name: /Schedule/ }))
+    expect(panel).toContainElement(screen.getByRole('navigation', { name: 'Admin sections' }))
     expect(screen.getAllByRole('link', { name: 'Bookings' })).toHaveLength(1)
+    expect(screen.getAllByRole('link', { name: 'Customer site' })).toHaveLength(1)
+  })
+
+  it('keeps the way back to the customer site inside the phone menu', () => {
+    // Arrange — the bar itself has no room for it at phone widths.
+    pathname.current = '/admin'
+
+    // Act
+    render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+
+    // Assert
+    const panel = panelFor(screen.getByRole('button', { name: /Schedule/ }))
+    expect(panel).toContainElement(screen.getByRole('link', { name: 'Customer site' }))
   })
 
   it('offers a way back to the customer site', () => {

@@ -87,7 +87,9 @@ describe('PaymentMethodEditor', () => {
     await user.click(screen.getByRole('button', { name: /remove qr image/i }))
     await user.click(screen.getByRole('button', { name: /save payment method/i }))
 
-    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ qrImageUrl: null })))
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ qrImageUrl: null })),
+    )
   })
 
   it('shows a server refusal without closing the editor', async () => {
@@ -110,4 +112,3 @@ describe('PaymentMethodEditor', () => {
     expect(screen.getByLabelText(/display label/i)).toBeInTheDocument()
   })
 })
-

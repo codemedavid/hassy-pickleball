@@ -2,7 +2,16 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { AdminPageHeader, AdminScreen, CARD, CELL, EmptyState, TABLE_HEAD } from './primitives'
+import {
+  AdminPageHeader,
+  AdminScreen,
+  CARD,
+  Cell,
+  DataTable,
+  EmptyState,
+  FullWidthRow,
+  Row,
+} from './primitives'
 import { Button } from '@/components/ui/button'
 import { CourtEditor } from './court-editor'
 import { type UploadedImage } from './image-upload-field'
@@ -104,34 +113,23 @@ export function CourtsScreen({ courts, currency, onSave, onUpload }: CourtsScree
         {courts.length === 0 ? (
           <EmptyState>No courts yet. Add one to start taking bookings.</EmptyState>
         ) : (
-          <table aria-label="Courts" className="w-full min-w-[820px] border-collapse text-[14px]">
-            <thead className={TABLE_HEAD}>
-              <tr>
-                {COLUMNS.map((column, index) => (
-                  <th key={column || index} scope="col" className={CELL}>
-                    {column}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {courts.map((court) => (
-                <CourtRow
-                  key={court.id}
-                  court={court}
-                  currency={currency}
-                  isPending={isPending}
-                  isEditing={editing === court.id}
-                  onEdit={() => setEditing(court.id)}
-                  onToggle={() => toggleAvailability(court)}
-                  onSave={onSave}
-                  onUpload={onUpload}
-                  onSaved={handleSaved}
-                  onCancel={() => setEditing(null)}
-                />
-              ))}
-            </tbody>
-          </table>
+          <DataTable label="Courts" columns={COLUMNS} wideClassName="sm:min-w-[820px]">
+            {courts.map((court) => (
+              <CourtRow
+                key={court.id}
+                court={court}
+                currency={currency}
+                isPending={isPending}
+                isEditing={editing === court.id}
+                onEdit={() => setEditing(court.id)}
+                onToggle={() => toggleAvailability(court)}
+                onSave={onSave}
+                onUpload={onUpload}
+                onSaved={handleSaved}
+                onCancel={() => setEditing(null)}
+              />
+            ))}
+          </DataTable>
         )}
       </div>
     </AdminScreen>
@@ -165,19 +163,19 @@ function CourtRow({
 }: CourtRowProps) {
   return (
     <>
-      <tr className="border-t border-[#f2f5f8]">
-        <td className={CELL}>
+      <Row>
+        <Cell label="Court">
           <span className="block font-semibold">{court.name}</span>
           <span className="mt-px block text-[12.5px] text-subtle">/{court.slug}</span>
-        </td>
-        <td className={`${CELL} text-slate`}>
+        </Cell>
+        <Cell label="Surface" className="text-slate">
           <span className="block">{court.surface}</span>
           <span className="mt-px block text-[12.5px] text-subtle">
             {ENVIRONMENT_LABELS[court.environment]}
             {court.isTournamentGrade ? ' · Tournament grade' : ''}
           </span>
-        </td>
-        <td className={`${CELL} text-slate tabular-nums`}>
+        </Cell>
+        <Cell label="Players" className="text-slate tabular-nums">
           <span className="block">
             {court.minPlayers}–{court.maxPlayers}
           </span>
@@ -189,12 +187,14 @@ function CourtRow({
               each
             </span>
           ) : null}
-        </td>
-        <td className={`${CELL} text-slate tabular-nums`}>
+        </Cell>
+        <Cell label="Price" className="text-slate tabular-nums">
           {formatMoney(court.basePriceCents, currency)}
-        </td>
-        <td className={`${CELL} text-slate tabular-nums`}>{court.sortOrder}</td>
-        <td className={CELL}>
+        </Cell>
+        <Cell label="Order" className="text-slate tabular-nums">
+          {court.sortOrder}
+        </Cell>
+        <Cell label="Status">
           {/* Wording, not just colour: an offline court still sits in the list. */}
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase ${
@@ -203,9 +203,9 @@ function CourtRow({
           >
             {court.isActive ? 'Bookable' : 'Offline'}
           </span>
-        </td>
-        <td className={CELL}>
-          <div className="flex justify-end gap-2">
+        </Cell>
+        <Cell label="">
+          <div className="flex justify-end gap-2 max-sm:justify-start">
             <Button variant="secondary" size="sm" onClick={onEdit} disabled={isEditing}>
               Edit
             </Button>
@@ -213,22 +213,20 @@ function CourtRow({
               {court.isActive ? 'Take offline' : 'Bring back'}
             </Button>
           </div>
-        </td>
-      </tr>
+        </Cell>
+      </Row>
 
       {isEditing ? (
-        <tr className="border-t border-[#f2f5f8]">
-          <td colSpan={COLUMNS.length} className="bg-surface-alt p-0">
-            <CourtEditor
-              court={court}
-              currency={currency}
-              onSave={onSave}
-              onUpload={onUpload}
-              onSaved={onSaved}
-              onCancel={onCancel}
-            />
-          </td>
-        </tr>
+        <FullWidthRow columnCount={COLUMNS.length}>
+          <CourtEditor
+            court={court}
+            currency={currency}
+            onSave={onSave}
+            onUpload={onUpload}
+            onSaved={onSaved}
+            onCancel={onCancel}
+          />
+        </FullWidthRow>
       ) : null}
     </>
   )

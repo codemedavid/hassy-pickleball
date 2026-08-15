@@ -2,7 +2,16 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { AdminPageHeader, AdminScreen, CARD, CELL, EmptyState, TABLE_HEAD } from './primitives'
+import {
+  AdminPageHeader,
+  AdminScreen,
+  CARD,
+  Cell,
+  DataTable,
+  EmptyState,
+  FullWidthRow,
+  Row,
+} from './primitives'
 import { Button } from '@/components/ui/button'
 import { ProductEditor } from './product-editor'
 import { type UploadedImage } from './image-upload-field'
@@ -98,34 +107,23 @@ export function ProductsScreen({ products, currency, onSave, onUpload }: Product
         {products.length === 0 ? (
           <EmptyState>No products yet. Add one to sell alongside a booking.</EmptyState>
         ) : (
-          <table aria-label="Products" className="w-full min-w-[720px] border-collapse text-[14px]">
-            <thead className={TABLE_HEAD}>
-              <tr>
-                {COLUMNS.map((column, index) => (
-                  <th key={column || index} scope="col" className={CELL}>
-                    {column}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((product) => (
-                <ProductRow
-                  key={product.id}
-                  product={product}
-                  currency={currency}
-                  isPending={isPending}
-                  isEditing={editing === product.id}
-                  onEdit={() => setEditing(product.id)}
-                  onToggle={() => toggleAvailability(product)}
-                  onSave={onSave}
-                  onUpload={onUpload}
-                  onSaved={handleSaved}
-                  onCancel={() => setEditing(null)}
-                />
-              ))}
-            </tbody>
-          </table>
+          <DataTable label="Products" columns={COLUMNS} wideClassName="sm:min-w-[720px]">
+            {products.map((product) => (
+              <ProductRow
+                key={product.id}
+                product={product}
+                currency={currency}
+                isPending={isPending}
+                isEditing={editing === product.id}
+                onEdit={() => setEditing(product.id)}
+                onToggle={() => toggleAvailability(product)}
+                onSave={onSave}
+                onUpload={onUpload}
+                onSaved={handleSaved}
+                onCancel={() => setEditing(null)}
+              />
+            ))}
+          </DataTable>
         )}
       </div>
     </AdminScreen>
@@ -159,18 +157,20 @@ function ProductRow({
 }: ProductRowProps) {
   return (
     <>
-      <tr className="border-t border-[#f2f5f8]">
-        <td className={CELL}>
+      <Row>
+        <Cell label="Product">
           <span className="block font-semibold">{product.name}</span>
           {product.description ? (
             <span className="mt-px block text-[12.5px] text-subtle">{product.description}</span>
           ) : null}
-        </td>
-        <td className={`${CELL} text-slate`}>{TYPE_LABELS[product.type]}</td>
-        <td className={`${CELL} text-slate tabular-nums`}>
+        </Cell>
+        <Cell label="Type" className="text-slate">
+          {TYPE_LABELS[product.type]}
+        </Cell>
+        <Cell label="Price" className="text-slate tabular-nums">
           {formatMoney(product.priceCents, currency)}
-        </td>
-        <td className={CELL}>
+        </Cell>
+        <Cell label="Status">
           {/* Wording, not just colour: a hidden item still sits in the list. */}
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase ${
@@ -179,9 +179,9 @@ function ProductRow({
           >
             {product.isActive ? 'On sale' : 'Hidden'}
           </span>
-        </td>
-        <td className={CELL}>
-          <div className="flex justify-end gap-2">
+        </Cell>
+        <Cell label="">
+          <div className="flex justify-end gap-2 max-sm:justify-start">
             <Button variant="secondary" size="sm" onClick={onEdit} disabled={isEditing}>
               Edit
             </Button>
@@ -189,22 +189,20 @@ function ProductRow({
               {product.isActive ? 'Hide' : 'Put on sale'}
             </Button>
           </div>
-        </td>
-      </tr>
+        </Cell>
+      </Row>
 
       {isEditing ? (
-        <tr className="border-t border-[#f2f5f8]">
-          <td colSpan={COLUMNS.length} className="bg-surface-alt p-0">
-            <ProductEditor
-              product={product}
-              currency={currency}
-              onSave={onSave}
-              onUpload={onUpload}
-              onSaved={onSaved}
-              onCancel={onCancel}
-            />
-          </td>
-        </tr>
+        <FullWidthRow columnCount={COLUMNS.length}>
+          <ProductEditor
+            product={product}
+            currency={currency}
+            onSave={onSave}
+            onUpload={onUpload}
+            onSaved={onSaved}
+            onCancel={onCancel}
+          />
+        </FullWidthRow>
       ) : null}
     </>
   )

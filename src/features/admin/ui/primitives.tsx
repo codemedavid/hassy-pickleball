@@ -11,6 +11,109 @@ export const TABLE_HEAD =
   'bg-surface-alt text-[11.5px] font-bold tracking-[0.08em] text-subtle uppercase'
 export const CELL = 'px-4 py-3.5 text-left align-middle'
 
+/**
+ * The console's tables, which become a stack of cards below `sm`.
+ *
+ * One DOM serves both: a phone-only card list beside a desktop table would
+ * double every value in the accessibility tree and drift the first time a
+ * column changed. Below `sm` the table's `display` is overridden, which is what
+ * drops a table's implicit roles in most browsers — so table, row, columnheader
+ * and cell are spelled out. The header row goes `sr-only` rather than `hidden`,
+ * and each cell prints its own column name from `data-label`, because a bare
+ * value in a card is unattributable.
+ */
+
+const STACKED_ROW =
+  'max-sm:block max-sm:border-t-8 max-sm:border-surface-alt max-sm:px-1 max-sm:py-1.5'
+
+const STACKED_CELL =
+  'max-sm:flex max-sm:items-baseline max-sm:justify-between max-sm:gap-4 max-sm:py-1.5 ' +
+  'max-sm:before:flex-none max-sm:before:content-[attr(data-label)] ' +
+  'max-sm:before:text-[11.5px] max-sm:before:font-bold max-sm:before:tracking-[0.08em] ' +
+  'max-sm:before:text-subtle max-sm:before:uppercase'
+
+export interface DataTableProps {
+  readonly label: string
+  readonly columns: readonly string[]
+  /**
+   * Minimum width for the table layout, which may only apply from `sm` up —
+   * an unconditional one is what makes a phone scroll sideways.
+   */
+  readonly wideClassName?: string
+  readonly children: ReactNode
+}
+
+export function DataTable({ label, columns, wideClassName = '', children }: DataTableProps) {
+  return (
+    <table
+      role="table"
+      aria-label={label}
+      className={`w-full border-collapse text-[14px] max-sm:block ${wideClassName}`}
+    >
+      <thead className={`${TABLE_HEAD} max-sm:sr-only`}>
+        <tr role="row">
+          {columns.map((column, index) => (
+            <th key={column || index} role="columnheader" scope="col" className={CELL}>
+              {column}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody className="max-sm:block">{children}</tbody>
+    </table>
+  )
+}
+
+export interface RowProps {
+  readonly className?: string
+  readonly children: ReactNode
+}
+
+export function Row({ className = '', children }: RowProps) {
+  return (
+    <tr role="row" className={`border-t border-[#f2f5f8] ${STACKED_ROW} ${className}`}>
+      {children}
+    </tr>
+  )
+}
+
+export interface CellProps {
+  /** The column this cell sits under; printed beside the value on a phone. */
+  readonly label: string
+  readonly className?: string
+  readonly children: ReactNode
+}
+
+export function Cell({ label, className = '', children }: CellProps) {
+  return (
+    <td role="cell" data-label={label} className={`${CELL} ${STACKED_CELL} ${className}`}>
+      {children}
+    </td>
+  )
+}
+
+/**
+ * A row that spans the table to hold an inline editor. It carries a form rather
+ * than column values, so it takes no `data-label`.
+ */
+export function FullWidthRow({
+  columnCount,
+  className = '',
+  children,
+}: {
+  readonly columnCount: number
+  readonly className?: string
+  readonly children: ReactNode
+}) {
+  return (
+    <tr role="row" className={`border-t border-[#f2f5f8] max-sm:block ${className}`}>
+      <td role="cell" colSpan={columnCount} className="bg-surface-alt p-0 max-sm:block">
+        {children}
+      </td>
+    </tr>
+  )
+}
+
 export interface AdminPageHeaderProps {
   readonly title: string
   readonly subtitle: string
