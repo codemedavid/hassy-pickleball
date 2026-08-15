@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { AdminNav } from './admin-nav'
@@ -10,12 +10,19 @@ vi.mock('next/navigation', () => ({
   usePathname: () => pathname.current,
 }))
 
-/** The panel the toggle says it controls, whatever element that turns out to be. */
-function panelFor(toggle: HTMLElement): HTMLElement {
-  const panel = document.getElementById(toggle.getAttribute('aria-controls') ?? '')
-  expect(panel).not.toBeNull()
-
-  return panel as HTMLElement
+function installScrollMetrics(
+  viewport: HTMLElement,
+  {
+    clientWidth,
+    scrollWidth,
+    scrollLeft,
+  }: Record<'clientWidth' | 'scrollWidth' | 'scrollLeft', number>,
+): void {
+  Object.defineProperties(viewport, {
+    clientWidth: { configurable: true, value: clientWidth },
+    scrollWidth: { configurable: true, value: scrollWidth },
+    scrollLeft: { configurable: true, writable: true, value: scrollLeft },
+  })
 }
 
 describe('AdminNav', () => {
@@ -76,99 +83,110 @@ describe('AdminNav', () => {
     )
   })
 
-  it('names the section being viewed on the phone menu button', () => {
-    // Arrange — the tab strip is collapsed on a phone, so the button has to say
-    // where you are without being opened.
+  it('keeps the compact header focused on identity and the customer site', () => {
+    pathname.current = '/admin'
+
+    render(<AdminNav clubName="Riverbend" staffName="Priya Desk" />)
+
+    expect(screen.getByRole('link', { name: 'Customer site' })).toHaveAttribute('href', '/')
+    expect(screen.getByLabelText('Signed in as Priya Desk')).toHaveTextContent('PD')
+    expect(screen.queryByRole('button', { name: /Schedule/ })).not.toBeInTheDocument()
+  })
+
+  it('disables both scroll buttons when every admin section fits', async () => {
+    pathname.current = '/admin'
+    render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+    const nav = screen.getByRole('navigation', { name: 'Admin sections' })
+    installScrollMetrics(nav, { clientWidth: 600, scrollWidth: 600, scrollLeft: 0 })
+
+    fireEvent.scroll(nav)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Scroll admin sections left' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Scroll admin sections right' })).toBeDisabled()
+    })
+  })
+
+  it('updates scroll-button availability at the rail boundaries', async () => {
+    pathname.current = '/admin'
+    render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+    const nav = screen.getByRole('navigation', { name: 'Admin sections' })
+    const left = screen.getByRole('button', { name: 'Scroll admin sections left' })
+    const right = screen.getByRole('button', { name: 'Scroll admin sections right' })
+    installScrollMetrics(nav, { clientWidth: 300, scrollWidth: 900, scrollLeft: 0 })
+
+    fireEvent.scroll(nav)
+
+    await waitFor(() => {
+      expect(left).toBeDisabled()
+      expect(right).toBeEnabled()
+    })
+
+    nav.scrollLeft = 600
+    fireEvent.scroll(nav)
+
+    await waitFor(() => {
+      expect(left).toBeEnabled()
+      expect(right).toBeDisabled()
+    })
+  })
+
+  it('scrolls the rail by a useful distance when an arrow is pressed', async () => {
+    pathname.current = '/admin'
+    const user = userEvent.setup()
+    render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+    const nav = screen.getByRole('navigation', { name: 'Admin sections' })
+    const scrollBy = vi.fn()
+    installScrollMetrics(nav, { clientWidth: 300, scrollWidth: 900, scrollLeft: 0 })
+    Object.defineProperty(nav, 'scrollBy', { configurable: true, value: scrollBy })
+
+    fireEvent.scroll(nav)
+    const right = screen.getByRole('button', { name: 'Scroll admin sections right' })
+    await waitFor(() => expect(right).toBeEnabled())
+    await user.click(right)
+
+    expect(scrollBy).toHaveBeenCalledWith({ left: 240, behavior: 'smooth' })
+  })
+
+  it('positions the active tab within the visible rail', () => {
+    const originalScrollIntoView = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      'scrollIntoView',
+    )
+    const scrollIntoView = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    })
     pathname.current = '/admin/payment-methods'
 
-    // Act
-    render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+    try {
+      render(<AdminNav clubName="Riverbend" staffName="Priya" />)
 
-    // Assert
-    expect(screen.getByRole('button', { name: /Payment methods/ })).toBeInTheDocument()
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', inline: 'center' })
+    } finally {
+      if (originalScrollIntoView) {
+        Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', originalScrollIntoView)
+      } else {
+        delete HTMLElement.prototype.scrollIntoView
+      }
+    }
   })
 
-  it('starts with the phone section menu closed', () => {
-    // Arrange
+  it('renders one responsive list of admin sections', () => {
     pathname.current = '/admin'
 
-    // Act
     render(<AdminNav clubName="Riverbend" staffName="Priya" />)
 
-    // Assert
-    const toggle = screen.getByRole('button', { name: /Schedule/ })
-    expect(toggle).toHaveAttribute('aria-expanded', 'false')
-    expect(panelFor(toggle)).toHaveAttribute('data-open', 'false')
-  })
-
-  it('opens the section list when the phone menu button is pressed', async () => {
-    // Arrange
-    pathname.current = '/admin'
-    const user = userEvent.setup()
-    render(<AdminNav clubName="Riverbend" staffName="Priya" />)
-
-    // Act
-    await user.click(screen.getByRole('button', { name: /Schedule/ }))
-
-    // Assert
-    const toggle = screen.getByRole('button', { name: /Schedule/ })
-    expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    expect(panelFor(toggle)).toHaveAttribute('data-open', 'true')
-  })
-
-  it('closes the menu once a section is chosen', async () => {
-    // Arrange — leaving it open would cover the page the staff member just
-    // asked for.
-    pathname.current = '/admin'
-    const user = userEvent.setup()
-    render(<AdminNav clubName="Riverbend" staffName="Priya" />)
-    await user.click(screen.getByRole('button', { name: /Schedule/ }))
-
-    // Act
-    await user.click(screen.getByRole('link', { name: 'Bookings' }))
-
-    // Assert
-    expect(panelFor(screen.getByRole('button', { name: /Schedule/ }))).toHaveAttribute(
-      'data-open',
-      'false',
-    )
-  })
-
-  it('points the phone menu button at the one list of sections', () => {
-    // Arrange
-    pathname.current = '/admin'
-
-    // Act
-    render(<AdminNav clubName="Riverbend" staffName="Priya" />)
-
-    // Assert — one list, revealed rather than duplicated: a second copy for
-    // phones would drift from the first and double every link on the page.
-    const panel = panelFor(screen.getByRole('button', { name: /Schedule/ }))
-    expect(panel).toContainElement(screen.getByRole('navigation', { name: 'Admin sections' }))
+    expect(screen.getAllByRole('navigation', { name: 'Admin sections' })).toHaveLength(1)
     expect(screen.getAllByRole('link', { name: 'Bookings' })).toHaveLength(1)
-    expect(screen.getAllByRole('link', { name: 'Customer site' })).toHaveLength(1)
-  })
-
-  it('keeps the way back to the customer site inside the phone menu', () => {
-    // Arrange — the bar itself has no room for it at phone widths.
-    pathname.current = '/admin'
-
-    // Act
-    render(<AdminNav clubName="Riverbend" staffName="Priya" />)
-
-    // Assert
-    const panel = panelFor(screen.getByRole('button', { name: /Schedule/ }))
-    expect(panel).toContainElement(screen.getByRole('link', { name: 'Customer site' }))
   })
 
   it('offers a way back to the customer site', () => {
-    // Arrange
     pathname.current = '/admin'
 
-    // Act
     render(<AdminNav clubName="Riverbend" staffName="Priya" />)
 
-    // Assert
     expect(screen.getByRole('link', { name: 'Customer site' })).toHaveAttribute('href', '/')
   })
 })
