@@ -25,6 +25,46 @@ function installScrollMetrics(
   })
 }
 
+function installDesktopMatchMedia(): {
+  readonly desktopQuery: MediaQueryList
+  readonly restore: () => void
+} {
+  const originalMatchMedia = Object.getOwnPropertyDescriptor(window, 'matchMedia')
+  const desktopQuery = {
+    matches: true,
+    media: '(min-width: 64rem)',
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  } as unknown as MediaQueryList
+  const reducedMotionQuery = {
+    ...desktopQuery,
+    matches: false,
+    media: '(prefers-reduced-motion: reduce)',
+  }
+
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: vi.fn((query: string) =>
+      query === '(min-width: 64rem)' ? desktopQuery : reducedMotionQuery,
+    ),
+  })
+
+  return {
+    desktopQuery,
+    restore: () => {
+      if (originalMatchMedia) {
+        Object.defineProperty(window, 'matchMedia', originalMatchMedia)
+      } else {
+        Reflect.deleteProperty(window, 'matchMedia')
+      }
+    },
+  }
+}
+
 describe('AdminNav', () => {
   it('names the club and the signed-in staff member', () => {
     // Arrange
@@ -91,6 +131,59 @@ describe('AdminNav', () => {
     expect(screen.getByRole('link', { name: 'Customer site' })).toHaveAttribute('href', '/')
     expect(screen.getByLabelText('Signed in as Priya Desk')).toHaveTextContent('PD')
     expect(screen.queryByRole('button', { name: /Schedule/ })).not.toBeInTheDocument()
+  })
+
+  it('keeps the club home link large enough to tap on mobile', () => {
+    pathname.current = '/admin'
+
+    render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+
+    expect(screen.getByRole('link', { name: 'Riverbend' })).toHaveClass('min-h-11', 'lg:min-h-0')
+  })
+
+  it('bounds long staff names in the compact identity row', () => {
+    const staffName = 'Priya With An Unusually Long Operations Desk Name'
+    pathname.current = '/admin'
+
+    render(<AdminNav clubName="Riverbend" staffName={staffName} />)
+
+    expect(screen.getByText(staffName)).toHaveClass('min-w-0', 'max-w-40', 'truncate')
+  })
+
+  it('keeps mobile focus order aligned with the visible header', () => {
+    pathname.current = '/admin'
+    const { container } = render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+    const focusable = Array.from(container.querySelectorAll('a, button'))
+    const brand = screen.getByRole('link', { name: 'Riverbend' })
+    const customerSite = screen.getByRole('link', { name: 'Customer site' })
+    const firstSection = screen.getByRole('link', { name: 'Schedule' })
+
+    expect(focusable.indexOf(brand)).toBeLessThan(focusable.indexOf(customerSite))
+    expect(focusable.indexOf(customerSite)).toBeLessThan(focusable.indexOf(firstSection))
+  })
+
+  it('keeps desktop focus order aligned with the visible header', () => {
+    const { desktopQuery, restore } = installDesktopMatchMedia()
+    pathname.current = '/admin'
+
+    try {
+      const { container, unmount } = render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+      const focusable = Array.from(container.querySelectorAll('a, button'))
+      const brand = screen.getByRole('link', { name: 'Riverbend' })
+      const firstSection = screen.getByRole('link', { name: 'Schedule' })
+      const customerSite = screen.getByRole('link', { name: 'Customer site' })
+
+      expect(focusable.indexOf(brand)).toBeLessThan(focusable.indexOf(firstSection))
+      expect(focusable.indexOf(firstSection)).toBeLessThan(focusable.indexOf(customerSite))
+
+      unmount()
+      expect(desktopQuery.removeEventListener).toHaveBeenCalledWith(
+        'change',
+        vi.mocked(desktopQuery.addEventListener).mock.calls[0]?.[1],
+      )
+    } finally {
+      restore()
+    }
   })
 
   it('disables both scroll buttons when every admin section fits', async () => {
@@ -180,17 +273,18 @@ describe('AdminNav', () => {
 
   it('uses instant rail movement when reduced motion is requested', async () => {
     const originalMatchMedia = Object.getOwnPropertyDescriptor(window, 'matchMedia')
-    const matchMedia = vi.fn((query: string) =>
-      ({
-        matches: query === '(prefers-reduced-motion: reduce)',
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      }) as MediaQueryList,
+    const matchMedia = vi.fn(
+      (query: string) =>
+        ({
+          matches: query === '(prefers-reduced-motion: reduce)',
+          media: query,
+          onchange: null,
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        }) as MediaQueryList,
     )
     Object.defineProperty(window, 'matchMedia', { configurable: true, value: matchMedia })
     pathname.current = '/admin'
@@ -248,8 +342,39 @@ describe('AdminNav', () => {
       if (originalScrollIntoView) {
         Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', originalScrollIntoView)
       } else {
-        delete HTMLElement.prototype.scrollIntoView
+        Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView')
       }
+    }
+  })
+
+  it('does not reposition the active tab on desktop', () => {
+    const { restore } = installDesktopMatchMedia()
+    const originalScrollIntoView = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      'scrollIntoView',
+    )
+    const scrollIntoView = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    })
+    pathname.current = '/admin/payment-methods'
+
+    try {
+      render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+
+      expect(screen.getByRole('link', { name: 'Payment methods' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      )
+      expect(scrollIntoView).not.toHaveBeenCalled()
+    } finally {
+      if (originalScrollIntoView) {
+        Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', originalScrollIntoView)
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView')
+      }
+      restore()
     }
   })
 

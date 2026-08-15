@@ -1,12 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ADMIN_NAV_ITEMS, isNavItemActive } from './nav-items'
 
 const SCROLL_EDGE_TOLERANCE = 1
 const SCROLL_PAGE_RATIO = 0.8
+const DESKTOP_MEDIA_QUERY = '(min-width: 64rem)'
 
 const MOBILE_NAV_LINK =
   'flex h-11 flex-none snap-center items-center border-b-2 px-3.5 text-[14px] font-semibold whitespace-nowrap ' +
@@ -21,11 +22,45 @@ function prefersReducedMotion(): boolean {
   )
 }
 
+function subscribeToDesktopViewport(onStoreChange: () => void): () => void {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return () => {}
+
+  const query = window.matchMedia(DESKTOP_MEDIA_QUERY)
+  if (typeof query.addEventListener === 'function') {
+    query.addEventListener('change', onStoreChange)
+    return () => query.removeEventListener('change', onStoreChange)
+  }
+
+  query.addListener(onStoreChange)
+  return () => query.removeListener(onStoreChange)
+}
+
+function getDesktopSnapshot(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia(DESKTOP_MEDIA_QUERY).matches
+  )
+}
+
+function getDesktopServerSnapshot(): boolean {
+  return false
+}
+
+function useIsDesktop(): boolean {
+  return useSyncExternalStore(
+    subscribeToDesktopViewport,
+    getDesktopSnapshot,
+    getDesktopServerSnapshot,
+  )
+}
+
 interface MobileAdminNavRailProps {
+  readonly isDesktop: boolean
   readonly pathname: string
 }
 
-function MobileAdminNavRail({ pathname }: MobileAdminNavRailProps) {
+function MobileAdminNavRail({ isDesktop, pathname }: MobileAdminNavRailProps) {
   const viewportRef = useRef<HTMLElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
@@ -43,8 +78,10 @@ function MobileAdminNavRail({ pathname }: MobileAdminNavRailProps) {
     const viewport = viewportRef.current
     if (!viewport) return
 
-    const activeLink = viewport.querySelector<HTMLElement>('[aria-current="page"]')
-    activeLink?.scrollIntoView?.({ block: 'nearest', inline: 'center' })
+    if (!isDesktop) {
+      const activeLink = viewport.querySelector<HTMLElement>('[aria-current="page"]')
+      activeLink?.scrollIntoView?.({ block: 'nearest', inline: 'center' })
+    }
     updateBoundaries()
 
     const resizeObserver =
@@ -56,7 +93,7 @@ function MobileAdminNavRail({ pathname }: MobileAdminNavRailProps) {
       resizeObserver?.disconnect()
       window.removeEventListener('resize', updateBoundaries)
     }
-  }, [pathname, updateBoundaries])
+  }, [isDesktop, pathname, updateBoundaries])
 
   function scroll(direction: -1 | 1): void {
     const viewport = viewportRef.current
@@ -70,15 +107,17 @@ function MobileAdminNavRail({ pathname }: MobileAdminNavRailProps) {
 
   return (
     <div className="grid grid-cols-[44px_minmax(0,1fr)_44px] bg-white text-navy lg:contents">
-      <button
-        type="button"
-        aria-label="Scroll admin sections left"
-        disabled={!canScrollLeft}
-        onClick={() => scroll(-1)}
-        className="grid size-11 place-items-center border-r border-navy/10 text-xl disabled:text-navy/25 lg:hidden"
-      >
-        <span aria-hidden>‹</span>
-      </button>
+      {!isDesktop && (
+        <button
+          type="button"
+          aria-label="Scroll admin sections left"
+          disabled={!canScrollLeft}
+          onClick={() => scroll(-1)}
+          className="grid size-11 place-items-center border-r border-navy/10 text-xl disabled:text-navy/25 lg:hidden"
+        >
+          <span aria-hidden>‹</span>
+        </button>
+      )}
 
       <nav
         ref={viewportRef}
@@ -106,15 +145,17 @@ function MobileAdminNavRail({ pathname }: MobileAdminNavRailProps) {
         })}
       </nav>
 
-      <button
-        type="button"
-        aria-label="Scroll admin sections right"
-        disabled={!canScrollRight}
-        onClick={() => scroll(1)}
-        className="grid size-11 place-items-center border-l border-navy/10 text-xl disabled:text-navy/25 lg:hidden"
-      >
-        <span aria-hidden>›</span>
-      </button>
+      {!isDesktop && (
+        <button
+          type="button"
+          aria-label="Scroll admin sections right"
+          disabled={!canScrollRight}
+          onClick={() => scroll(1)}
+          className="grid size-11 place-items-center border-l border-navy/10 text-xl disabled:text-navy/25 lg:hidden"
+        >
+          <span aria-hidden>›</span>
+        </button>
+      )}
     </div>
   )
 }
@@ -132,58 +173,86 @@ function initialsOf(name: string): string {
     .join('')
 }
 
+function ClubHomeLink({ clubName }: Pick<AdminNavProps, 'clubName'>) {
+  return (
+    <Link
+      href="/admin"
+      className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5 text-white hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:order-1 lg:mr-1 lg:min-h-0 lg:flex-none"
+    >
+      <span
+        aria-hidden
+        className="grid size-[30px] flex-none place-items-center rounded-[9px] bg-lime font-[family-name:var(--font-display)] text-[16px] font-extrabold text-navy"
+      >
+        P
+      </span>
+      <span className="truncate font-[family-name:var(--font-display)] text-[17px] font-bold tracking-[-0.02em] lg:text-[18px]">
+        {clubName}
+      </span>
+    </Link>
+  )
+}
+
+function AdminBadge() {
+  return (
+    <span className="hidden flex-none rounded-md bg-white/12 px-2.5 py-[5px] text-[11px] font-bold tracking-[0.1em] text-lime uppercase lg:order-2 lg:inline">
+      Admin
+    </span>
+  )
+}
+
+function AccountBlock({ staffName }: Pick<AdminNavProps, 'staffName'>) {
+  return (
+    <div className="ml-auto flex min-w-0 flex-none items-center gap-1 sm:gap-3 lg:order-4 lg:gap-4">
+      <Link
+        href="/"
+        aria-label="Customer site"
+        className="flex min-h-11 flex-none items-center px-1 text-[13px] font-semibold text-white/70 hover:text-lime focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-2 lg:min-h-0 lg:px-0"
+      >
+        <span className="sm:hidden">Site</span>
+        <span className="hidden sm:inline">Customer site</span>
+      </Link>
+
+      <span
+        aria-label={`Signed in as ${staffName}`}
+        className="flex min-h-11 min-w-0 items-center gap-2 lg:min-h-0"
+      >
+        <span
+          aria-hidden
+          className="grid size-8 flex-none place-items-center rounded-full bg-navy-mid text-[12px] font-bold text-lime lg:size-7"
+        >
+          {initialsOf(staffName)}
+        </span>
+        <span className="hidden max-w-40 min-w-0 truncate text-[13px] text-white/80 sm:inline lg:max-w-32 xl:max-w-48">
+          {staffName}
+        </span>
+      </span>
+    </div>
+  )
+}
+
 export function AdminNav({ clubName, staffName }: AdminNavProps) {
   const pathname = usePathname()
+  const isDesktop = useIsDesktop()
 
   return (
     <header className="sticky top-0 z-40 bg-navy text-white">
       <div className="mx-auto w-full max-w-[1440px] lg:flex lg:h-16 lg:items-center lg:gap-4 lg:px-7">
-        <div className="flex h-14 items-center gap-2 px-4 sm:gap-3 sm:px-7 lg:contents">
-          <Link
-            href="/admin"
-            className="order-1 flex min-w-0 flex-1 items-center gap-2.5 text-white hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:mr-1 lg:flex-none"
-          >
-            <span
-              aria-hidden
-              className="grid size-[30px] flex-none place-items-center rounded-[9px] bg-lime font-[family-name:var(--font-display)] text-[16px] font-extrabold text-navy"
-            >
-              P
-            </span>
-            <span className="truncate font-[family-name:var(--font-display)] text-[17px] font-bold tracking-[-0.02em] lg:text-[18px]">
-              {clubName}
-            </span>
-          </Link>
-
-          <span className="order-2 hidden flex-none rounded-md bg-white/12 px-2.5 py-[5px] text-[11px] font-bold tracking-[0.1em] text-lime uppercase lg:inline">
-            Admin
-          </span>
-
-          <div className="order-4 ml-auto flex flex-none items-center gap-1 sm:gap-3 lg:gap-4">
-            <Link
-              href="/"
-              aria-label="Customer site"
-              className="flex min-h-11 items-center px-1 text-[13px] font-semibold text-white/70 hover:text-lime focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-2 lg:min-h-0 lg:px-0"
-            >
-              <span className="sm:hidden">Site</span>
-              <span className="hidden sm:inline">Customer site</span>
-            </Link>
-
-            <span
-              aria-label={`Signed in as ${staffName}`}
-              className="flex min-h-11 items-center gap-2"
-            >
-              <span
-                aria-hidden
-                className="grid size-8 flex-none place-items-center rounded-full bg-navy-mid text-[12px] font-bold text-lime lg:size-7"
-              >
-                {initialsOf(staffName)}
-              </span>
-              <span className="hidden text-[13px] text-white/80 sm:inline">{staffName}</span>
-            </span>
-          </div>
-        </div>
-
-        <MobileAdminNavRail pathname={pathname} />
+        {isDesktop ? (
+          <>
+            <ClubHomeLink clubName={clubName} />
+            <AdminBadge />
+            <MobileAdminNavRail isDesktop pathname={pathname} />
+            <AccountBlock staffName={staffName} />
+          </>
+        ) : (
+          <>
+            <div className="flex h-14 items-center gap-2 px-4 sm:gap-3 sm:px-7 lg:contents">
+              <ClubHomeLink clubName={clubName} />
+              <AccountBlock staffName={staffName} />
+            </div>
+            <MobileAdminNavRail isDesktop={false} pathname={pathname} />
+          </>
+        )}
       </div>
     </header>
   )
