@@ -12,16 +12,31 @@ export type StaffMember = {
 }
 
 /**
- * The signed-in user's staff record, or null.
+ * Why the caller does or does not have the console.
  *
+ * `anonymous` and `not-staff` are both "no access", but they are not the same
+ * problem and must not get the same answer: sending a signed-in non-staff user
+ * to the sign-in page loops them through a form they have already completed.
+ */
+export type StaffAccess =
+  | { readonly status: 'anonymous' }
+  | { readonly status: 'not-staff' }
+  | { readonly status: 'staff'; readonly staff: StaffMember }
+
+const ANONYMOUS: StaffAccess = { status: 'anonymous' }
+const NOT_STAFF: StaffAccess = { status: 'not-staff' }
+
+/**
  * Uses the anon-key server client so RLS applies: the `staff_self_read` policy
- * is what actually decides whether this row is visible. A user with no staff
- * row gets null, which the /admin layout turns into a redirect.
+ * is what actually decides whether this row is visible.
  *
  * Always reads the user via getUser(), never getSession() — getSession() trusts
  * the cookie without revalidating it against the auth server.
+ *
+ * A failed lookup is reported as not-staff rather than thrown: RLS is the real
+ * boundary, so the safe reading of "we could not confirm this" is no access.
  */
-export async function getCurrentStaff(): Promise<StaffMember | null> {
+export async function getStaffAccess(): Promise<StaffAccess> {
   const client = await createSupabaseServerClient()
 
   const {
@@ -29,7 +44,7 @@ export async function getCurrentStaff(): Promise<StaffMember | null> {
   } = await client.auth.getUser()
 
   if (!user) {
-    return null
+    return ANONYMOUS
   }
 
   const { data, error } = await client
@@ -40,14 +55,28 @@ export async function getCurrentStaff(): Promise<StaffMember | null> {
     .maybeSingle()
 
   if (error || !data) {
-    return null
+    return NOT_STAFF
   }
 
   return {
-    id: data.id,
-    userId: data.user_id,
-    clubId: data.club_id,
-    role: data.role,
-    fullName: data.full_name,
+    status: 'staff',
+    staff: {
+      id: data.id,
+      userId: data.user_id,
+      clubId: data.club_id,
+      role: data.role,
+      fullName: data.full_name,
+    },
   }
+}
+
+/**
+ * The signed-in user's staff record, or null, for callers that only need to
+ * know whether to act — every mutation gate, which fails the same way either
+ * way. Anything that renders for the caller wants getStaffAccess() instead.
+ */
+export async function getCurrentStaff(): Promise<StaffMember | null> {
+  const access = await getStaffAccess()
+
+  return access.status === 'staff' ? access.staff : null
 }

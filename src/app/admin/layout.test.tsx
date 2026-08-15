@@ -12,7 +12,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const getStaffAccess = vi.fn()
 const findClubById = vi.fn()
-const redirect = vi.hoisted(() => vi.fn())
+/** The real redirect() throws to stop rendering; a stub that returns would let
+ *  the layout run on into branches Next.js would never reach. */
+const redirect = vi.hoisted(() =>
+  vi.fn(() => {
+    throw new Error('NEXT_REDIRECT')
+  }),
+)
 
 vi.mock('next/navigation', () => ({ redirect }))
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseServerClient: () => ({}) }))
@@ -49,7 +55,7 @@ describe('AdminLayout', () => {
   it('sends an anonymous visitor to the staff sign-in page', async () => {
     getStaffAccess.mockResolvedValue({ status: 'anonymous' })
 
-    await renderLayout()
+    await expect(renderLayout()).rejects.toThrow('NEXT_REDIRECT')
 
     expect(redirect).toHaveBeenCalledWith('/staff/sign-in')
   })
