@@ -1,6 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ADMIN_NAV_ITEMS, isNavItemActive } from './nav-items'
@@ -8,6 +15,7 @@ import { ADMIN_NAV_ITEMS, isNavItemActive } from './nav-items'
 const SCROLL_EDGE_TOLERANCE = 1
 const SCROLL_PAGE_RATIO = 0.8
 const DESKTOP_MEDIA_QUERY = '(min-width: 64rem)'
+const CURRENT_SECTION_FOCUS = 'current-section'
 
 const MOBILE_NAV_LINK =
   'flex h-11 flex-none snap-center items-center border-b-2 px-3.5 text-[14px] font-semibold whitespace-nowrap ' +
@@ -26,17 +34,24 @@ function prefersReducedMotion(): boolean {
   return matchesMediaQuery('(prefers-reduced-motion: reduce)')
 }
 
-function subscribeToDesktopViewport(onStoreChange: () => void): () => void {
+function subscribeToDesktopViewport(
+  onStoreChange: () => void,
+  beforeStoreChange?: () => void,
+): () => void {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return () => {}
 
   const query = window.matchMedia(DESKTOP_MEDIA_QUERY)
+  const handleChange = (): void => {
+    beforeStoreChange?.()
+    onStoreChange()
+  }
   if (typeof query.addEventListener === 'function') {
-    query.addEventListener('change', onStoreChange)
-    return () => query.removeEventListener('change', onStoreChange)
+    query.addEventListener('change', handleChange)
+    return () => query.removeEventListener('change', handleChange)
   }
 
-  query.addListener(onStoreChange)
-  return () => query.removeListener(onStoreChange)
+  query.addListener(handleChange)
+  return () => query.removeListener(handleChange)
 }
 
 function getDesktopSnapshot(): boolean {
@@ -47,12 +62,42 @@ function getDesktopServerSnapshot(): boolean {
   return false
 }
 
-function useIsDesktop(): boolean {
-  return useSyncExternalStore(
-    subscribeToDesktopViewport,
-    getDesktopSnapshot,
-    getDesktopServerSnapshot,
+function useIsDesktop(headerRef: RefObject<HTMLElement | null>): boolean {
+  const focusToRestoreRef = useRef<string | null>(null)
+  const subscribe = useCallback(
+    (onStoreChange: () => void) =>
+      subscribeToDesktopViewport(onStoreChange, () => {
+        const header = headerRef.current
+        const focused = document.activeElement
+        if (!(focused instanceof HTMLElement) || !header?.contains(focused)) {
+          focusToRestoreRef.current = null
+          return
+        }
+
+        focusToRestoreRef.current =
+          focused.dataset.adminNavFocus ??
+          (focused.dataset.adminNavScroll === undefined ? null : CURRENT_SECTION_FOCUS)
+      }),
+    [headerRef],
   )
+  const isDesktop = useSyncExternalStore(subscribe, getDesktopSnapshot, getDesktopServerSnapshot)
+
+  useEffect(() => {
+    const focusIdentity = focusToRestoreRef.current
+    if (!focusIdentity) return
+
+    focusToRestoreRef.current = null
+    const header = headerRef.current
+    const target =
+      focusIdentity === CURRENT_SECTION_FOCUS
+        ? header?.querySelector<HTMLElement>('[aria-current="page"]')
+        : Array.from(header?.querySelectorAll<HTMLElement>('[data-admin-nav-focus]') ?? []).find(
+            (element) => element.dataset.adminNavFocus === focusIdentity,
+          )
+    target?.focus({ preventScroll: true })
+  }, [headerRef, isDesktop])
+
+  return isDesktop
 }
 
 interface MobileAdminNavRailProps {
@@ -110,6 +155,7 @@ function MobileAdminNavRail({ isDesktop, pathname }: MobileAdminNavRailProps) {
       {!isDesktop && (
         <button
           type="button"
+          data-admin-nav-scroll
           aria-label="Scroll admin sections left"
           disabled={!canScrollLeft}
           onClick={() => scroll(-1)}
@@ -132,6 +178,7 @@ function MobileAdminNavRail({ isDesktop, pathname }: MobileAdminNavRailProps) {
             <Link
               key={item.href}
               href={item.href}
+              data-admin-nav-focus={`section:${item.href}`}
               aria-current={isCurrent ? 'page' : undefined}
               className={`${MOBILE_NAV_LINK} ${
                 isCurrent
@@ -148,6 +195,7 @@ function MobileAdminNavRail({ isDesktop, pathname }: MobileAdminNavRailProps) {
       {!isDesktop && (
         <button
           type="button"
+          data-admin-nav-scroll
           aria-label="Scroll admin sections right"
           disabled={!canScrollRight}
           onClick={() => scroll(1)}
@@ -177,6 +225,7 @@ function ClubHomeLink({ clubName }: Pick<AdminNavProps, 'clubName'>) {
   return (
     <Link
       href="/admin"
+      data-admin-nav-focus="brand"
       className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5 text-white hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:order-1 lg:mr-1 lg:min-h-0 lg:flex-none"
     >
       <span
@@ -205,6 +254,7 @@ function AccountBlock({ staffName }: Pick<AdminNavProps, 'staffName'>) {
     <div className="ml-auto flex min-w-0 flex-none items-center gap-1 sm:gap-3 lg:order-4 lg:gap-4">
       <Link
         href="/"
+        data-admin-nav-focus="customer-site"
         aria-label="Customer site"
         className="flex min-h-11 flex-none items-center px-1 text-[13px] font-semibold text-white/70 hover:text-lime focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-2 lg:min-h-0 lg:px-0"
       >
@@ -212,17 +262,18 @@ function AccountBlock({ staffName }: Pick<AdminNavProps, 'staffName'>) {
         <span className="hidden sm:inline">Customer site</span>
       </Link>
 
-      <span
-        aria-label={`Signed in as ${staffName}`}
-        className="flex min-h-11 min-w-0 items-center gap-2 lg:min-h-0"
-      >
+      <span className="flex min-h-11 min-w-0 items-center gap-2 lg:min-h-0">
+        <span className="sr-only">Signed in as {staffName}</span>
         <span
           aria-hidden
           className="grid size-8 flex-none place-items-center rounded-full bg-navy-mid text-[12px] font-bold text-lime lg:size-7"
         >
           {initialsOf(staffName)}
         </span>
-        <span className="hidden max-w-40 min-w-0 truncate text-[13px] text-white/80 sm:inline lg:max-w-32 xl:max-w-48">
+        <span
+          aria-hidden
+          className="hidden max-w-40 min-w-0 truncate text-[13px] text-white/80 sm:inline lg:max-w-32 xl:max-w-48"
+        >
           {staffName}
         </span>
       </span>
@@ -232,10 +283,11 @@ function AccountBlock({ staffName }: Pick<AdminNavProps, 'staffName'>) {
 
 export function AdminNav({ clubName, staffName }: AdminNavProps) {
   const pathname = usePathname()
-  const isDesktop = useIsDesktop()
+  const headerRef = useRef<HTMLElement>(null)
+  const isDesktop = useIsDesktop(headerRef)
 
   return (
-    <header className="sticky top-0 z-40 bg-navy text-white">
+    <header ref={headerRef} className="sticky top-0 z-40 bg-navy text-white">
       <div className="mx-auto w-full max-w-[1440px] lg:flex lg:h-16 lg:items-center lg:gap-4 lg:px-7">
         {isDesktop ? (
           <>

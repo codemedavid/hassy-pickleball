@@ -28,19 +28,28 @@ function installScrollMetrics(
   })
 }
 
-function installDesktopMatchMedia(): {
+function installDesktopMatchMedia(initialDesktop = true): {
   readonly desktopQuery: MediaQueryList
   readonly restore: () => void
+  readonly setDesktop: (matches: boolean) => void
 } {
   const originalMatchMedia = Object.getOwnPropertyDescriptor(window, 'matchMedia')
+  const listeners = new Set<EventListenerOrEventListenerObject>()
+  let desktopMatches = initialDesktop
   const desktopQuery = {
-    matches: true,
+    get matches() {
+      return desktopMatches
+    },
     media: '(min-width: 64rem)',
     onchange: null,
     addListener: vi.fn(),
     removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
+    addEventListener: vi.fn((type: string, listener: EventListenerOrEventListenerObject) => {
+      if (type === 'change') listeners.add(listener)
+    }),
+    removeEventListener: vi.fn((type: string, listener: EventListenerOrEventListenerObject) => {
+      if (type === 'change') listeners.delete(listener)
+    }),
     dispatchEvent: vi.fn(),
   } as unknown as MediaQueryList
   const reducedMotionQuery = {
@@ -58,6 +67,14 @@ function installDesktopMatchMedia(): {
 
   return {
     desktopQuery,
+    setDesktop: (matches: boolean) => {
+      desktopMatches = matches
+      const event = { matches, media: '(min-width: 64rem)' } as MediaQueryListEvent
+      for (const listener of [...listeners]) {
+        if (typeof listener === 'function') listener(event)
+        else listener.handleEvent(event)
+      }
+    },
     restore: () => {
       if (originalMatchMedia) {
         Object.defineProperty(window, 'matchMedia', originalMatchMedia)
@@ -132,7 +149,11 @@ describe('AdminNav', () => {
     render(<AdminNav clubName="Riverbend" staffName="Priya Desk" />)
 
     expect(screen.getByRole('link', { name: 'Customer site' })).toHaveAttribute('href', '/')
-    expect(screen.getByLabelText('Signed in as Priya Desk')).toHaveTextContent('PD')
+    const signedInIdentity = screen.getByText('Signed in as Priya Desk')
+    expect(signedInIdentity).toHaveClass('sr-only')
+    expect(signedInIdentity).not.toHaveAttribute('aria-hidden')
+    expect(screen.getByText('PD')).toHaveAttribute('aria-hidden', 'true')
+    expect(screen.getByText('Priya Desk')).toHaveAttribute('aria-hidden', 'true')
     expect(screen.queryByRole('button', { name: /Schedule/ })).not.toBeInTheDocument()
   })
 
@@ -196,6 +217,53 @@ describe('AdminNav', () => {
         'change',
         vi.mocked(desktopQuery.addEventListener).mock.calls[0]?.[1],
       )
+    } finally {
+      restore()
+    }
+  })
+
+  it('preserves section focus when the navigation switches to desktop', async () => {
+    const { restore, setDesktop } = installDesktopMatchMedia(false)
+    pathname.current = '/admin/bookings'
+
+    try {
+      const { unmount } = render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+      const mobileBookings = screen.getByRole('link', { name: 'Bookings' })
+      mobileBookings.focus()
+      expect(mobileBookings).toHaveFocus()
+
+      await act(async () => setDesktop(true))
+
+      await waitFor(() => {
+        const desktopBookings = screen.getByRole('link', { name: 'Bookings' })
+        expect(desktopBookings).not.toBe(mobileBookings)
+        expect(desktopBookings).toHaveFocus()
+      })
+      expect(screen.getAllByRole('navigation', { name: 'Admin sections' })).toHaveLength(1)
+      unmount()
+    } finally {
+      restore()
+    }
+  })
+
+  it('moves arrow focus to the current section when switching to desktop', async () => {
+    const { restore, setDesktop } = installDesktopMatchMedia(false)
+    pathname.current = '/admin/bookings'
+
+    try {
+      const { unmount } = render(<AdminNav clubName="Riverbend" staffName="Priya" />)
+      const nav = screen.getByRole('navigation', { name: 'Admin sections' })
+      installScrollMetrics(nav, { clientWidth: 300, scrollWidth: 900, scrollLeft: 0 })
+      fireEvent.scroll(nav)
+      const right = screen.getByRole('button', { name: 'Scroll admin sections right' })
+      await waitFor(() => expect(right).toBeEnabled())
+      right.focus()
+
+      await act(async () => setDesktop(true))
+
+      await waitFor(() => expect(screen.getByRole('link', { name: 'Bookings' })).toHaveFocus())
+      expect(screen.getAllByRole('navigation', { name: 'Admin sections' })).toHaveLength(1)
+      unmount()
     } finally {
       restore()
     }
