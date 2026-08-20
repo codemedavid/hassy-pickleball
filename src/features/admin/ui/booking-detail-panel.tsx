@@ -42,7 +42,7 @@ const CLOSED_MESSAGE = 'This booking is closed. Rebook to put the customer back 
 const NOTHING_OWED = 'A payment must be for more than nothing'
 
 const FIELD =
-  'h-10 w-full rounded-xl border border-line-strong bg-surface px-3 text-sm ' +
+  'h-11 w-full rounded-xl border border-line-strong bg-surface px-3 text-[15px] sm:h-10 sm:text-sm ' +
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-mid'
 const LABEL = 'text-[12px] font-bold tracking-[0.06em] text-subtle uppercase'
 const ROW = 'flex justify-between gap-4 text-[14px]'
@@ -108,7 +108,10 @@ export function BookingDetailPanel({
   }
 
   return (
-    <section aria-label={`Booking ${detail.reference}`} className={`${CARD} px-6 py-5`}>
+    <section
+      aria-label={`Booking ${detail.reference}`}
+      className={`${CARD} px-4 py-4 sm:px-6 sm:py-5`}
+    >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="m-0 font-[family-name:var(--font-display)] text-[19px] font-bold">
           {detail.reference}
@@ -212,7 +215,7 @@ export function BookingDetailPanel({
           </label>
         </div>
 
-        <Button onClick={recordPayment} isPending={isPending} className="mt-3">
+        <Button onClick={recordPayment} isPending={isPending} className="mt-3 max-sm:w-full">
           Record payment
         </Button>
       </div>
@@ -221,7 +224,9 @@ export function BookingDetailPanel({
         {detail.nextStatuses.length === 0 ? (
           <p className="m-0 text-[13px] text-muted">{CLOSED_MESSAGE}</p>
         ) : (
-          <div className="flex flex-wrap gap-2.5">
+          /* Stacked and full width on a phone: these are the moves the
+             desk makes one-handed at the counter. */
+          <div className="flex flex-wrap gap-2.5 max-sm:flex-col">
             {detail.nextStatuses.map((status) => (
               <Button
                 key={status}

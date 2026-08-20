@@ -37,7 +37,7 @@ const INCLUDED_MESSAGE = 'Players covered by the price must sit inside the court
 const SAVE_FAILURE_MESSAGE = 'We could not save that change. Please try again.'
 
 const FIELD =
-  'h-10 rounded-xl border border-line-strong bg-surface px-3 text-[14px] text-ink ' +
+  'h-11 rounded-xl border border-line-strong bg-surface px-3 text-[15px] text-ink sm:h-10 sm:text-[14px] ' +
   'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-navy-mid'
 const AREA =
   'min-h-20 rounded-xl border border-line-strong bg-surface px-3 py-2 text-[14px] text-ink ' +
@@ -118,7 +118,7 @@ export function CourtEditor({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 p-5 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
       <Field id={ids.name} label="Court name">
         <input
           id={ids.name}

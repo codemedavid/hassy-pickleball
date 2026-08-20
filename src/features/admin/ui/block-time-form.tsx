@@ -43,7 +43,7 @@ const KIND_LABELS: Record<Enums['block_kind'], string> = {
 }
 
 const FIELD =
-  'h-10 rounded-xl border border-line-strong bg-surface px-3 text-[14px] text-ink ' +
+  'h-11 rounded-xl border border-line-strong bg-surface px-3 text-[15px] text-ink sm:h-10 sm:text-[14px] ' +
   'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-navy-mid'
 const LABEL = 'text-[13px] font-semibold text-ink'
 
