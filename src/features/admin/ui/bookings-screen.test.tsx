@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { BookingsScreen } from './bookings-screen'
 import { toBookingDetailView, toBookingRows } from '../view/bookings'
@@ -134,6 +135,78 @@ describe('BookingsScreen', () => {
   })
 })
 
+/**
+ * Thirty days of bookings is an unscannable column of cards on a phone, so the
+ * desk says what it is after rather than scrolling for it.
+ */
+describe('BookingsScreen searching', () => {
+  it('narrows the ledger to the customer the desk typed', async () => {
+    // Arrange
+    render(<BookingsScreen {...screenProps()} />)
+    const user = userEvent.setup()
+
+    // Act
+    await user.type(screen.getByRole('searchbox', { name: /search bookings/i }), 'Jun')
+
+    // Assert
+    const table = screen.getByRole('table', { name: 'Bookings' })
+    expect(within(table).getByText('PB-4820')).toBeInTheDocument()
+    expect(within(table).queryByText('PB-4821')).not.toBeInTheDocument()
+  })
+
+  it('says nothing matched rather than showing an empty ledger', async () => {
+    // Arrange
+    render(<BookingsScreen {...screenProps()} />)
+    const user = userEvent.setup()
+
+    // Act
+    await user.type(screen.getByRole('searchbox', { name: /search bookings/i }), 'Nobody')
+
+    // Assert
+    expect(screen.getByText('No bookings match this search.')).toBeInTheDocument()
+  })
+
+  it('counts what sits behind each status tab', () => {
+    // Act
+    render(<BookingsScreen {...screenProps()} />)
+
+    // Assert
+    const tabs = screen.getByRole('group', { name: /filter bookings/i })
+    expect(within(tabs).getByRole('button', { name: /^all 2$/i })).toBeInTheDocument()
+    expect(within(tabs).getByRole('button', { name: /^awaiting payment 1$/i })).toBeInTheDocument()
+  })
+
+  it('narrows the ledger to the money it still has to chase', async () => {
+    // Arrange
+    render(<BookingsScreen {...screenProps()} />)
+    const user = userEvent.setup()
+
+    // Act
+    await user.click(screen.getByRole('button', { name: /^awaiting payment 1$/i }))
+
+    // Assert
+    const table = screen.getByRole('table', { name: 'Bookings' })
+    expect(within(table).getByText('PB-4820')).toBeInTheDocument()
+    expect(within(table).queryByText('PB-4821')).not.toBeInTheDocument()
+  })
+
+  it('marks the tab in force, so the desk knows what it is looking at', async () => {
+    // Arrange
+    render(<BookingsScreen {...screenProps()} />)
+    const user = userEvent.setup()
+
+    // Act
+    await user.click(screen.getByRole('button', { name: /^confirmed 1$/i }))
+
+    // Assert
+    expect(screen.getByRole('button', { name: /^confirmed 1$/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: /^all 2$/i })).toHaveAttribute('aria-pressed', 'false')
+  })
+})
+
 describe('BookingsScreen on a phone', () => {
   it('stacks each row into a labelled card instead of scrolling sideways', () => {
     // Arrange & Act
@@ -145,5 +218,68 @@ describe('BookingsScreen on a phone', () => {
     expectCellsLabelledByColumn(table)
     expectExplicitTableRoles(table)
     expectNoPhoneMinimumWidth(table)
+  })
+
+  /**
+   * Nine columns printed as nine label-and-value lines is a wall of grey text.
+   * The card is led by the two things staff scan for — which booking, and how
+   * much — with the badges beside them.
+   */
+  it('leads each card with the reference and the amount owed', () => {
+    // Arrange & Act
+    render(<BookingsScreen {...screenProps()} />)
+
+    // Assert
+    const table = screen.getByRole('table', { name: 'Bookings' })
+    const [row] = within(table).getAllByRole('row').slice(1)
+    const roleOf = (label: string): string | null =>
+      within(row)
+        .getAllByRole('cell')
+        .find((cell) => cell.getAttribute('data-label') === label)
+        ?.getAttribute('data-mobile') ?? null
+
+    expect(roleOf('Reference')).toBe('title')
+    expect(roleOf('Total')).toBe('trailing')
+    expect(roleOf('Customer')).toBe('lead')
+    expect(roleOf('Status')).toBe('badge')
+    expect(roleOf('Payment')).toBe('badge')
+    expect(roleOf('Court')).toBe('inline')
+  })
+
+  it('gives every card a tappable way into the booking, not just the reference', () => {
+    // Arrange & Act
+    render(<BookingsScreen {...screenProps()} />)
+
+    // Assert
+    expect(screen.getByRole('link', { name: /manage PB-4820/i })).toHaveAttribute(
+      'href',
+      '/admin/bookings?booking=b2',
+    )
+  })
+
+  /**
+   * Landing on Bookings shows the ledger. The panel would otherwise open on
+   * whichever booking happened to be newest and push the list off the screen.
+   */
+  it('keeps the panel out of the way until a booking is actually opened', () => {
+    // Arrange & Act
+    render(<BookingsScreen {...screenProps()} isSelectionExplicit={false} />)
+
+    // Assert
+    const panel = screen.getByRole('region', { name: 'Booking PB-4821' })
+    expect(panel.parentElement?.className).toContain('max-lg:hidden')
+  })
+
+  it('puts an opened booking above the ledger, with a way back to it', () => {
+    // Arrange & Act
+    render(<BookingsScreen {...screenProps()} isSelectionExplicit />)
+
+    // Assert
+    const panel = screen.getByRole('region', { name: 'Booking PB-4821' })
+    expect(panel.parentElement?.className).toContain('max-lg:order-first')
+    expect(screen.getByRole('link', { name: /all bookings/i })).toHaveAttribute(
+      'href',
+      '/admin/bookings',
+    )
   })
 })
