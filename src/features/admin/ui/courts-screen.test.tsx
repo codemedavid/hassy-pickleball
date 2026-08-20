@@ -278,4 +278,39 @@ describe('CourtsScreen on a phone', () => {
     expectExplicitTableRoles(table)
     expectNoPhoneMinimumWidth(table)
   })
+
+  /**
+   * A court is a name, a price, and whether guests can book it. Printed as
+   * seven equal label-and-value lines, none of those three led the card.
+   */
+  it('leads each card with the court, its price, and whether it is bookable', () => {
+    // Arrange & Act
+    renderScreen()
+    const [row] = within(screen.getByRole('table', { name: 'Courts' }))
+      .getAllByRole('row')
+      .slice(1)
+    const roleOf = (label: string): string | null =>
+      within(row)
+        .getAllByRole('cell')
+        .find((cell) => cell.getAttribute('data-label') === label)
+        ?.getAttribute('data-mobile') ?? null
+
+    // Assert
+    expect(roleOf('Court')).toBe('title')
+    expect(roleOf('Price')).toBe('trailing')
+    expect(roleOf('Status')).toBe('badge')
+    expect(roleOf('Surface')).toBe('lead')
+    expect(roleOf('Order')).toBe('inline')
+  })
+
+  it('gives the row’s two actions the full width of the card', () => {
+    // Arrange & Act
+    renderScreen()
+
+    // Assert — a pair of 70px buttons in the corner of a card is a miss
+    // waiting to happen.
+    const actions = screen.getAllByRole('button', { name: 'Edit' })[0].parentElement
+    expect(actions?.className).toContain('max-sm:grid-cols-2')
+    expect(actions?.closest('td')).toHaveAttribute('data-mobile', 'actions')
+  })
 })
