@@ -203,7 +203,10 @@ describe('BookingsScreen searching', () => {
       'aria-pressed',
       'true',
     )
-    expect(screen.getByRole('button', { name: /^all 2$/i })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: /^all 2$/i })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
   })
 })
 

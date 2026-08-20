@@ -55,12 +55,16 @@ export default async function AdminBookingsPage({ searchParams }: BookingsPagePr
 
   // An unknown or absent id falls back to the newest booking rather than an
   // empty panel, so the screen is useful the moment it loads.
-  const selected = bookings.find((detail) => detail.booking.id === booking) ?? bookings.at(-1)
+  const asked = bookings.find((detail) => detail.booking.id === booking)
+  const selected = asked ?? bookings.at(-1)
 
   return (
     <BookingsScreen
       rows={toBookingRows(bookings, club)}
       detail={selected ? toBookingDetailView(selected, club, signProofs([selected])) : null}
+      // A phone has no room for the ledger and the panel at once, so the
+      // fallback selection stays closed there until someone opens a booking.
+      isSelectionExplicit={asked !== undefined}
       currency={club.currency}
       onSetStatus={setBookingStatusAction}
       onMarkPaid={markBookingPaidAction}
