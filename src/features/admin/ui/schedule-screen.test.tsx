@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ScheduleScreen } from './schedule-screen'
 import { buildScheduleGrid } from '../view/schedule'
 import { buildScheduleStats } from '../view/schedule-stats'
 import { at, club, DAY, makeBlock, makeBooking, makeCourt } from '../../../../test/admin-fixtures'
+import { installViewport } from '../../../../test/viewport'
 
 const refresh = vi.fn()
 const push = vi.fn()
@@ -65,8 +66,19 @@ async function fillBlockForm(times: { readonly from: string; readonly to: string
   await user.type(screen.getByLabelText('To'), times.to)
 }
 
+/**
+ * The grid is the desktop layout. A phone gets the agenda instead, which the
+ * last describe in this file covers.
+ */
+let restoreViewport = (): void => {}
+
 beforeEach(() => {
   vi.clearAllMocks()
+  restoreViewport = installViewport(true)
+})
+
+afterEach(() => {
+  restoreViewport()
 })
 
 describe('ScheduleScreen', () => {
@@ -334,5 +346,120 @@ describe('ScheduleScreen releasing time', () => {
 
     // Assert
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not release that')
+  })
+})
+
+/**
+ * The grid asks for 680px before it can be read at all, which is a sideways
+ * scroll on every device the desk actually carries. A phone gets the same day
+ * as a list, court by court.
+ */
+describe('ScheduleScreen on a phone', () => {
+  beforeEach(() => {
+    restoreViewport()
+    restoreViewport = installViewport(false)
+  })
+
+  it('reads the day as a list per court instead of a grid that scrolls sideways', () => {
+    // Act
+    renderScreen()
+
+    // Assert
+    expect(screen.queryByRole('table', { name: 'Court schedule' })).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Court schedule' })).toBeInTheDocument()
+  })
+
+  it('heads each court with what it is carrying and what is still free', () => {
+    // Act
+    renderScreen()
+    const agenda = screen.getByRole('region', { name: 'Court schedule' })
+
+    // Assert
+    expect(within(agenda).getByRole('heading', { level: 2, name: 'Harbor Court' })).toBeVisible()
+    expect(within(agenda).getByText('1 booking · 1 hold')).toBeInTheDocument()
+    expect(within(agenda).getByText('12.5 hrs open')).toBeInTheDocument()
+  })
+
+  it('gives every entry its time, its name, and what it is in words', () => {
+    // Act
+    renderScreen()
+    const entries = screen.getByRole('list', { name: 'Harbor Court schedule' })
+
+    // Assert — no legend is in view when the list has scrolled, so colour
+    // cannot be the only thing saying a slot is blocked.
+    const [hold] = within(entries).getAllByRole('listitem')
+    expect(within(hold).getByText('Net repair')).toBeInTheDocument()
+    expect(within(hold).getByText('9:00 AM – 10:00 AM')).toBeInTheDocument()
+    expect(within(hold).getByText('Maintenance or blocked')).toBeInTheDocument()
+  })
+
+  it('says a court is free rather than heading an empty section', () => {
+    // Act
+    renderScreen()
+    const agenda = screen.getByRole('region', { name: 'Court schedule' })
+
+    // Assert
+    expect(within(agenda).getByText('Nothing booked')).toBeInTheDocument()
+  })
+
+  it('releases a staff hold from the list', async () => {
+    // Arrange
+    const { onRelease } = renderScreen()
+
+    // Act
+    await userEvent.setup().click(screen.getByRole('button', { name: /release net repair/i }))
+
+    // Assert
+    await waitFor(() => expect(onRelease).toHaveBeenCalledWith({ blockId: 'block-7' }))
+  })
+
+  it('offers no release on a booking here either', () => {
+    // Act
+    renderScreen()
+
+    // Assert
+    expect(screen.getAllByRole('button', { name: /release/i })).toHaveLength(1)
+  })
+
+  /**
+   * Six form fields under the day is most of a phone screen spent on something
+   * the desk does occasionally, so blocking time waits to be asked for.
+   */
+  it('keeps the block form behind a control instead of under the day', async () => {
+    // Arrange
+    renderScreen()
+
+    // Assert
+    expect(screen.queryByLabelText('Court')).not.toBeInTheDocument()
+
+    // Act
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Block court time' }))
+
+    // Assert
+    expect(screen.getByLabelText('Court')).toBeInTheDocument()
+  })
+
+  it('shows the day being viewed inside the day navigation, not only in the subtitle', () => {
+    // Act
+    renderScreen()
+
+    // Assert — the header subtitle scrolls away; the nav is what stays.
+    const nav = screen.getByRole('navigation', { name: 'Schedule day' })
+    expect(within(nav).getByText('Tue, 04 Aug 2026')).toBeInTheDocument()
+  })
+
+  it('says the club is closed rather than listing no courts', () => {
+    // Arrange
+    const empty = buildScheduleGrid({ club, courts: [], bookings: [], blocks: [], day: DAY })
+
+    // Act
+    renderScreen({
+      courts: [],
+      grid: empty,
+      stats: buildScheduleStats({ club, courts: [], bookings: [], day: DAY }),
+    })
+
+    // Assert
+    expect(screen.getByText('No active courts to schedule yet.')).toBeInTheDocument()
   })
 })
