@@ -462,4 +462,20 @@ describe('ScheduleScreen on a phone', () => {
     // Assert
     expect(screen.getByText('No active courts to schedule yet.')).toBeInTheDocument()
   })
+
+  /**
+   * 44px is the smallest target a thumb hits reliably, and every field in this
+   * form is one a staff member fills standing at the desk.
+   */
+  it('gives the block form fields a full touch target', async () => {
+    // Arrange
+    renderScreen()
+
+    // Act
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Block court time' }))
+
+    // Assert
+    expect(screen.getByLabelText('Court').className).toContain('h-11')
+    expect(screen.getByLabelText('From').className).toContain('h-11')
+  })
 })

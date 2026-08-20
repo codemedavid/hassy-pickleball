@@ -292,3 +292,18 @@ describe('BookingDetailPanel', () => {
     expect(screen.getByText('Member — approved for desk payment.')).toBeInTheDocument()
   })
 })
+
+/**
+ * The panel takes the whole screen on a phone, where the desk records a
+ * payment one-handed at the counter.
+ */
+describe('BookingDetailPanel on a phone', () => {
+  it('gives the payment fields a full touch target', () => {
+    // Arrange & Act
+    render(<BookingDetailPanel {...panelProps()} />)
+
+    // Assert — 44px is the smallest target a thumb hits reliably.
+    expect(screen.getByLabelText('Method').className).toContain('h-11')
+    expect(screen.getByLabelText(/Amount/).className).toContain('h-11')
+  })
+})
