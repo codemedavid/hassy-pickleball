@@ -11,10 +11,17 @@ import {
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ADMIN_NAV_ITEMS, isNavItemActive } from './nav-items'
+import {
+  DESKTOP_MEDIA_QUERY,
+  getDesktopServerSnapshot,
+  getDesktopSnapshot,
+  matchesMediaQuery,
+  prefersReducedMotion,
+  subscribeToDesktopViewport,
+} from './desktop-viewport'
 
 const SCROLL_EDGE_TOLERANCE = 1
 const SCROLL_PAGE_RATIO = 0.8
-const DESKTOP_MEDIA_QUERY = '(min-width: 64rem)'
 const CURRENT_SECTION_FOCUS = 'current-section'
 
 const MOBILE_NAV_LINK =
@@ -22,47 +29,12 @@ const MOBILE_NAV_LINK =
   'focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-navy ' +
   'lg:h-auto lg:rounded-lg lg:border-b-0 lg:px-3.5 lg:py-[7px] lg:text-[13.5px] lg:focus-visible:outline-white'
 
-function matchesMediaQuery(query: string): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia(query).matches
-  )
-}
-
-function prefersReducedMotion(): boolean {
-  return matchesMediaQuery('(prefers-reduced-motion: reduce)')
-}
-
-function subscribeToDesktopViewport(
-  onStoreChange: () => void,
-  beforeStoreChange?: () => void,
-): () => void {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return () => {}
-
-  const query = window.matchMedia(DESKTOP_MEDIA_QUERY)
-  const handleChange = (): void => {
-    beforeStoreChange?.()
-    onStoreChange()
-  }
-  if (typeof query.addEventListener === 'function') {
-    query.addEventListener('change', handleChange)
-    return () => query.removeEventListener('change', handleChange)
-  }
-
-  query.addListener(handleChange)
-  return () => query.removeListener(handleChange)
-}
-
-function getDesktopSnapshot(): boolean {
-  return matchesMediaQuery(DESKTOP_MEDIA_QUERY)
-}
-
-function getDesktopServerSnapshot(): boolean {
-  return false
-}
-
-function useIsDesktop(headerRef: RefObject<HTMLElement | null>): boolean {
+/**
+ * Desktop width, plus the focus the nav has to carry across the switch: the
+ * two layouts are different DOM, so the link that had focus is gone by the
+ * time the new one renders unless it is remembered first.
+ */
+function useIsDesktopNav(headerRef: RefObject<HTMLElement | null>): boolean {
   const focusToRestoreRef = useRef<string | null>(null)
   const subscribe = useCallback(
     (onStoreChange: () => void) =>
@@ -284,7 +256,7 @@ function AccountBlock({ staffName }: Pick<AdminNavProps, 'staffName'>) {
 export function AdminNav({ clubName, staffName }: AdminNavProps) {
   const pathname = usePathname()
   const headerRef = useRef<HTMLElement>(null)
-  const isDesktop = useIsDesktop(headerRef)
+  const isDesktop = useIsDesktopNav(headerRef)
 
   return (
     <header ref={headerRef} className="sticky top-0 z-40 bg-navy text-white">

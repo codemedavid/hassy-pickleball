@@ -39,7 +39,8 @@ export async function savePaymentMethod(input: unknown): Promise<Result<PaymentM
 
     return withStaff(async ({ staff, client }) => {
       const methods = await listAllPaymentMethods(client, staff.clubId)
-      const sortOrder = methods.reduce((highest, method) => Math.max(highest, method.sortOrder), 0) + 1
+      const sortOrder =
+        methods.reduce((highest, method) => Math.max(highest, method.sortOrder), 0) + 1
 
       return createPaymentMethod(client, {
         clubId: staff.clubId,
@@ -84,12 +85,7 @@ export async function savePaymentMethod(input: unknown): Promise<Result<PaymentM
     }
 
     if (isActive !== undefined) {
-      saved = await setPaymentMethodActive(
-        client,
-        id,
-        isActive,
-        acknowledgeCheckoutPause ?? false,
-      )
+      saved = await setPaymentMethodActive(client, id, isActive, acknowledgeCheckoutPause ?? false)
     }
 
     return ok(saved)

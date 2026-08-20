@@ -67,10 +67,13 @@ describe('toPaymentMethodPayload', () => {
   })
 
   it('carries a removed QR image as null so the stored URL is cleared', () => {
-    const payload = toPaymentMethodPayload({
-      ...toPaymentMethodFormState(gcash),
-      qrImageUrl: null,
-    }, METHOD_ID)
+    const payload = toPaymentMethodPayload(
+      {
+        ...toPaymentMethodFormState(gcash),
+        qrImageUrl: null,
+      },
+      METHOD_ID,
+    )
 
     expect(payload.qrImageUrl).toBeNull()
   })

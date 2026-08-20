@@ -1,10 +1,14 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AdminPageHeader, AdminScreen, CARD, EmptyState, StatCards } from './primitives'
 import { BlockTimeForm } from './block-time-form'
+import { ScheduleAgenda } from './schedule-agenda'
+import { SCHEDULE_TONE_STYLES } from './schedule-tones'
+import { useIsDesktop } from './desktop-viewport'
+import { buildScheduleAgenda, SCHEDULE_TONE_LABELS } from '../view/schedule-agenda'
 import { shiftDayString } from '@/lib/domain/time'
 import type { ScheduleGrid, ScheduleTone } from '../view/schedule'
 import type { StatCard } from '../view/schedule-stats'
@@ -15,9 +19,17 @@ import type { Result } from '@/lib/api/result'
 /**
  * The day view of the court schedule.
  *
- * Entries are positioned as percentages of the column, which the view model
- * has already worked out. The colour of an entry is never its only meaning:
- * every entry prints its own time range, and the legend names each tone.
+ * Above `lg` it is a grid: entries positioned as percentages of the column,
+ * which the view model has already worked out. Below it the grid cannot be
+ * read — a column per court needs 680px before anything is legible, which is a
+ * sideways scroll on every device the desk actually carries — so the same day
+ * is offered as a list, court by court. That is one of the two places in the
+ * console where the layouts are different DOM rather than one restyled, and it
+ * chooses from the shared breakpoint so it cannot disagree with the nav.
+ *
+ * The colour of an entry is never its only meaning: every entry prints its own
+ * time range, the grid names each tone in a legend beneath it, and the list,
+ * which scrolls away from any legend, names the tone on each entry.
  *
  * The day is navigated with links rather than client state: the schedule is
  * server-rendered per day, so ?day= is what actually loads another day's
@@ -27,19 +39,7 @@ import type { Result } from '@/lib/api/result'
 
 const ROW_HEIGHT_PX = 58
 
-const TONE_STYLES: Record<ScheduleTone, string> = {
-  confirmed: 'bg-navy text-white',
-  awaiting: 'bg-lime text-navy',
-  blocked: 'border border-line-strong bg-surface-sunken text-muted',
-  event: 'bg-navy-mid text-white',
-}
-
-const LEGEND: readonly { readonly tone: ScheduleTone; readonly label: string }[] = [
-  { tone: 'confirmed', label: 'Confirmed' },
-  { tone: 'awaiting', label: 'Awaiting payment' },
-  { tone: 'blocked', label: 'Maintenance or blocked' },
-  { tone: 'event', label: 'League or event' },
-]
+const LEGEND: readonly ScheduleTone[] = ['confirmed', 'awaiting', 'blocked', 'event']
 
 export interface ScheduleScreenProps {
   /** Club-local calendar day being viewed, "YYYY-MM-DD". */
@@ -64,11 +64,12 @@ export function ScheduleScreen({
   onRelease,
 }: ScheduleScreenProps) {
   const router = useRouter()
+  const isDesktop = useIsDesktop()
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  const columnTemplate = `74px repeat(${grid.columns.length}, minmax(150px, 1fr))`
-  const bodyHeight = grid.hourLabels.length * ROW_HEIGHT_PX
+  const agenda = useMemo(() => buildScheduleAgenda(grid), [grid])
+  const hasCourts = grid.columns.length > 0
 
   function handleRelease(blockId: string): void {
     setError(null)
@@ -89,9 +90,15 @@ export function ScheduleScreen({
     <AdminScreen>
       <AdminPageHeader
         title="Court schedule"
-        subtitle={`${dayLabel} · bookings and blocked time across every court`}
+        subtitle={
+          isDesktop
+            ? `${dayLabel} · bookings and blocked time across every court`
+            : 'Bookings and blocked time across every court'
+        }
       >
-        <DayNav day={day} />
+        {/* The date rides in the nav on a phone, where the subtitle above it is
+            the first thing to scroll away. */}
+        <DayNav day={day} dayLabel={isDesktop ? null : dayLabel} />
       </AdminPageHeader>
 
       <StatCards stats={stats} />
@@ -102,152 +109,224 @@ export function ScheduleScreen({
         </p>
       ) : null}
 
-      <div className={`${CARD} overflow-x-auto`}>
-        {grid.columns.length === 0 ? (
+      {!hasCourts ? (
+        <div className={CARD}>
           <EmptyState>No active courts to schedule yet.</EmptyState>
-        ) : (
-          <div role="table" aria-label="Court schedule" className="min-w-[680px]">
-            <div role="rowgroup">
-              <div
-                role="row"
-                className="grid border-b border-surface-sunken bg-surface-alt"
-                style={{ gridTemplateColumns: columnTemplate }}
-              >
-                <span
-                  role="columnheader"
-                  className="px-2.5 py-3.5 text-[12px] font-bold text-subtle"
-                >
-                  Time
-                </span>
-                {grid.columns.map((column) => (
-                  <span
-                    key={column.courtId}
-                    role="columnheader"
-                    className="border-l border-surface-sunken px-3.5 py-3 text-left"
-                  >
-                    <span className="block text-[14.5px] font-bold">{column.courtName}</span>
-                    <span className="mt-0.5 block text-[12px] font-normal text-subtle">
-                      {column.meta}
-                    </span>
-                    <span className="mt-0.5 block text-[12px] font-semibold text-olive">
-                      {column.openLabel}
-                    </span>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div role="rowgroup">
-              <div role="row" className="grid" style={{ gridTemplateColumns: columnTemplate }}>
-                <span role="rowheader" className="block">
-                  {grid.hourLabels.map((label) => (
-                    <span
-                      key={label}
-                      className="flex items-start border-b border-[#f2f5f8] px-2.5 pt-1.5 text-[12px] text-subtle tabular-nums"
-                      style={{ height: ROW_HEIGHT_PX }}
-                    >
-                      {label}
-                    </span>
-                  ))}
-                </span>
-
-                {grid.columns.map((column) => (
-                  <span
-                    key={column.courtId}
-                    role="cell"
-                    className="relative block border-l border-surface-sunken"
-                    style={{ height: bodyHeight }}
-                  >
-                    {/* Hour rules, drawn behind the entries. */}
-                    <span aria-hidden className="absolute inset-0">
-                      {grid.hourLabels.map((label) => (
-                        <span
-                          key={label}
-                          className="block border-b border-[#f2f5f8]"
-                          style={{ height: ROW_HEIGHT_PX }}
-                        />
-                      ))}
-                    </span>
-
-                    {column.entries.map((entry) => (
-                      <span
-                        key={entry.id}
-                        className={`absolute right-1 left-1 overflow-hidden rounded-lg px-2.5 py-1.5 ${TONE_STYLES[entry.tone]}`}
-                        style={{
-                          top: `${entry.topPercent}%`,
-                          height: `${entry.heightPercent}%`,
-                        }}
-                      >
-                        <span className="block text-[12.5px] leading-tight font-bold">
-                          {entry.title}
-                        </span>
-                        <span className="mt-0.5 block text-[11.5px] opacity-80">
-                          {entry.detail}
-                        </span>
-                        {entry.blockId ? (
-                          <button
-                            type="button"
-                            aria-label={`Release ${entry.title}`}
-                            disabled={isPending}
-                            onClick={() => handleRelease(entry.blockId as string)}
-                            className="mt-1 text-[11.5px] font-semibold underline underline-offset-2 disabled:opacity-55"
-                          >
-                            Release
-                          </button>
-                        ) : null}
-                      </span>
-                    ))}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : isDesktop ? (
+        <ScheduleGridView grid={grid} isPending={isPending} onRelease={handleRelease} />
+      ) : (
+        <ScheduleAgenda sections={agenda} isPending={isPending} onRelease={handleRelease} />
+      )}
 
       {courts.length > 0 ? (
-        <BlockTimeForm key={day} day={day} club={club} courts={courts} onBlock={onBlock} />
+        <BlockTimeSection
+          key={day}
+          day={day}
+          club={club}
+          courts={courts}
+          isDesktop={isDesktop}
+          onBlock={onBlock}
+        />
       ) : null}
 
-      <ul
-        aria-label="Schedule legend"
-        className="mt-3.5 flex list-none flex-wrap gap-4 p-0 text-[12.5px] text-muted"
-      >
-        {LEGEND.map((item) => (
-          <li key={item.tone} className="flex items-center gap-2">
-            <span aria-hidden className={`size-3 rounded-[3px] ${TONE_STYLES[item.tone]}`} />
-            {item.label}
-          </li>
-        ))}
-      </ul>
+      {/* The agenda names its own tones, so the legend would be a second copy. */}
+      {isDesktop ? (
+        <ul
+          aria-label="Schedule legend"
+          className="mt-3.5 flex list-none flex-wrap gap-4 p-0 text-[12.5px] text-muted"
+        >
+          {LEGEND.map((tone) => (
+            <li key={tone} className="flex items-center gap-2">
+              <span aria-hidden className={`size-3 rounded-[3px] ${SCHEDULE_TONE_STYLES[tone]}`} />
+              {SCHEDULE_TONE_LABELS[tone]}
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </AdminScreen>
   )
 }
 
+interface ScheduleGridViewProps {
+  readonly grid: ScheduleGrid
+  readonly isPending: boolean
+  readonly onRelease: (blockId: string) => void
+}
+
+/** The desktop layout: one column per court, entries placed by percentage. */
+function ScheduleGridView({ grid, isPending, onRelease }: ScheduleGridViewProps) {
+  const columnTemplate = `74px repeat(${grid.columns.length}, minmax(150px, 1fr))`
+  const bodyHeight = grid.hourLabels.length * ROW_HEIGHT_PX
+
+  return (
+    <div className={`${CARD} overflow-x-auto`}>
+      <div role="table" aria-label="Court schedule" className="min-w-[680px]">
+        <div role="rowgroup">
+          <div
+            role="row"
+            className="grid border-b border-surface-sunken bg-surface-alt"
+            style={{ gridTemplateColumns: columnTemplate }}
+          >
+            <span role="columnheader" className="px-2.5 py-3.5 text-[12px] font-bold text-subtle">
+              Time
+            </span>
+            {grid.columns.map((column) => (
+              <span
+                key={column.courtId}
+                role="columnheader"
+                className="border-l border-surface-sunken px-3.5 py-3 text-left"
+              >
+                <span className="block text-[14.5px] font-bold">{column.courtName}</span>
+                <span className="mt-0.5 block text-[12px] font-normal text-subtle">
+                  {column.meta}
+                </span>
+                <span className="mt-0.5 block text-[12px] font-semibold text-olive">
+                  {column.openLabel}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div role="rowgroup">
+          <div role="row" className="grid" style={{ gridTemplateColumns: columnTemplate }}>
+            <span role="rowheader" className="block">
+              {grid.hourLabels.map((label) => (
+                <span
+                  key={label}
+                  className="flex items-start border-b border-[#f2f5f8] px-2.5 pt-1.5 text-[12px] text-subtle tabular-nums"
+                  style={{ height: ROW_HEIGHT_PX }}
+                >
+                  {label}
+                </span>
+              ))}
+            </span>
+
+            {grid.columns.map((column) => (
+              <span
+                key={column.courtId}
+                role="cell"
+                className="relative block border-l border-surface-sunken"
+                style={{ height: bodyHeight }}
+              >
+                {/* Hour rules, drawn behind the entries. */}
+                <span aria-hidden className="absolute inset-0">
+                  {grid.hourLabels.map((label) => (
+                    <span
+                      key={label}
+                      className="block border-b border-[#f2f5f8]"
+                      style={{ height: ROW_HEIGHT_PX }}
+                    />
+                  ))}
+                </span>
+
+                {column.entries.map((entry) => (
+                  <span
+                    key={entry.id}
+                    className={`absolute right-1 left-1 overflow-hidden rounded-lg px-2.5 py-1.5 ${SCHEDULE_TONE_STYLES[entry.tone]}`}
+                    style={{
+                      top: `${entry.topPercent}%`,
+                      height: `${entry.heightPercent}%`,
+                    }}
+                  >
+                    <span className="block text-[12.5px] leading-tight font-bold">
+                      {entry.title}
+                    </span>
+                    <span className="mt-0.5 block text-[11.5px] opacity-80">{entry.detail}</span>
+                    {entry.blockId ? (
+                      <button
+                        type="button"
+                        aria-label={`Release ${entry.title}`}
+                        disabled={isPending}
+                        onClick={() => onRelease(entry.blockId as string)}
+                        className="mt-1 text-[11.5px] font-semibold underline underline-offset-2 disabled:opacity-55"
+                      >
+                        Release
+                      </button>
+                    ) : null}
+                  </span>
+                ))}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface BlockTimeSectionProps {
+  readonly day: string
+  readonly club: Club
+  readonly courts: readonly Court[]
+  readonly isDesktop: boolean
+  readonly onBlock: ScheduleScreenProps['onBlock']
+}
+
+/**
+ * Six fields under the day is most of a phone screen spent on something the
+ * desk does occasionally, so on a phone the form waits to be asked for. On a
+ * desktop it sits open under the grid, where the decision to block is made.
+ */
+function BlockTimeSection({ day, club, courts, isDesktop, onBlock }: BlockTimeSectionProps) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  if (isDesktop) {
+    return <BlockTimeForm day={day} club={club} courts={courts} onBlock={onBlock} />
+  }
+
+  return (
+    <div className="mt-3">
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((current) => !current)}
+        className="flex h-12 w-full items-center justify-between rounded-[14px] border border-line bg-surface px-4 text-[14.5px] font-semibold text-ink"
+      >
+        Block court time
+        <span aria-hidden className="text-[18px] text-subtle">
+          {isOpen ? '−' : '+'}
+        </span>
+      </button>
+
+      {isOpen ? <BlockTimeForm day={day} club={club} courts={courts} onBlock={onBlock} /> : null}
+    </div>
+  )
+}
+
 const DAY_LINK =
-  'inline-flex h-10 items-center rounded-xl border border-line-strong bg-surface px-3.5 ' +
-  'text-[13px] font-semibold text-ink hover:border-line-heavy'
+  'inline-flex h-11 items-center justify-center rounded-xl border border-line-strong bg-surface ' +
+  'px-3.5 text-[13.5px] font-semibold text-ink hover:border-line-heavy sm:h-10 sm:text-[13px]'
 
 /** Previous day, today, next day — the only three moves the desk ever makes. */
-function DayNav({ day }: { readonly day: string }) {
+function DayNav({ day, dayLabel }: { readonly day: string; readonly dayLabel: string | null }) {
   return (
-    <nav aria-label="Schedule day" className="flex gap-2">
+    <nav aria-label="Schedule day" className="flex items-center gap-2">
       <Link
         href={`/admin?day=${shiftDayString(day, -1)}`}
         aria-label="Previous day"
-        className={DAY_LINK}
+        className={`${DAY_LINK} max-sm:w-11 max-sm:flex-none`}
       >
         ‹
       </Link>
-      <Link href="/admin" className={DAY_LINK}>
-        Today
-      </Link>
+
+      {dayLabel ? (
+        <span className="min-w-0 flex-1 truncate text-center text-[14px] font-bold">
+          {dayLabel}
+        </span>
+      ) : null}
+
       <Link
         href={`/admin?day=${shiftDayString(day, 1)}`}
         aria-label="Next day"
-        className={DAY_LINK}
+        className={`${DAY_LINK} max-sm:w-11 max-sm:flex-none`}
       >
         ›
+      </Link>
+
+      <Link href="/admin" className={`${DAY_LINK} max-sm:flex-none`}>
+        Today
       </Link>
     </nav>
   )
