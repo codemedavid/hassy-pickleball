@@ -12,6 +12,7 @@ import {
   EmptyState,
   FullWidthRow,
   Row,
+  TABLE_SHELL,
 } from './primitives'
 import { PaymentMethodEditor } from './payment-method-editor'
 import type { UploadedImage } from './image-upload-field'
@@ -129,7 +130,7 @@ export function PaymentMethodsScreen({
         </div>
       ) : null}
 
-      <div className={`${CARD} overflow-x-auto`}>
+      <div className={`${TABLE_SHELL} sm:overflow-x-auto`}>
         {displayedMethods.length === 0 ? (
           <EmptyState>No payment methods yet. Add one to reopen online checkout.</EmptyState>
         ) : (

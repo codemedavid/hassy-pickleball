@@ -11,6 +11,7 @@ import {
   EmptyState,
   FullWidthRow,
   Row,
+  TABLE_SHELL,
 } from './primitives'
 import { Button } from '@/components/ui/button'
 import { ProductEditor } from './product-editor'
@@ -103,7 +104,7 @@ export function ProductsScreen({ products, currency, onSave, onUpload }: Product
         </div>
       ) : null}
 
-      <div className={`${CARD} overflow-x-auto`}>
+      <div className={`${TABLE_SHELL} sm:overflow-x-auto`}>
         {products.length === 0 ? (
           <EmptyState>No products yet. Add one to sell alongside a booking.</EmptyState>
         ) : (

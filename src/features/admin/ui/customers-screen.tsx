@@ -1,4 +1,12 @@
-import { AdminPageHeader, AdminScreen, CARD, Cell, DataTable, EmptyState, Row } from './primitives'
+import {
+  AdminPageHeader,
+  AdminScreen,
+  Cell,
+  DataTable,
+  EmptyState,
+  Row,
+  TABLE_SHELL,
+} from './primitives'
 import { formatMoney } from '@/lib/format/money'
 import { formatDayInZone } from '@/lib/format/time'
 import type { Customer } from '@/lib/repositories/booking-mappers'
@@ -46,7 +54,7 @@ export function CustomersScreen({ customers, club }: CustomersScreenProps) {
         subtitle={`${customers.length} players · ${members.length} on a member tier`}
       />
 
-      <div className={`${CARD} overflow-x-auto`}>
+      <div className={`${TABLE_SHELL} sm:overflow-x-auto`}>
         {customers.length === 0 ? (
           <EmptyState>No customers yet.</EmptyState>
         ) : (

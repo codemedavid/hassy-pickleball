@@ -11,6 +11,7 @@ import {
   EmptyState,
   FullWidthRow,
   Row,
+  TABLE_SHELL,
 } from './primitives'
 import { Button } from '@/components/ui/button'
 import { CourtEditor } from './court-editor'
@@ -109,7 +110,7 @@ export function CourtsScreen({ courts, currency, onSave, onUpload }: CourtsScree
         </div>
       ) : null}
 
-      <div className={`${CARD} overflow-x-auto`}>
+      <div className={`${TABLE_SHELL} sm:overflow-x-auto`}>
         {courts.length === 0 ? (
           <EmptyState>No courts yet. Add one to start taking bookings.</EmptyState>
         ) : (
@@ -164,11 +165,11 @@ function CourtRow({
   return (
     <>
       <Row>
-        <Cell label="Court">
+        <Cell label="Court" mobile="title">
           <span className="block font-semibold">{court.name}</span>
-          <span className="mt-px block text-[12.5px] text-subtle">/{court.slug}</span>
+          <span className="mt-px block text-[12.5px] font-normal text-subtle">/{court.slug}</span>
         </Cell>
-        <Cell label="Surface" className="text-slate">
+        <Cell label="Surface" mobile="lead" className="text-slate">
           <span className="block">{court.surface}</span>
           <span className="mt-px block text-[12.5px] text-subtle">
             {ENVIRONMENT_LABELS[court.environment]}
@@ -188,13 +189,13 @@ function CourtRow({
             </span>
           ) : null}
         </Cell>
-        <Cell label="Price" className="text-slate tabular-nums">
+        <Cell label="Price" mobile="trailing" className="text-slate tabular-nums">
           {formatMoney(court.basePriceCents, currency)}
         </Cell>
         <Cell label="Order" className="text-slate tabular-nums">
           {court.sortOrder}
         </Cell>
-        <Cell label="Status">
+        <Cell label="Status" mobile="badge">
           {/* Wording, not just colour: an offline court still sits in the list. */}
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase ${
@@ -204,12 +205,26 @@ function CourtRow({
             {court.isActive ? 'Bookable' : 'Offline'}
           </span>
         </Cell>
-        <Cell label="">
-          <div className="flex justify-end gap-2 max-sm:justify-start">
-            <Button variant="secondary" size="sm" onClick={onEdit} disabled={isEditing}>
+        <Cell label="" mobile="actions">
+          {/* Side by side and full width on a phone: a pair of 70px buttons in
+              the corner of a card is a miss waiting to happen. */}
+          <div className="flex justify-end gap-2 max-sm:grid max-sm:grid-cols-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onEdit}
+              disabled={isEditing}
+              className="max-sm:h-11 max-sm:text-sm"
+            >
               Edit
             </Button>
-            <Button variant="ghost" size="sm" onClick={onToggle} disabled={isPending}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggle}
+              disabled={isPending}
+              className="max-sm:h-11 max-sm:border max-sm:border-line-strong max-sm:text-sm"
+            >
               {court.isActive ? 'Take offline' : 'Bring back'}
             </Button>
           </div>
