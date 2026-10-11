@@ -7,7 +7,7 @@ insert into clubs (
 )
 values (
   '00000000-0000-4000-8000-000000000001',
-  'Baseline Pickleball Club',
+  'HASSY PICKLEBALL COURT',
   'baseline',
   'Asia/Manila',
   'PHP',
