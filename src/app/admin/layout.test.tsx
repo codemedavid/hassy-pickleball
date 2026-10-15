@@ -11,7 +11,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
  */
 
 const getStaffAccess = vi.fn()
-const findClubById = vi.fn()
 /** The real redirect() throws to stop rendering; a stub that returns would let
  *  the layout run on into branches Next.js would never reach. */
 const redirect = vi.hoisted(() =>
@@ -21,9 +20,7 @@ const redirect = vi.hoisted(() =>
 )
 
 vi.mock('next/navigation', () => ({ redirect }))
-vi.mock('@/lib/supabase/server', () => ({ createSupabaseServerClient: () => ({}) }))
 vi.mock('@/lib/auth/staff', () => ({ getStaffAccess }))
-vi.mock('@/lib/repositories/clubs', () => ({ findClubById }))
 vi.mock('@/features/admin/ui/admin-nav', () => ({
   AdminNav: ({ clubName, staffName }: { clubName: string; staffName: string }) => (
     <div data-testid="admin-nav">
@@ -48,7 +45,6 @@ async function renderLayout() {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  findClubById.mockResolvedValue({ name: 'Baseline Pickleball Club' })
 })
 
 describe('AdminLayout', () => {
@@ -102,17 +98,8 @@ describe('AdminLayout', () => {
     await renderLayout()
 
     expect(screen.getByTestId('admin-nav')).toHaveTextContent(
-      'Baseline Pickleball Club / Mika Reyes',
+      'HASSY PICKLEBALL COURT / Mika Reyes',
     )
     expect(screen.getByText('Console')).toBeInTheDocument()
-  })
-
-  it('degrades to a generic label rather than blocking on a missing club', async () => {
-    getStaffAccess.mockResolvedValue({ status: 'staff', staff: STAFF })
-    findClubById.mockResolvedValue(null)
-
-    await renderLayout()
-
-    expect(screen.getByTestId('admin-nav')).toHaveTextContent('Admin console / Mika Reyes')
   })
 })
